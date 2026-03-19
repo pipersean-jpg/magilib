@@ -198,8 +198,8 @@ input[type=file].file-input{display:none;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:0.5px solid var(--border);}
 .modal-title{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:500;}
 .modal-close{width:34px;height:34px;border-radius:6px;border:0.5px solid var(--border-med);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink-light);}
-.modal-body{padding:20px;display:grid;grid-template-columns:140px 1fr;gap:20px;}
-@media(max-width:480px){.modal-body{grid-template-columns:100px 1fr;gap:14px;}}
+.modal-body{padding:0;overflow-y:auto;}
+}
 .modal-cover{background:var(--paper-warm);border-radius:10px;overflow:hidden;}
 .modal-cover img{width:100%;height:100%;object-fit:cover;display:none;}
 .detail-row{display:flex;flex-direction:column;margin-bottom:12px;}
