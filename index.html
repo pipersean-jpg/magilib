@@ -943,17 +943,18 @@ function loadSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
     S.settings=s;
-    if(s.ebayKey)document.getElementById('s-ebay').value=s.ebayKey;
-    if(s.scriptUrl&&document.getElementById('s-scriptUrl'))document.getElementById('s-scriptUrl').value=s.scriptUrl;
-    if(s.cloudName&&document.getElementById('s-cloudName'))document.getElementById('s-cloudName').value=s.cloudName;
-    if(s.cloudPreset&&document.getElementById('s-cloudPreset'))document.getElementById('s-cloudPreset').value=s.cloudPreset;
+    // Note: s-ebay field removed — no longer referenced
+    const setField = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
+    setField('s-scriptUrl', s.scriptUrl);
+    setField('s-cloudName', s.cloudName);
+    setField('s-cloudPreset', s.cloudPreset);
     if(s.currency){document.getElementById('s-currency').value=s.currency;document.getElementById('currencyLabel').textContent=s.currency;}
     if(s.marketplace)document.getElementById('s-marketplace').value=s.marketplace;
   }catch(e){}
 }
 function saveSettings(){
   const s={
-    ebayKey:document.getElementById('s-ebay').value.trim(),
+    // ebayKey removed,
     scriptUrl:(document.getElementById('s-scriptUrl')||{value:''}).value.trim(),
     cloudName:(document.getElementById('s-cloudName')||{value:''}).value.trim(),
     cloudPreset:(document.getElementById('s-cloudPreset')||{value:''}).value.trim(),
