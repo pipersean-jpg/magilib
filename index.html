@@ -949,8 +949,8 @@ function loadSettings(){
     setField('s-cloudName', s.cloudName);
     setField('s-cloudPreset', s.cloudPreset);
     if(s.currency){document.getElementById('s-currency').value=s.currency;document.getElementById('currencyLabel').textContent=s.currency;}
-    if(s.marketplace)document.getElementById('s-marketplace').value=s.marketplace;
-  }catch(e){}
+    if(s.marketplace){ const el=document.getElementById('s-marketplace'); if(el) el.value=s.marketplace; }
+  }catch(e){ console.warn('loadSettings error:', e); }
 }
 function saveSettings(){
   const s={
@@ -1954,7 +1954,8 @@ async function saveBook() {
     showToast('✓ Saved to Google Sheets!', 'success', 3000);
     clearForm();
   } catch(e) {
-    showErrorBanner('Save failed', e.message || 'Unknown error');
+    // no-cors fetches rarely throw — if they do, show a dismissible toast not a blocking banner
+    showToast('Save may have failed: ' + (e.message || 'Unknown error') + ' — check your Google Sheet', 'error', 6000);
   }
   btn.disabled = false; btn.textContent = 'Save to Sheet';
 }
