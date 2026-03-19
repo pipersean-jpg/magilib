@@ -2454,7 +2454,7 @@ function clearFilters() {
   showToast('Filters cleared', 'info', 1500);
 }
 
-loadSettings();
+document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
 </script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#a32d2d;color:white;padding:14px 20px;font-size:13px;font-weight:500;display:none;align-items:center;justify-content:space-between;gap:12px;">
