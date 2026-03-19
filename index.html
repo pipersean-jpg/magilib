@@ -1232,35 +1232,30 @@ function openModal(idx){
   document.getElementById('modalTitle').textContent=b.title;
   const modalCoverSrc = b.rawCover || b.coverUrl || '';
   document.getElementById('modalBody').innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;padding:20px 20px 0;">
-      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
+    <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
+      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);align-self:center;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
         `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
       </div>
       <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);text-align:center;line-height:1.35;margin-bottom:5px;padding:0 4px;">${b.title}</div>
       <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:10px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:10px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
         ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0.03em;">${b.condition}</span>`:''}
         ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
       </div>
       ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.5;">${b.flags}</div>`:''}
-      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;">
         <span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span>
         <div id="modalStarRow" class="star-row" style="margin-top:0;"></div>
       </div>
     </div>
-    <div style="padding:14px 20px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;border-top:0.5px solid var(--border);margin-top:14px;">
     <div style="width:100%;border-top:0.5px solid var(--border);margin-top:14px;display:grid;grid-template-columns:1fr 1fr;">
       ${b.publisher?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
-      ${b.dateAdded?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
-      ${b.edition?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
-      ${b.year?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
-      ${b.location?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
-      ${b.isbn?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
-      ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
-      ${b.notes?`<div style="grid-column:1/-1;padding:14px 20px;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
-      ${b.collectorNote?`<div style="grid-column:1/-1;padding:14px 20px;border-bottom:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
+      ${b.year?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Published</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
+      ${b.dateAdded?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
+      ${b.location?`<div style="padding:14px 20px;text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
     </div>
+    ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
 `;
   // Set sold/wishlist button labels
   const soldBtn = document.getElementById('modalSoldBtn');
