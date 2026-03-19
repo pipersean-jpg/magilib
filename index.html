@@ -953,17 +953,21 @@ function loadSettings(){
   }catch(e){ console.warn('loadSettings error:', e); }
 }
 function saveSettings(){
-  const s={
-    // ebayKey removed,
-    scriptUrl:(document.getElementById('s-scriptUrl')||{value:''}).value.trim(),
-    cloudName:(document.getElementById('s-cloudName')||{value:''}).value.trim(),
-    cloudPreset:(document.getElementById('s-cloudPreset')||{value:''}).value.trim(),
-    currency:document.getElementById('s-currency').value,
-    marketplace:document.getElementById('s-marketplace').value
+  // Load existing saved settings first so we never overwrite with empty values
+  let existing = {};
+  try { existing = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}'); } catch(e){}
+  const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
+  const s = {
+    scriptUrl: getVal('s-scriptUrl') || existing.scriptUrl || '',
+    cloudName: getVal('s-cloudName') || existing.cloudName || '',
+    cloudPreset: getVal('s-cloudPreset') || existing.cloudPreset || '',
+    currency: getVal('s-currency') || existing.currency || 'AUD',
+    marketplace: getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
   };
-  S.settings=s;
-  try{localStorage.setItem('arcana_books_v2',JSON.stringify(s));}catch(e){}
-  document.getElementById('currencyLabel').textContent=s.currency||'AUD';
+  S.settings = s;
+  try { localStorage.setItem('arcana_books_v2', JSON.stringify(s)); } catch(e){}
+  const cl = document.getElementById('currencyLabel');
+  if(cl) cl.textContent = s.currency || 'AUD';
 }
 function showView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
@@ -1099,7 +1103,14 @@ function openEbay(e){
 
 
 // Apps Script URL is now configurable in Settings
-function getScriptUrl(){return S.settings.scriptUrl||'';}
+function getScriptUrl(){
+  // Read from S.settings first, then fall back to localStorage directly
+  if(S.settings && S.settings.scriptUrl) return S.settings.scriptUrl;
+  try {
+    const s = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
+    return s.scriptUrl || '';
+  } catch(e) { return ''; }
+}
 
 
 
