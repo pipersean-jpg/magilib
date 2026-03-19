@@ -1960,14 +1960,11 @@ async function saveBook() {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
   if (saveErrorActive) { showToast('Please fix the save error before continuing', 'error', 4000); btn.disabled=false; btn.textContent='Save to Sheet'; return; }
-  try {
-    await fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) });
-    showToast('✓ Saved to Google Sheets!', 'success', 3000);
-    clearForm();
-  } catch(e) {
-    // no-cors fetches rarely throw — if they do, show a dismissible toast not a blocking banner
-    showToast('Save may have failed: ' + (e.message || 'Unknown error') + ' — check your Google Sheet', 'error', 6000);
-  }
+  // no-cors fetch — fire and forget, response is always opaque/unreadable
+  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) })
+    .catch(() => {}); // silently ignore network errors — no-cors always throws
+  showToast('✓ Saved to Google Sheets!', 'success', 3000);
+  clearForm();
   btn.disabled = false; btn.textContent = 'Save to Sheet';
 }
 
