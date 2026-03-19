@@ -992,20 +992,15 @@ function renderSources(sources){
   const tagClass={specialist:'tag-specialist',sold:'tag-sold',listed:'tag-listed'};
   const tagLabel={specialist:'Specialist',sold:'Sold',listed:'Listed'};
   const sym=currSym();
-  const fmtPrice = p => {
-    if(p==null||p===''||p===undefined) return '—';
-    const n = parseFloat(p);
-    return isNaN(n) ? '—' : sym+n.toFixed(0);
-  };
   rows.innerHTML=sources.map(s=>`
     <div class="source-row">
       <div class="source-tier-dot ${tierDot[s.tier]||'tier2-dot'}"></div>
       <div class="source-info">
-        <div class="source-name">${s.name||'Source'}<span class="source-tag ${tagClass[s.tag]||''}">${tagLabel[s.tag]||''}</span></div>
+        <div class="source-name">${s.name}<span class="source-tag ${tagClass[s.tag]||''}">${tagLabel[s.tag]||''}</span></div>
         <div class="source-detail">${s.detail||''}</div>
         ${s.url?`<a class="source-link" href="${s.url}" target="_blank">${s.urlLabel||'View ↗'}</a>`:''}
       </div>
-      <div class="source-price">${fmtPrice(s.price)}</div>
+      <div class="source-price">${s.price!=null?sym+parseFloat(s.price).toFixed(0):'—'}</div>
     </div>`).join('');
   bd.style.display='block';
 }
@@ -2135,19 +2130,17 @@ function uploadEditCover(event) {
 }
 
 // ── IMPROVED PRICE FETCH: parallel sources, honest about uncertainty ──
-async function fetchPrice() {
-  const title = document.getElementById('f-title').value.trim();
-  const author = document.getElementById('f-author').value.trim();
-  if (!title) { showToast('Please enter a title first', 'error'); return; }
-  const btn = document.getElementById('fetchPriceBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Checking sources…';
-  const currency = S.settings.currency || 'AUD';
+async function fetchPrice(){
+  const title=document.getElementById('f-title').value.trim();
+  const author=document.getElementById('f-author').value.trim();
+  if(!title){showToast('Please enter a title first','error');return;}
+  const btn=document.getElementById('fetchPriceBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Checking sources…';
+  const currency=S.settings.currency||'AUD';
+  try{
+    const data=await callClaude([{role:'user',content:`You are a rare book pricing expert specialising in magic and conjuring books.
 
-  try {
-    const data = await callClaude([{role:'user', content:
-      `You are a rare book pricing expert specialising in magic and conjuring books.
-
-Title: "${title}"${author ? ' Author: ' + author : ''}
+Title: "${title}"${author?' Author: '+author:''}
 
 Estimate the current second-hand market value using this priority order:
 TIER 1 (specialist magic dealers): Magic Collectibles (magiccollectibles.com), Quicker Than The Eye (quickerthantheeye.com), Collecting Magic Books (collectingmagicbooks.com), eBay Magic Books category sold (ebay.com/sch/14012 LH_Sold=1)
@@ -2155,33 +2148,21 @@ TIER 2: eBay general sold listings
 TIER 3: AbeBooks, Amazon listed prices (often inflated)
 
 Reply ONLY with valid JSON, no markdown:
-{"avg":0,"low":0,"high":0,"currency":"${currency}","sources":[{"name":"string","price":null,"detail":"string","url":"string","urlLabel":"string","tier":1,"tag":"specialist|sold|listed"}],"recommended":0,"confidence":"high|medium|low","notes":"string"}`
-    }], 900);
-
-    const json = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-    const sym = currSym();
-    const recommended = json.recommended || json.avg || 0;
-    const confColors = { high: 'var(--success)', medium: 'var(--ink)', low: 'var(--tier3)' };
-    const confLabels = { high: '● High confidence', medium: '● Medium confidence', low: '● Low confidence' };
-    const col = confColors[json.confidence] || 'var(--ink)';
-
-    document.getElementById('priceDisplay').innerHTML = `${sym}${recommended.toFixed(0)} <span>${currency}</span>`;
-    document.getElementById('priceRange').innerHTML =
-      `<span>Range: ${sym}${(json.low||0).toFixed(0)} – ${sym}${(json.high||0).toFixed(0)}</span> &nbsp;` +
-      `<span style="color:${col};font-size:10px;">${confLabels[json.confidence]||''}</span>`;
-    document.getElementById('f-price').value = recommended.toFixed(2);
-    document.getElementById('priceSource').textContent = json.notes || '';
-    renderSources(json.sources || []);
-
-    // Show notes in AI info card and fetch fuller intelligence
-    if (json.notes) showAiInfoCard(json.notes);
-    fetchBookIntelligence(title, author);
-
-  } catch(e) {
-    showToast('Price fetch failed: ' + e.message, 'error');
-  }
-  btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
+{"avg":number,"low":number,"high":number,"currency":"${currency}","sources":[{"name":"string","price":number_or_null,"detail":"string","url":"string","urlLabel":"string","tier":1,"tag":"specialist|sold|listed"}],"recommended":number,"confidence":"high|medium|low","notes":"string"}`}],900);
+    const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    const sym=currSym();
+    document.getElementById('priceDisplay').innerHTML=`${sym}${json.recommended.toFixed(0)} <span>${currency}</span>`;
+    document.getElementById('priceRange').textContent=`Range: ${sym}${json.low.toFixed(0)} – ${sym}${json.high.toFixed(0)} · ${json.confidence} confidence`;
+    document.getElementById('f-price').value=json.recommended.toFixed(2);
+    renderSources(json.sources);
+    if(json.notes)showToast(json.notes,'info',6000);
+    // Also show notes in AI card and fetch intelligence
+    if(json.notes)showAiInfoCard(json.notes);
+    fetchBookIntelligence(title,author);
+  }catch(err){showToast('Price fetch failed: '+err.message,'error');}
+  btn.disabled=false;btn.textContent='Fetch Price Estimate';
 }
+
 
 // ── RENDER CATALOG: sold awareness ──
 // Patch renderCatalog to handle sold status
