@@ -1236,7 +1236,7 @@ function openModal(idx){
   if(zoomBtn) zoomBtn.style.display = modalCoverSrc ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:center;padding:20px 20px 0;">
-      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,\"\\\\'\")+'\')'+'':''}">
+      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
         `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
       </div>
