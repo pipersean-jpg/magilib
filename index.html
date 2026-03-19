@@ -205,7 +205,7 @@ input[type=file].file-input{display:none;}
 .detail-row{display:flex;flex-direction:column;margin-bottom:12px;}
 .detail-key{font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;}
 .detail-val{font-size:13px;color:var(--ink);line-height:1.5;}
-.modal-actions{padding:14px 20px;border-top:0.5px solid var(--border);display:flex;gap:10px;justify-content:flex-end;padding-bottom:max(14px,env(safe-area-inset-bottom));}
+.modal-actions{padding:12px 16px;border-top:0.5px solid var(--border);padding-bottom:max(16px,env(safe-area-inset-bottom));}
 .settings-panel{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
 .settings-row{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
 .settings-row label{font-size:11px;font-weight:500;color:var(--ink-light);}
@@ -908,17 +908,16 @@ input[type=file].file-input{display:none;}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
-    <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn-secondary" onclick="closeModal()">Close</button>
-        <button class="btn-secondary" onclick="openZoomFromModal()" id="modalZoomBtn" style="display:none;">🔍 Zoom</button>
+    <div class="modal-actions" style="display:block;padding:12px 16px 16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
         <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-        <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
-        <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
         <button class="btn-primary" onclick="openEbayModal()">eBay ↗</button>
+        <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+        <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
+        <button class="btn-secondary" onclick="closeModal()">Close</button>
       </div>
     </div>
   </div>
@@ -1232,8 +1231,6 @@ function openModal(idx){
   const sym=currSym();S.currentModalUrl=buildEbayUrl(b.title,b.author);
   document.getElementById('modalTitle').textContent=b.title;
   const modalCoverSrc = b.rawCover || b.coverUrl || '';
-  const zoomBtn = document.getElementById('modalZoomBtn');
-  if(zoomBtn) zoomBtn.style.display = modalCoverSrc ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:center;padding:20px 20px 0;">
       <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
@@ -1253,16 +1250,27 @@ function openModal(idx){
       </div>
     </div>
     <div style="padding:14px 20px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;border-top:0.5px solid var(--border);margin-top:14px;">
-      ${b.publisher?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
-      ${b.year?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
-      ${b.edition?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
-      ${b.isbn?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
-      ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
-      ${b.dateAdded?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
-      ${b.location?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
-      ${b.notes?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
-      ${b.collectorNote?`<div style="grid-column:1/-1;background:var(--paper-warm);border-radius:7px;padding:10px 12px;border:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
+    <div style="border-top:0.5px solid var(--border);margin-top:14px;display:grid;grid-template-columns:1fr 1fr;">
+      ${(b.publisher||b.year||b.edition||b.isbn||b.cost||b.dateAdded)?`
+      <div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);">
+        ${b.publisher?`<div style="margin-bottom:${(b.year||b.edition||b.isbn)?'10px':'0'};"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
+        ${b.edition?`<div style="margin-bottom:${b.year?'10px':'0'};"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
+        ${b.year?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
+      </div>
+      <div style="padding:14px 20px;text-align:center;">
+        ${b.dateAdded?`<div style="margin-bottom:${(b.isbn||b.cost)?'10px':'0'};"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
+        ${b.isbn?`<div style="margin-bottom:${b.cost?'10px':'0'};"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
+        ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
+      </div>
+      `:''}
     </div>
+    ${(b.location||b.notes||b.collectorNote)?`
+    <div style="padding:14px 20px 16px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+      ${b.location?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
+      ${b.notes?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
+      ${b.collectorNote?`<div style="background:var(--paper-warm);border-radius:7px;padding:10px 12px;border:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
+    </div>
+    `:''}
 `;
   // Set sold/wishlist button labels
   const soldBtn = document.getElementById('modalSoldBtn');
