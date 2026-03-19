@@ -200,7 +200,7 @@ input[type=file].file-input{display:none;}
 .modal-close{width:34px;height:34px;border-radius:6px;border:0.5px solid var(--border-med);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--ink-light);}
 .modal-body{padding:20px;display:grid;grid-template-columns:140px 1fr;gap:20px;}
 @media(max-width:480px){.modal-body{grid-template-columns:100px 1fr;gap:14px;}}
-.modal-cover{width:100%;aspect-ratio:2/3;background:var(--paper-warm);border-radius:8px;overflow:hidden;}
+.modal-cover{background:var(--paper-warm);border-radius:10px;overflow:hidden;}
 .modal-cover img{width:100%;height:100%;object-fit:cover;display:none;}
 .detail-row{display:flex;flex-direction:column;margin-bottom:12px;}
 .detail-key{font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;}
@@ -237,21 +237,7 @@ input[type=file].file-input{display:none;}
 <body>
 
 <nav class="nav">
-  <div class="nav-brand" style="gap:6px;">
-    <svg width="36" height="26" viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 26 L3 29 Q3 30 4 30 L21 30 Q22 30 22 29 L22 27" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <path d="M41 26 L41 29 Q41 30 40 30 L23 30 Q22 30 22 29 L22 27" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <path d="M3 26 Q3 13 22 13 Q41 13 41 26" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <line x1="22" y1="13" x2="22" y2="30" stroke="#2A1F6B" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M22 13 Q24 9 26 8 Q29 6 28 3.5 Q27 1.5 25 2 Q23 2.5 23.5 4.5" stroke="#C9A84C" stroke-width="1.3" fill="none" stroke-linecap="round"/>
-      <rect x="29" y="1" width="9" height="6" rx="1" fill="none" stroke="#C9A84C" stroke-width="1.3"/>
-      <line x1="27.5" y1="7" x2="39.5" y2="7" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M27 10 L27.5 8.5 L28 10 L29.5 10.5 L28 11 L27.5 12.5 L27 11 L25.5 10.5 Z" fill="#C9A84C"/>
-      <path d="M24 6.5 L24.3 5.7 L24.6 6.5 L25.4 6.8 L24.6 7.1 L24.3 7.9 L24 7.1 L23.2 6.8 Z" fill="#2A1F6B" opacity="0.6"/>
-      <path d="M31 3.5 L31.2 3 L31.4 3.5 L31.9 3.7 L31.4 3.9 L31.2 4.4 L31 3.9 L30.5 3.7 Z" fill="#C9A84C" opacity="0.7"/>
-    </svg>
-    <span style="font-size:19px;font-weight:600;color:#2A1F6B;font-family:'DM Sans',sans-serif;letter-spacing:-0.02em;">Magi<span style="color:#C9A84C;">Lib</span></span>
-  </div>
+  <div class="nav-brand" style="gap:0;"><img src="/logo.png" alt="MagiLib" style="height:36px;width:auto;display:block;"/></div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
     <button class="tab-btn" onclick="showView('catalog')">Catalog</button>
@@ -1245,26 +1231,31 @@ function openModal(idx){
   const zoomBtn = document.getElementById('modalZoomBtn');
   if(zoomBtn) zoomBtn.style.display = modalCoverSrc ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML=`
-    <div class="modal-cover" style="cursor:${modalCoverSrc?'zoom-in':'default'}" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
-      ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="display:block" onerror="this.style.display='none'">`:
-      `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.2">📖</div>`}
-      ${modalCoverSrc?'<div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.4);color:white;border-radius:4px;padding:2px 6px;font-size:10px;">tap to zoom</div>':''}
+    <div style="display:flex;flex-direction:column;align-items:center;padding:16px 16px 0;">
+      <div class="modal-cover" style="width:160px;height:200px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:10px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
+        ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">`:
+        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
+      </div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);text-align:center;line-height:1.3;margin-bottom:4px;">${b.title}</div>
+      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:4px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap;justify-content:center;">
+        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:500;padding:3px 9px;border-radius:4px;">${b.condition}</span>`:''}
+        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:17px;font-weight:600;color:var(--accent);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
+      </div>
+      ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:4px;">${b.flags}</div>`:''}
     </div>
-    <div>
-      <div class="detail-row"><div class="detail-key">Author</div><div class="detail-val">${b.author||'—'}</div></div>
-      ${b.artist?`<div class="detail-row"><div class="detail-key">Artist / Subject</div><div class="detail-val">${b.artist}</div></div>`:''}
-      ${b.flags?`<div class="detail-row"><div class="detail-key">Condition notes</div><div class="detail-val" style="color:var(--accent)">${b.flags}</div></div>`:''}
-      <div class="detail-row"><div class="detail-key">Edition</div><div class="detail-val">${b.edition||'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Year</div><div class="detail-val">${b.year||'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Publisher</div><div class="detail-val">${b.publisher||'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Condition</div><div class="detail-val">${b.condition||'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Market price</div><div class="detail-val" style="font-weight:500;color:var(--accent)">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(2):'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Cost</div><div class="detail-val">${(b.cost&&!isNaN(parseFloat(b.cost)))?sym+parseFloat(b.cost).toFixed(2):'—'}</div></div>
-      <div class="detail-row"><div class="detail-key">Added</div><div class="detail-val">${b.dateAdded||'—'}</div></div>
-      ${b.notes?`<div class="detail-row"><div class="detail-key">Notes</div><div class="detail-val">${b.notes}</div></div>`:''}
-      ${b.collectorNote?`<div class="detail-row"><div class="detail-key">Collector's note</div><div class="detail-val" style="font-style:italic;color:var(--ink-light);">${b.collectorNote}</div></div>`:''}
-      ${b.location?`<div class="detail-row"><div class="detail-key">Acquired</div><div class="detail-val">${b.location}</div></div>`:''}
-    </div>`;
+    <div style="padding:12px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:0.5px solid var(--border);margin-top:12px;">
+      ${b.publisher?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Publisher</div><div style="font-size:13px;color:var(--ink);">${b.publisher}</div></div>`:''}
+      ${b.year?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
+      ${b.edition?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
+      ${b.isbn?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
+      ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
+      ${b.dateAdded?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
+      ${b.notes?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
+      ${b.collectorNote?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.5;">${b.collectorNote}</div></div>`:''}
+      ${b.location?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
+    </div>
+`;
   // Set sold/wishlist button labels
   const soldBtn = document.getElementById('modalSoldBtn');
   if (soldBtn) soldBtn.textContent = (b.sold === 'Sold') ? 'Return to Library' : 'Mark Sold';
