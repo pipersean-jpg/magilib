@@ -1972,6 +1972,9 @@ function clearForm() {
   // Clear any draft context so a future save doesn't accidentally delete a row
   S.draftRowIdx = null;
   S.draftRowNum = null;
+  // Reset save button back to normal state
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) { saveBtn.textContent = 'Save to Sheet'; saveBtn.style.background = ''; saveBtn.style.color = ''; }
 }
 
 // ── AI INFO CARD ──
@@ -2068,6 +2071,7 @@ async function saveBook() {
 
   // If this save completed a Draft, delete the original draft row from the sheet
   // and remove it from local state so the catalog doesn't show a ghost entry
+  const wasDraft = !!S.draftRowNum;
   if (S.draftRowNum) {
     fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ deleteRow: S.draftRowNum }) }).catch(() => {});
@@ -2078,7 +2082,7 @@ async function saveBook() {
     S.draftRowIdx = null;
   }
 
-  showToast('✓ Saved to Google Sheets!', 'success', 3000);
+  showToast(wasDraft ? '✓ Draft completed and saved!' : '✓ Saved to Google Sheets!', 'success', 3000);
   clearForm();
   renderCatalog();
   btn.disabled = false; btn.textContent = 'Save to Sheet';
@@ -2528,7 +2532,10 @@ function openDraftInAddForm(idx) {
     // Store draft row index for deletion after save
     S.draftRowIdx = idx;
     S.draftRowNum = idx + 2;
-    showToast('Draft loaded — complete and save', 'info', 3000);
+    // Update save button to signal draft-completion mode
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) { saveBtn.textContent = 'Save and Delete Draft'; saveBtn.style.background = 'var(--gold)'; saveBtn.style.color = '#1A1814'; }
+    showToast('Draft loaded — fill in details and save', 'info', 3000);
   }, 200);
 }
 
