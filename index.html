@@ -237,11 +237,20 @@ input[type=file].file-input{display:none;}
 <body>
 
 <nav class="nav">
-  <div class="nav-brand">
-    <div style="width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="9" height="13" rx="1.5" fill="white" opacity="0.9"/><rect x="5" y="2" width="9" height="13" rx="1.5" fill="white" opacity="0.35"/><line x1="4" y1="6" x2="8.5" y2="6" stroke="#2A1F6B" stroke-width="1.1" stroke-linecap="round"/><line x1="4" y1="8" x2="7" y2="8" stroke="#2A1F6B" stroke-width="1.1" stroke-linecap="round"/><path d="M13 3l1.2 1.2L13 5.4" stroke="#C9A84C" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <span>Magi<span style="color:var(--gold)">Lib</span></span>
+  <div class="nav-brand" style="gap:6px;">
+    <svg width="36" height="26" viewBox="0 0 44 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 26 L3 29 Q3 30 4 30 L21 30 Q22 30 22 29 L22 27" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path d="M41 26 L41 29 Q41 30 40 30 L23 30 Q22 30 22 29 L22 27" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <path d="M3 26 Q3 13 22 13 Q41 13 41 26" stroke="#2A1F6B" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <line x1="22" y1="13" x2="22" y2="30" stroke="#2A1F6B" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M22 13 Q24 9 26 8 Q29 6 28 3.5 Q27 1.5 25 2 Q23 2.5 23.5 4.5" stroke="#C9A84C" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      <rect x="29" y="1" width="9" height="6" rx="1" fill="none" stroke="#C9A84C" stroke-width="1.3"/>
+      <line x1="27.5" y1="7" x2="39.5" y2="7" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M27 10 L27.5 8.5 L28 10 L29.5 10.5 L28 11 L27.5 12.5 L27 11 L25.5 10.5 Z" fill="#C9A84C"/>
+      <path d="M24 6.5 L24.3 5.7 L24.6 6.5 L25.4 6.8 L24.6 7.1 L24.3 7.9 L24 7.1 L23.2 6.8 Z" fill="#2A1F6B" opacity="0.6"/>
+      <path d="M31 3.5 L31.2 3 L31.4 3.5 L31.9 3.7 L31.4 3.9 L31.2 4.4 L31 3.9 L30.5 3.7 Z" fill="#C9A84C" opacity="0.7"/>
+    </svg>
+    <span style="font-size:19px;font-weight:600;color:#2A1F6B;font-family:'DM Sans',sans-serif;letter-spacing:-0.02em;">Magi<span style="color:#C9A84C;">Lib</span></span>
   </div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
@@ -1707,9 +1716,18 @@ function openEditFromModal() {
   S.editRowNum = idx + 2; // +2 for header row and 0-index offset
   S.editCoverUrl = b.rawCover || b.coverUrl || '';
 
+  // Clear ALL edit fields first before populating
+  ['edit-title','edit-author','edit-artist','edit-edition','edit-year',
+   'edit-publisher','edit-isbn','edit-price','edit-cost','edit-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  populateEditCondition('', ''); // clear condition + flags
+
   document.getElementById('editModalTitle').textContent = 'Edit — ' + b.title;
   document.getElementById('edit-title').value = b.title || '';
   document.getElementById('edit-author').value = b.author || '';
+  const artistEl = document.getElementById('edit-artist');
+  if (artistEl) artistEl.value = b.artist || '';
   document.getElementById('edit-edition').value = b.edition || '';
   document.getElementById('edit-year').value = b.year || '';
   document.getElementById('edit-publisher').value = b.publisher || '';
