@@ -876,6 +876,10 @@ input[type=file].file-input{display:none;}
       <input type="text" id="s-cloudPreset" placeholder="unsigned_preset_name" oninput="saveSettings()" autocomplete="off"/>
       <div class="settings-hint">In Cloudinary: Settings → Upload → Add upload preset → Unsigned. Copy the preset name here.</div>
     </div>
+    <div class="settings-row">
+      <button onclick="testCloudinaryUpload()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:36px;">Test Cloudinary Connection</button>
+      <div id="cloudinaryTestStatus" style="margin-top:8px;font-size:12px;display:none;padding:8px 12px;border-radius:var(--radius);"></div>
+    </div>
   </div>
   <div class="settings-panel">
     <div class="section-title">Price source priority</div>
@@ -904,18 +908,18 @@ input[type=file].file-input{display:none;}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
-    <div style="padding:12px 20px 6px;display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--border);">
-      <span style="font-size:11px;color:var(--ink-faint);">Rating:</span>
-      <div id="modalStarRow" class="star-row" style="margin-top:0;"></div>
-    </div>
-    <div class="modal-actions" style="flex-wrap:wrap;">
-      <button class="btn-secondary" onclick="closeModal()">Close</button>
-      <button class="btn-secondary" onclick="openZoomFromModal()" id="modalZoomBtn" style="display:none;">🔍 Zoom</button>
-      <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-      <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
-      <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Sold</button>
-      <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
-      <button class="btn-primary" onclick="openEbayModal()">eBay ↗</button>
+    <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn-secondary" onclick="openZoomFromModal()" id="modalZoomBtn" style="display:none;">🔍 Zoom</button>
+        <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
+        <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
+        <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
+        <button class="btn-primary" onclick="openEbayModal()">eBay ↗</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1231,29 +1235,33 @@ function openModal(idx){
   const zoomBtn = document.getElementById('modalZoomBtn');
   if(zoomBtn) zoomBtn.style.display = modalCoverSrc ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:center;padding:16px 16px 0;">
-      <div class="modal-cover" style="width:160px;height:200px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:10px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
-        ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">`:
+    <div style="display:flex;flex-direction:column;align-items:center;padding:20px 20px 0;">
+      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,\"\\\\'\")+'\')'+'':''}">
+        ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
         `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
       </div>
-      <div style="font-size:16px;font-weight:600;color:var(--ink);text-align:center;line-height:1.3;margin-bottom:4px;">${b.title}</div>
-      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:4px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
-      <div style="display:flex;gap:8px;align-items:center;margin:8px 0 4px;flex-wrap:wrap;justify-content:center;">
-        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:500;padding:3px 9px;border-radius:4px;">${b.condition}</span>`:''}
-        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:17px;font-weight:600;color:var(--accent);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);text-align:center;line-height:1.35;margin-bottom:5px;padding:0 4px;">${b.title}</div>
+      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:10px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
+        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0.03em;">${b.condition}</span>`:''}
+        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
       </div>
-      ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:4px;">${b.flags}</div>`:''}
+      ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.5;">${b.flags}</div>`:''}
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span>
+        <div id="modalStarRow" class="star-row" style="margin-top:0;"></div>
+      </div>
     </div>
-    <div style="padding:12px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:0.5px solid var(--border);margin-top:12px;">
-      ${b.publisher?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Publisher</div><div style="font-size:13px;color:var(--ink);">${b.publisher}</div></div>`:''}
-      ${b.year?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
-      ${b.edition?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
-      ${b.isbn?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
-      ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
-      ${b.dateAdded?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
-      ${b.notes?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
-      ${b.collectorNote?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.5;">${b.collectorNote}</div></div>`:''}
-      ${b.location?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
+    <div style="padding:14px 20px 16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;border-top:0.5px solid var(--border);margin-top:14px;">
+      ${b.publisher?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
+      ${b.year?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Year</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
+      ${b.edition?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Edition</div><div style="font-size:13px;color:var(--ink);">${b.edition}</div></div>`:''}
+      ${b.isbn?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">ISBN</div><div style="font-size:13px;color:var(--ink);">${b.isbn}</div></div>`:''}
+      ${(b.cost&&!isNaN(parseFloat(b.cost)))?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Purchase cost</div><div style="font-size:13px;color:var(--ink);">${sym}${parseFloat(b.cost).toFixed(2)}</div></div>`:''}
+      ${b.dateAdded?`<div><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
+      ${b.location?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
+      ${b.notes?`<div style="grid-column:1/-1;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Notes</div><div style="font-size:13px;color:var(--ink);line-height:1.5;">${b.notes}</div></div>`:''}
+      ${b.collectorNote?`<div style="grid-column:1/-1;background:var(--paper-warm);border-radius:7px;padding:10px 12px;border:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;">Collector's note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
     </div>
 `;
   // Set sold/wishlist button labels
@@ -1487,6 +1495,67 @@ async function uploadToCloudinary(dataUrl) {
 }
 
 // Cloudinary upload happens separately — called after setCoverCompressed when needed
+
+// ── CLOUDINARY CONNECTION TEST ──
+async function testCloudinaryUpload() {
+  const cloudName = (S.settings.cloudName || '').trim();
+  const preset = (S.settings.cloudPreset || '').trim();
+  const statusEl = document.getElementById('cloudinaryTestStatus');
+
+  const showStatus = (msg, ok) => {
+    statusEl.style.display = 'block';
+    statusEl.textContent = msg;
+    statusEl.style.background = ok ? '#d1fae5' : '#fee2e2';
+    statusEl.style.color = ok ? '#065f46' : '#991b1b';
+    statusEl.style.border = '0.5px solid ' + (ok ? '#6ee7b7' : '#fca5a5');
+  };
+
+  if (!cloudName || !preset) {
+    showStatus('⚠ Enter your Cloud Name and Upload Preset above first.', false);
+    return;
+  }
+
+  showStatus('Testing…', true);
+  statusEl.style.background = '#f3f4f6';
+  statusEl.style.color = '#374151';
+  statusEl.style.border = '0.5px solid #d1d5db';
+
+  try {
+    // Upload a minimal 1×1 transparent PNG as a test image
+    const testPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const arr = testPng.split(',');
+    const bstr = atob(arr[1]);
+    const u8arr = new Uint8Array(bstr.length);
+    for (let n = 0; n < bstr.length; n++) u8arr[n] = bstr.charCodeAt(n);
+    const blob = new Blob([u8arr], {type: 'image/png'});
+    const formData = new FormData();
+    formData.append('file', blob, 'magilib-test.png');
+    formData.append('upload_preset', preset);
+    formData.append('folder', 'arcana-books');
+
+    const resp = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
+      method: 'POST', body: formData
+    });
+    const data = await resp.json();
+
+    if (data.secure_url) {
+      showStatus('✓ Connected! Test image uploaded successfully. Cloudinary is working.', true);
+    } else if (data.error) {
+      const msg = data.error.message || 'Unknown error';
+      if (msg.toLowerCase().includes('preset')) {
+        showStatus('✗ Invalid preset "' + preset + '". Check it exists and is set to Unsigned in Cloudinary.', false);
+      } else if (msg.toLowerCase().includes('cloud')) {
+        showStatus('✗ Cloud name "' + cloudName + '" not found. Check your Cloudinary dashboard.', false);
+      } else {
+        showStatus('✗ Cloudinary error: ' + msg, false);
+      }
+    } else {
+      showStatus('✗ Unexpected response from Cloudinary. Check your credentials.', false);
+    }
+  } catch(e) {
+    showStatus('✗ Network error — could not reach Cloudinary. Check your internet connection.', false);
+  }
+}
 
 // ── COVER PICKER ──
 function resetPickerState() {
@@ -1755,44 +1824,66 @@ async function saveEdit() {
   const btn = document.getElementById('editSaveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
 
-  const b = S.books[S.editRowNum - 2] || {};
-  // Preserve original raw sheet values for columns we don't edit
-  // This prevents corruption of pre-v8 books that may have different column layouts
+  const idx = S.editRowNum - 2;
+  const b = S.books[idx] || {};
+  // Use _rawRow as fallback for columns not exposed in the edit form.
+  // This is the fix for pre-v9 books: their newer columns (P–S) may be
+  // empty in _rawRow, but we must not overwrite existing values with blanks.
   const origRow = b._rawRow || [];
-  const getOrig = (idx) => (origRow[idx] !== undefined ? origRow[idx] : '');
+  const getOrig = (i) => (origRow[i] !== undefined ? origRow[i] : '');
+
   const updatedRow = [
-    document.getElementById('edit-title').value.trim(),           // A(0): Title
-    document.getElementById('edit-author').value.trim(),          // B(1): Author
-    b.artist || getOrig(2) || '',                                 // C(2): Artist/Subject — preserve if exists
-    document.getElementById('edit-edition').value.trim(),         // D(3): Edition
-    document.getElementById('edit-year').value.trim(),            // E(4): Year
-    document.getElementById('edit-publisher').value.trim(),       // F(5): Publisher
-    document.getElementById('edit-isbn').value.trim(),            // G(6): ISBN
-    S.editCondition || document.getElementById('edit-condition').value || b.condition || '', // H(7): Condition
-    document.getElementById('edit-price').value,                  // I(8): Market Price
-    document.getElementById('edit-cost').value,                   // J(9): Purchase Price
-    document.getElementById('edit-notes').value.trim(),           // K(10): Notes
-    S.editCoverUrl || b.coverUrl || '',                           // L(11): Cover URL
-    b.dateAdded || new Date().toLocaleDateString('en-AU'),        // M(12): Date Added
-    S.editFlags.join(', ') || b.flags || '',                      // N(13): Condition Flags
-    b.sold || '',                                                 // O(14): Sold Status
+    document.getElementById('edit-title').value.trim(),                                       // A(0): Title
+    document.getElementById('edit-author').value.trim(),                                      // B(1): Author
+    (document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : '') || getOrig(2), // C(2): Artist/Subject
+    document.getElementById('edit-edition').value.trim(),                                     // D(3): Edition
+    document.getElementById('edit-year').value.trim(),                                        // E(4): Year
+    document.getElementById('edit-publisher').value.trim(),                                   // F(5): Publisher
+    document.getElementById('edit-isbn').value.trim(),                                        // G(6): ISBN
+    S.editCondition || document.getElementById('edit-condition').value || b.condition || '',  // H(7): Condition
+    document.getElementById('edit-price').value,                                              // I(8): Market Price
+    document.getElementById('edit-cost').value,                                               // J(9): Purchase Price
+    document.getElementById('edit-notes').value.trim(),                                       // K(10): Notes
+    S.editCoverUrl || b.coverUrl || '',                                                       // L(11): Cover URL
+    b.dateAdded || getOrig(12) || new Date().toLocaleDateString('en-AU'),                     // M(12): Date Added
+    (S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || getOrig(13) || '', // N(13): Condition Flags
+    b.sold || getOrig(14) || '',                                                              // O(14): Sold Status — never touched by edit form
+    b.star || getOrig(15) || '',                                                              // P(15): Star Rating — preserve
+    b.collectorNote || getOrig(16) || '',                                                     // Q(16): Collector's Note — preserve
+    b.location || getOrig(17) || '',                                                          // R(17): Where Acquired — preserve
+    b.draft || getOrig(18) || '',                                                             // S(18): Draft Status — preserve
   ];
 
   fetch(scriptUrl, { method:'POST', mode:'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ row: updatedRow, updateRow: rowNum }) }).catch(()=>{});
+
   try {
-    // Update local cache
-    const idx = S.editRowNum - 2;
+    // Update local cache — indices must exactly match the updatedRow above
     if (S.books[idx]) {
       S.books[idx] = {
-        title: updatedRow[0], author: updatedRow[1], edition: updatedRow[2],
-        year: updatedRow[3], publisher: updatedRow[4], isbn: updatedRow[5],
-        condition: updatedRow[6], price: updatedRow[7], cost: updatedRow[8],
-        notes: updatedRow[10], coverUrl: updatedRow[11], rawCover: updatedRow[11],
-        dateAdded: updatedRow[12], flags: updatedRow[13], condition: updatedRow[7],
-        price: updatedRow[8], cost: updatedRow[9], edition: updatedRow[3],
-        year: updatedRow[4], publisher: updatedRow[5], isbn: updatedRow[6]
+        ...S.books[idx],           // preserve any fields not in updatedRow (e.g. _rawRow)
+        title:         updatedRow[0],
+        author:        updatedRow[1],
+        artist:        updatedRow[2],
+        edition:       updatedRow[3],
+        year:          updatedRow[4],
+        publisher:     updatedRow[5],
+        isbn:          updatedRow[6],
+        condition:     updatedRow[7],
+        price:         updatedRow[8],
+        cost:          updatedRow[9],
+        notes:         updatedRow[10],
+        coverUrl:      updatedRow[11],
+        rawCover:      updatedRow[11],
+        dateAdded:     updatedRow[12],
+        flags:         updatedRow[13],
+        sold:          updatedRow[14],
+        star:          updatedRow[15],
+        collectorNote: updatedRow[16],
+        location:      updatedRow[17],
+        draft:         updatedRow[18],
+        _rawRow:       updatedRow,   // update _rawRow so subsequent edits have correct baseline
       };
     }
     renderCatalog();
@@ -1885,6 +1976,9 @@ function clearForm() {
   const ve = document.getElementById('view-entry');
   if (ve) ve.scrollTo({top: 0, behavior: 'smooth'});
   window.scrollTo({top: 0, behavior: 'smooth'});
+  // Clear any draft context so a future save doesn't accidentally delete a row
+  S.draftRowIdx = null;
+  S.draftRowNum = null;
 }
 
 // ── AI INFO CARD ──
@@ -1978,8 +2072,22 @@ async function saveBook() {
   // no-cors fetch — fire and forget, response is always opaque/unreadable
   fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) })
     .catch(() => {}); // silently ignore network errors — no-cors always throws
+
+  // If this save completed a Draft, delete the original draft row from the sheet
+  // and remove it from local state so the catalog doesn't show a ghost entry
+  if (S.draftRowNum) {
+    fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ deleteRow: S.draftRowNum }) }).catch(() => {});
+    if (S.draftRowIdx !== undefined) {
+      S.books.splice(S.draftRowIdx, 1);
+    }
+    S.draftRowNum = null;
+    S.draftRowIdx = null;
+  }
+
   showToast('✓ Saved to Google Sheets!', 'success', 3000);
   clearForm();
+  renderCatalog();
   btn.disabled = false; btn.textContent = 'Save to Sheet';
 }
 
