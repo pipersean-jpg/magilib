@@ -2051,14 +2051,17 @@ function openEditFromModal() {
 let _editDirty = false;
 
 function closeEditModal(e) {
-  // If triggered by backdrop click or X button (not programmatic), check for unsaved changes
-  const fromBackdrop = e && e.target === document.getElementById('editModalOverlay');
-  const fromX = !e;
-  if ((fromBackdrop || fromX) && _editDirty) {
+  const overlay = document.getElementById('editModalOverlay');
+  const fromBackdrop = e && e.target === overlay;
+  const fromProgrammatic = !e;
+  // Only close if: backdrop tap, programmatic call (save/cancel), or X button
+  // Ignore bubbled clicks from inner elements
+  if (!fromBackdrop && !fromProgrammatic) return;
+  if (_editDirty && fromBackdrop) {
     if (!confirm('Leave without saving? Your changes will be lost.')) return;
   }
   _editDirty = false;
-  document.getElementById('editModalOverlay').classList.add('hidden');
+  overlay.classList.add('hidden');
 }
 
 function _markEditDirty() { _editDirty = true; }
@@ -2678,35 +2681,24 @@ async function scrapeConjuringMetadata(bookId) {
       return '';
     };
 
-    // CA page format: "Written by John Derris Work of Various · 1998 ... published by L&L Publishing Illustrated..."
+    // CA page format: "1987 Written by Harry Lorayne Work of David Regal · 277 pages, published by Star Quality Illustrated..."
+    // Always work from stripped text to avoid HTML tag interference
     const rawText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-    const matchFirst = (patterns, text) => {
-      for (const p of patterns) {
-        const m = text.match(p);
-        if (m && m[1] && m[1].trim()) return m[1].trim();
-      }
-      return '';
+    const firstMatch = (pat, text) => {
+      const m = text.match(pat);
+      return (m && m[1] && m[1].trim()) ? m[1].trim() : '';
     };
 
-    const author = matchFirst([
-      /Written by ([A-Z][a-zA-Z\s\.\-]+?)(?:\s+Work of|\s+·|\s*<)/i,
-      /by\s+<a[^>]+>([^<]+)<\/a>/i,
-      /"author"[^>]*>([^<]+)</i,
-    ], html) || matchFirst([
-      /Written by ([A-Z][a-zA-Z\s\.\-]+?)(?:\s+Work of|\s+·|\s{2,})/i,
-    ], rawText);
+    // Author: "Written by X Work of" — stop before "Work of", "·", or end
+    const author = firstMatch(/Written by ([A-Z][a-zA-Z\s\.\-]+?)(?:\s+Work of|\s+·)/i, rawText)
+                || firstMatch(/Written by ([A-Z][a-zA-Z\s\.\-]+)/i, rawText);
 
-    const year = matchFirst([
-      /(1[89]\d{2}|20[012]\d)/,
-    ], rawText);
+    // Year: first publication year in the text (oldest = correct edition year)
+    const year = firstMatch(/(1[89]\d{2}|200\d|201\d|202\d)/, rawText);
 
-    const publisher = matchFirst([
-      /published by ([A-Z][a-zA-Z0-9\s&\.\-]+?)(?:\s+Illustrated|\s+Language|\s+\d|\s{2,}|$)/i,
-      /Publisher[^<]*<\/[^>]+>\s*<[^>]+>([^<]+)</i,
-    ], html) || matchFirst([
-      /published by ([A-Z][a-zA-Z0-9\s&\.\-]+?)(?:\s+Illustrated|\s+Language|\s{2,}|$)/i,
-    ], rawText);
+    // Publisher: "published by X" — stop before "Illustrated", "Language", digits, or end
+    const publisher = firstMatch(/published by ([A-Z][a-zA-Z0-9\s&\.\,\-\/]+?)(?:\s+Illustrated|\s+Language|\s+\d|\s{2,}|\·|$)/i, rawText);
 
     // Fill fields that are currently empty
     const fill = (id, val) => {
