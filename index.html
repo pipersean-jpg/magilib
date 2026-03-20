@@ -1889,6 +1889,10 @@ function openEditFromModal() {
   document.getElementById('edit-price').value = (b.price && !isNaN(parseFloat(b.price))) ? b.price : '';
   document.getElementById('edit-cost').value = (b.cost && !isNaN(parseFloat(b.cost))) ? b.cost : '';
   document.getElementById('edit-notes').value = b.notes || '';
+  const editLocEl = document.getElementById('edit-location');
+  if (editLocEl) editLocEl.value = b.location || '';
+  const editCnEl = document.getElementById('edit-collector-note');
+  if (editCnEl) editCnEl.value = b.collectorNote || '';
   populateEditCondition(b.condition, b.flags);
 
   const img = document.getElementById('editCoverImg');
@@ -1943,8 +1947,8 @@ async function saveEdit() {
     (S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || getOrig(13) || '', // N(13): Condition Flags
     b.sold || getOrig(14) || '',                                                              // O(14): Sold Status — never touched by edit form
     b.star || getOrig(15) || '',                                                              // P(15): Star Rating — preserve
-    b.collectorNote || getOrig(16) || '',                                                     // Q(16): Collector's Note — preserve
-    b.location || getOrig(17) || '',                                                          // R(17): Where Acquired — preserve
+    (document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || getOrig(16) || '', // Q(16): Collector's Note
+    (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || getOrig(17) || '',            // R(17): Where Acquired
     b.draft || getOrig(18) || '',                                                             // S(18): Draft Status — preserve
   ];
 
@@ -1975,8 +1979,7 @@ async function saveEdit() {
         sold:          updatedRow[14],
         star:          updatedRow[15],
         collectorNote: updatedRow[16],
-        location:      updatedRow[17],
-        draft:         updatedRow[18],
+        location:      updatedRow[17],        draft:         updatedRow[18],
         _rawRow:       updatedRow,   // update _rawRow so subsequent edits have correct baseline
       };
     }
@@ -2810,6 +2813,8 @@ document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
         <div class="field"><label>Purchase Price (AUD)</label><input type="number" id="edit-cost" step="0.01" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
       </div>
       <div class="field"><label>Notes</label><textarea id="edit-notes" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;min-height:70px;resize:vertical;line-height:1.5;"></textarea></div>
+      <div class="field"><label>Where Acquired</label><input type="text" id="edit-location" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;" placeholder="e.g. Davenports auction, Magic fair 2024"/></div>
+      <div class="field"><label>Collector's Note</label><textarea id="edit-collector-note" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;min-height:70px;resize:vertical;line-height:1.5;" placeholder="Personal significance, purchase story, research notes…"></textarea></div>
     </div>
     <div style="padding:14px 20px;border-top:0.5px solid var(--border);display:flex;gap:10px;justify-content:flex-end;padding-bottom:max(14px,env(safe-area-inset-bottom));">
       <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
