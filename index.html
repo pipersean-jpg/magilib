@@ -37,7 +37,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .tab-btn{padding:7px 14px;border-radius:7px;border:0.5px solid transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-light);}
 .tab-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
 .tab-btn:hover:not(.active){background:var(--paper-warm);border-color:var(--border);color:var(--ink);}
-.view{display:none;padding:16px;box-sizing:border-box;}
+.view{display:none;padding:16px 20px;width:100%;box-sizing:border-box;}
 .view.active{display:block;}
 
 .camera-hero{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;}
@@ -198,7 +198,7 @@ input[type=file].file-input{display:none;}
 .empty-state p{font-size:13px;line-height:1.6;}
 .empty-state button{margin-top:14px;padding:11px 22px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
 .modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
-@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;} #navLogo{height:46px;} .view{padding:20px;max-width:800px;margin:0 auto;}}
+@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;} #navLogo{height:46px;} .view{padding:20px;max-width:900px;margin:0 auto;}}
 .modal-overlay.hidden{display:none;}
 .modal{background:var(--paper-card);border-radius:20px 20px 0 0;max-width:680px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 @media(min-width:600px){.modal{border-radius:var(--radius-lg);}}
@@ -247,7 +247,7 @@ input[type=file].file-input{display:none;}
 
 <!-- SPLASH SCREEN -->
 <div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
-  <img src="/logo@3x.png" alt="MagiLib" id="splashLogo" style="height:100px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;"/>
+  <img src="/logo@3x.png" alt="MagiLib" id="splashLogo" onerror="this.src='/logo.png'" style="height:100px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;"/>
   <div id="splashWordmark" style="display:none;"></div>
   <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(42,31,107,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
 </div>
