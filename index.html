@@ -1265,7 +1265,7 @@ function openDealerSearch(dealer, e) {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const urls = {
     ebay: buildEbayUrl(title, author),
-    qtte: 'https://www.quickerthantheeye.com/products/find/any/' + q,
+    qtte: 'https://www.quickerthantheeye.com/products/find/title/' + encodeURIComponent(title),
     cmb:  'https://www.collectingmagicbooks.com/all?search=' + q,
     mc:   'https://www.magiccollectibles.com/?s=' + q,
   };
@@ -2651,7 +2651,7 @@ async function scrapeQTTEPrices(title, author) {
   const searchUrls = [];
   const titleQ = encodeURIComponent(title.replace(/['"]/g,''));
   // Primary: search by title (most direct)
-  searchUrls.push('https://quickerthantheeye.com/products/find/any/' + titleQ);
+  searchUrls.push('https://quickerthantheeye.com/products/find/title/' + titleQ);
   if (author) {
     const authorQ = encodeURIComponent(author.replace(/['"]/g,''));
     searchUrls.push('https://quickerthantheeye.com/products/find/author/' + authorQ);
