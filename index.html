@@ -34,7 +34,7 @@
   --tier2:#185fa5;--tier2-bg:#e6f1fb;--tier2-border:#b5d4f4;
   --tier3:#854f0b;--tier3-bg:#faeeda;--tier3-border:#f5d59a;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;-webkit-text-size-adjust:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--paper-warm);color:var(--ink);min-height:100vh;-webkit-text-size-adjust:100%;}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--border-med);background:var(--paper-card);position:sticky;top:0;z-index:100;box-sizing:border-box;}
 .nav-brand{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
 .nav-brand>span{color:var(--ink);}
@@ -4406,31 +4406,5 @@ function renderWizardStep() {
     </div>
   </div>
 </div>
-
-<script>
-window.addEventListener('load', () => {
-  const nav = document.querySelector('.nav');
-  const view = document.querySelector('.view.active') || document.querySelector('.view');
-  const firstCard = view ? view.querySelector('.camera-hero, .form-section') : null;
-  
-  const cs = el => el ? window.getComputedStyle(el) : null;
-  const navCS = cs(nav);
-  const viewCS = cs(view);
-  const cardCS = cs(firstCard);
-  
-  const info = [
-    'NAV: pl=' + navCS?.paddingLeft + ' pr=' + navCS?.paddingRight + ' w=' + nav?.offsetWidth,
-    'VIEW: pl=' + viewCS?.paddingLeft + ' pr=' + viewCS?.paddingRight + ' w=' + view?.offsetWidth + ' maxW=' + viewCS?.maxWidth + ' ml=' + viewCS?.marginLeft,
-    'CARD: ml=' + cardCS?.marginLeft + ' mr=' + cardCS?.marginRight,
-    'BODY w=' + document.body.offsetWidth,
-  ].join('\n');
-  
-  const el = document.createElement('pre');
-  el.style.cssText = 'position:fixed;bottom:80px;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;padding:8px;z-index:9999;margin:0;white-space:pre-wrap;';
-  el.textContent = info;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 15000);
-});
-</script>
 </body>
 </html>
