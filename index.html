@@ -893,15 +893,15 @@ input[type=file].file-input{display:none;}
     <div style="font-size:13px;color:var(--ink-light);line-height:1.8;">
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:var(--tier1-bg);border-radius:var(--radius);border:0.5px solid var(--tier1-border);">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--tier1);margin-top:5px;flex-shrink:0;"></div>
-        <div><strong style="font-size:12px;color:var(--tier1);">Tier 1 — Specialist magic dealers</strong><br><span style="font-size:11px;">Magic Collectibles · Quicker Than The Eye · Collecting Magic Books · eBay magic books sold</span></div>
+        <div><span style="font-size:12px;font-weight:600;color:var(--tier1);">Tier 1 — Specialist magic dealers</span><br><span style="font-size:11px;">Magic Collectibles · Quicker Than The Eye · Collecting Magic Books · eBay magic books sold</span></div>
       </div>
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:var(--tier2-bg);border-radius:var(--radius);border:0.5px solid var(--tier2-border);">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--tier2);margin-top:5px;flex-shrink:0;"></div>
-        <div><strong style="font-size:12px;color:var(--tier2);">Tier 2 — eBay sold listings (general)</strong><br><span style="font-size:11px;">Actual completed sales across all eBay categories</span></div>
+        <div><span style="font-size:12px;font-weight:600;color:var(--tier2);">Tier 2 — eBay sold listings (general)</span><br><span style="font-size:11px;">Actual completed sales across all eBay categories</span></div>
       </div>
       <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--tier3-bg);border-radius:var(--radius);border:0.5px solid var(--tier3-border);">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--tier3);margin-top:5px;flex-shrink:0;"></div>
-        <div><strong style="font-size:12px;color:var(--tier3);">Tier 3 — Listed prices only (often inflated)</strong><br><span style="font-size:11px;">AbeBooks · Amazon · Alibris — upper reference only</span></div>
+        <div><span style="font-size:12px;font-weight:600;color:var(--tier3);">Tier 3 — Listed prices only (often inflated)</span><br><span style="font-size:11px;">AbeBooks · Amazon · Alibris — upper reference only</span></div>
       </div>
     </div>
   </div>
@@ -911,6 +911,28 @@ input[type=file].file-input{display:none;}
     <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">✦ Run Setup Wizard</button>
   </div>
 
+  <div class="settings-panel" style="margin-top:0;">
+    <div class="section-title">Help &amp; Feedback</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Got a question, found a bug, or have a suggestion? We want to hear it.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button onclick="openSupport('feedback')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
+        <span style="font-size:20px;flex-shrink:0;">💬</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Send Feedback</div><div style="font-size:11px;color:var(--ink-faint);">Suggestions, feature requests, general thoughts</div></div>
+        <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
+      </button>
+      <button onclick="openSupport('bug')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
+        <span style="font-size:20px;flex-shrink:0;">🐛</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Report a Bug</div><div style="font-size:11px;color:var(--ink-faint);">Something not working as expected?</div></div>
+        <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
+      </button>
+      <button onclick="openSupport('faq')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
+        <span style="font-size:20px;flex-shrink:0;">❓</span>
+        <div><div style="font-size:13px;font-weight:500;color:var(--ink);">FAQ</div><div style="font-size:11px;color:var(--ink-faint);">Common questions answered</div></div>
+        <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Version footer -->
   <div style="text-align:center;padding:28px 20px 36px;border-top:0.5px solid var(--border);margin-top:8px;">
     <div style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="openChangelog()">
@@ -918,6 +940,24 @@ input[type=file].file-input{display:none;}
       <span id="versionBadge" style="font-size:11px;font-weight:600;padding:3px 8px;background:var(--accent-light);color:var(--accent);border-radius:20px;border:0.5px solid var(--accent);letter-spacing:0.04em;">v1.0 beta</span>
     </div>
     <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Tap to see what's new</div>
+  </div>
+</div>
+
+<!-- SUPPORT / FAQ MODAL -->
+<div class="modal-overlay hidden" id="supportOverlay" onclick="if(event.target===this)closeSupport()" style="z-index:600;">
+  <div class="modal" style="max-width:540px;border-radius:20px;overflow:hidden;">
+    <div class="modal-handle"></div>
+    <div class="modal-header" style="padding:18px 20px 14px;">
+      <div>
+        <div class="modal-title" id="supportTitle">Help &amp; Feedback</div>
+        <div id="supportSubtitle" style="font-size:12px;color:var(--ink-faint);margin-top:2px;"></div>
+      </div>
+      <button class="modal-close" onclick="closeSupport()">✕</button>
+    </div>
+    <div id="supportBody" style="padding:4px 20px 8px;max-height:68vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div style="padding:12px 20px 24px;border-top:0.5px solid var(--border);">
+      <button onclick="closeSupport()" style="width:100%;padding:12px;background:var(--paper-warm);color:var(--ink);border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Close</button>
+    </div>
   </div>
 </div>
 
@@ -2803,6 +2843,137 @@ document.addEventListener('DOMContentLoaded', function() {
     checkChangelog();
   }
 });
+
+// ── SUPPORT / FEEDBACK / FAQ ──
+const FEEDBACK_FORM_URL = 'https://YOUR_GOOGLE_FORM_URL_HERE'; // TODO: replace with real URL
+const BUG_REPORT_URL   = 'https://YOUR_GOOGLE_FORM_URL_HERE?type=bug'; // TODO: replace with real URL
+
+const FAQ_ITEMS = [
+  {
+    q: "My books aren't saving — what's wrong?",
+    a: "You need an Apps Script URL configured in Settings. Go to Settings → Setup → Run Setup Wizard and follow Step 1. Once your Apps Script is deployed and the URL is saved, all writes will work."
+  },
+  {
+    q: "Why does the catalog show someone else's books?",
+    a: "MagiLib reads from a fixed demo sheet by default. After running the Setup Wizard and connecting your own Google Sheet, the catalog will load your books instead."
+  },
+  {
+    q: "How do I add a book without a photo?",
+    a: "On the Add tab, skip the camera section and scroll down to fill in the title and author manually. You can always add a cover later by tapping the book in the catalog and choosing Edit → Update Cover."
+  },
+  {
+    q: "What does 'Draft' mean?",
+    a: "A draft is a partially filled entry — usually created when the AI scan runs but you haven't confirmed all the details yet. Drafts appear with a badge in the catalog. Tap a draft to open the Add form pre-filled, then save to convert it to a real entry."
+  },
+  {
+    q: "My cover image isn't showing — it shows a book icon instead.",
+    a: "This usually means the cover URL stored in the sheet has expired or is blocked. Open the book, tap Edit → Update Cover, and find a new cover using the Conjuring Archive or Google Images tab."
+  },
+  {
+    q: "How do I mark a book as sold?",
+    a: "Open the book from the catalog and tap 'Mark Sold' in the action buttons. Sold books are hidden from the main catalog view but remain in your sheet. You can view them by tapping the Sold filter chip."
+  },
+  {
+    q: "Can I use MagiLib on desktop?",
+    a: "Yes — MagiLib works in any modern browser. The Google Images cover search works best on desktop since you can right-click images to copy their URL directly."
+  },
+  {
+    q: "Is my data safe? What happens if I lose access?",
+    a: "Your books live entirely in your own Google Sheet — MagiLib never stores your data on its own servers. As long as you have access to your Google account, your catalog is safe."
+  },
+  {
+    q: "How do I install MagiLib as an app on my phone?",
+    a: "In Safari on iOS, tap the Share button then 'Add to Home Screen'. On Android Chrome, tap the menu and choose 'Add to Home Screen' or 'Install App'. MagiLib will then open full-screen like a native app."
+  },
+  {
+    q: "The price estimate seems wrong or missing.",
+    a: "Price estimates are pulled from eBay sold listings and specialist magic book dealers via the Claude AI. If results are missing, check your internet connection and try again. For obscure titles, results may be sparse — the eBay link in the detail modal lets you search manually."
+  }
+];
+
+function openSupport(tab) {
+  const overlay = document.getElementById('supportOverlay');
+  const title = document.getElementById('supportTitle');
+  const subtitle = document.getElementById('supportSubtitle');
+  const body = document.getElementById('supportBody');
+
+  if (tab === 'faq') {
+    title.textContent = 'FAQ';
+    subtitle.textContent = 'Common questions about MagiLib';
+    body.innerHTML = FAQ_ITEMS.map((item, i) => `
+      <div style="border-bottom:0.5px solid var(--border);last-child:border-none;">
+        <button onclick="toggleFaq(${i})" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;">
+          <span style="font-size:13px;font-weight:500;color:var(--ink);line-height:1.4;">${item.q}</span>
+          <span id="faqChevron${i}" style="flex-shrink:0;font-size:12px;color:var(--ink-faint);transition:transform 0.2s;">▼</span>
+        </button>
+        <div id="faqAnswer${i}" style="display:none;padding:0 0 14px;">
+          <div style="font-size:13px;color:var(--ink-light);line-height:1.65;padding:12px 14px;background:var(--paper-warm);border-radius:8px;">${item.a}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  else if (tab === 'feedback') {
+    title.textContent = 'Send Feedback';
+    subtitle.textContent = 'Your thoughts help shape MagiLib';
+    body.innerHTML = `
+      <div style="padding:12px 0 20px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--accent-light);border-radius:12px;border:0.5px solid var(--accent);">
+          <span style="font-size:24px;flex-shrink:0;">💬</span>
+          <div style="font-size:13px;color:var(--ink);line-height:1.6;">We read every piece of feedback. Tell us what you love, what confuses you, or what you wish MagiLib could do.</div>
+        </div>
+        <button onclick="window.open('${FEEDBACK_FORM_URL}','_blank')" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Open Feedback Form ↗</button>
+        <div style="font-size:11px;color:var(--ink-faint);text-align:center;">Opens in your browser — takes about 2 minutes</div>
+      </div>
+    `;
+  }
+
+  else if (tab === 'bug') {
+    title.textContent = 'Report a Bug';
+    subtitle.textContent = 'Help us squash it';
+    body.innerHTML = `
+      <div style="padding:12px 0 20px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:#fdf0f0;border-radius:12px;border:0.5px solid #f5b7b5;">
+          <span style="font-size:24px;flex-shrink:0;">🐛</span>
+          <div style="font-size:13px;color:var(--ink);line-height:1.6;">Please describe what you were doing, what you expected to happen, and what happened instead. Screenshots help a lot.</div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:-6px;">Quick diagnostics</div>
+        <div style="display:flex;flex-direction:column;gap:6px;" id="bugDiagnostics"></div>
+        <button onclick="window.open('${BUG_REPORT_URL}','_blank')" style="width:100%;padding:14px;background:#a32d2d;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Open Bug Report Form ↗</button>
+        <div style="font-size:11px;color:var(--ink-faint);text-align:center;">Include the diagnostics above if you can</div>
+      </div>
+    `;
+    // Populate diagnostics
+    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+    const diags = [
+      ['App version', APP_VERSION],
+      ['Books loaded', (window.S && S.books) ? S.books.length : '—'],
+      ['Script URL set', s.scriptUrl ? 'Yes' : 'No'],
+      ['Cloudinary set', s.cloudName ? 'Yes' : 'No'],
+      ['Browser', navigator.userAgent.match(/(iPhone|iPad|Android|Chrome|Safari|Firefox)/g)?.join(', ') || 'Unknown'],
+    ];
+    document.getElementById('bugDiagnostics').innerHTML = diags.map(([k, v]) =>
+      `<div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 10px;background:var(--paper-warm);border-radius:6px;border:0.5px solid var(--border);">
+        <span style="color:var(--ink-light);">${k}</span>
+        <span style="color:var(--ink);font-weight:500;">${v}</span>
+      </div>`
+    ).join('');
+  }
+
+  overlay.classList.remove('hidden');
+}
+
+function closeSupport() {
+  document.getElementById('supportOverlay').classList.add('hidden');
+}
+
+function toggleFaq(i) {
+  const answer = document.getElementById('faqAnswer' + i);
+  const chevron = document.getElementById('faqChevron' + i);
+  const isOpen = answer.style.display !== 'none';
+  answer.style.display = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
 
 // ── APPS SCRIPT EMBED ──
 const MAGILIB_APPS_SCRIPT = `// MagiLib Apps Script v1.0
