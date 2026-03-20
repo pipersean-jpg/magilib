@@ -84,12 +84,13 @@ input[type=file].file-input{display:none;}
 .el-notes{order:4;}
 .el-save{order:5;}
 @media(min-width:700px){
-  .entry-layout{display:grid;grid-template-columns:300px 1fr;align-items:start;column-gap:16px;row-gap:0;}
-  .book-preview-panel{grid-column:1;grid-row:1;align-self:start;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow-y:auto;}
-  .el-book-details{grid-column:2;grid-row:1;order:unset;margin-bottom:16px;}
-  .el-condition{grid-column:2;grid-row:2;order:unset;margin-bottom:16px;}
-  .el-notes{grid-column:2;grid-row:3;order:unset;margin-bottom:16px;}
-  .el-save{grid-column:2;grid-row:4;order:unset;}
+  .entry-layout{display:grid;grid-template-columns:300px 1fr;column-gap:16px;row-gap:16px;align-items:start;}
+  .book-preview-panel{grid-column:1;grid-row:1 / span 10;align-self:start;position:sticky;top:76px;}
+  .el-book-details{grid-column:2;order:unset;}
+  .el-condition{grid-column:2;order:unset;}
+  .el-notes{grid-column:2;order:unset;}
+  .el-save{grid-column:2;order:unset;}
+  .el-book-details,.el-condition,.el-notes,.el-save{margin-bottom:0;}
 }
 .book-preview-panel{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;box-sizing:border-box;}
 .cover-frame{width:100%;aspect-ratio:4/5;background:var(--paper-warm);border-radius:8px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin-bottom:14px;}
@@ -165,8 +166,7 @@ input[type=file].file-input{display:none;}
 .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
 .filter-chip{padding:7px 14px;border:0.5px solid var(--border-med);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;min-height:36px;flex-shrink:0;}
 .filter-chip.active{background:var(--accent);color:white;border-color:var(--accent);}
-.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
-@media(min-width:600px){.stats-row{grid-template-columns:repeat(4,1fr);}}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
 .stat-card{background:var(--paper-card);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;}
 .stat-label{font-size:10px;color:var(--ink-faint);font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
 .stat-val{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);}
@@ -839,7 +839,6 @@ input[type=file].file-input{display:none;}
       <span class="search-icon">⌕</span>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="exportCSV()" class="btn-secondary" style="font-size:12px;padding:8px 12px;" title="Export to CSV">↓ CSV</button>
       <button onclick="toggleView('grid')" id="viewGrid" class="btn-primary" style="font-size:16px;padding:8px 12px;" title="Grid view">⊞</button>
       <button onclick="toggleView('list')" id="viewList" class="btn-secondary" style="font-size:16px;padding:8px 12px;" title="List view">☰</button>
       <button class="btn-primary" onclick="loadCatalog()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg> Refresh Library</button>
@@ -872,14 +871,9 @@ input[type=file].file-input{display:none;}
     <button id="showSoldChip" onclick="toggleShowSold(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #f5b7b5;background:transparent;color:#791F1F;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Sold</button>
     <button id="showWishlistChip" onclick="toggleWishlist(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #b5d4f4;background:transparent;color:#0C447C;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Wishlist</button>
     <button id="showDraftsChip" onclick="toggleDrafts(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #d3d1c7;background:transparent;color:#444441;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Drafts</button>
-    <button onclick="clearFilters()" style="margin-left:auto;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border-med);background:transparent;color:var(--ink-light);font-family:'DM Sans',sans-serif;min-height:36px;">✕ Clear Filters</button>
+    <button onclick="clearFilters()" class="btn-secondary" style="margin-left:auto;font-size:12px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;min-height:36px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear Filters</button>
   </div>
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">—</div></div>
-    <div class="stat-card"><div class="stat-label">Total value</div><div class="stat-val" id="statValue">—</div></div>
-    <div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>
-    <div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>
-  </div>
+  <div class="stats-row" id="statsRow"></div>
   <div id="booksGrid" class="books-grid"></div>
 </div>
 
@@ -935,6 +929,33 @@ input[type=file].file-input{display:none;}
     <div class="section-title">Setup</div>
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
     <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">Run Setup Wizard</button>
+  </div>
+
+  <div class="settings-panel" style="margin-top:0;">
+    <div class="section-title">Library Settings</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Choose which stat cards appear at the top of your Library, and export your collection.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+        <span style="font-size:13px;color:var(--ink);">Total books</span>
+        <input type="checkbox" id="s-stat-total" checked onchange="saveSettings();renderStatsRow()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      </label>
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+        <span style="font-size:13px;color:var(--ink);">Total value</span>
+        <input type="checkbox" id="s-stat-value" checked onchange="saveSettings();renderStatsRow()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      </label>
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+        <span style="font-size:13px;color:var(--ink);">Avg. price</span>
+        <input type="checkbox" id="s-stat-avg" checked onchange="saveSettings();renderStatsRow()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      </label>
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+        <span style="font-size:13px;color:var(--ink);">Highest value</span>
+        <input type="checkbox" id="s-stat-top" checked onchange="saveSettings();renderStatsRow()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+      </label>
+    </div>
+    <div style="border-top:0.5px solid var(--border);padding-top:14px;">
+      <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Export your full collection as a CSV file.</div>
+      <button onclick="exportCSV()" class="btn-secondary" style="font-size:13px;padding:9px 18px;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download CSV</button>
+    </div>
   </div>
 
   <div class="settings-panel" style="margin-top:0;">
@@ -1116,12 +1137,17 @@ function saveSettings(){
   let existing = {};
   try { existing = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}'); } catch(e){}
   const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
+  const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
   const s = {
     scriptUrl: getVal('s-scriptUrl') || existing.scriptUrl || '',
     cloudName: getVal('s-cloudName') || existing.cloudName || '',
     cloudPreset: getVal('s-cloudPreset') || existing.cloudPreset || '',
     currency: getVal('s-currency') || existing.currency || 'AUD',
     marketplace: getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
+    statTotal: getCheck('s-stat-total'),
+    statValue: getCheck('s-stat-value'),
+    statAvg:   getCheck('s-stat-avg'),
+    statTop:   getCheck('s-stat-top'),
   };
   S.settings = s;
   try { localStorage.setItem('arcana_books_v2', JSON.stringify(s)); } catch(e){}
@@ -1339,6 +1365,7 @@ async function loadCatalog(){
   }
 }
 function renderCatalog(){
+  renderStatsRow();
   const search=(document.getElementById('catalogSearch').value||'').toLowerCase();
   const cond=S.filterCondition||'all';
   const pub=(document.getElementById('filterPublisher')||{}).value||'';
@@ -1376,10 +1403,28 @@ function renderCatalog(){
   const avg=prices.length?totalVal/prices.length:0;
   const top=prices.length?Math.max(...prices):0;
   const sym=currSym();
-  document.getElementById('statTotal').textContent='— / '+S.books.length;
-  document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—';
-  document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—';
-  document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—';
+function renderStatsRow() {
+  const settings = S.settings || {};
+  const show = {
+    total: document.getElementById('s-stat-total') ? document.getElementById('s-stat-total').checked : (settings.statTotal !== false),
+    value: document.getElementById('s-stat-value') ? document.getElementById('s-stat-value').checked : (settings.statValue !== false),
+    avg:   document.getElementById('s-stat-avg')   ? document.getElementById('s-stat-avg').checked   : (settings.statAvg   !== false),
+    top:   document.getElementById('s-stat-top')   ? document.getElementById('s-stat-top').checked   : (settings.statTop   !== false),
+  };
+  const cards = [
+    show.total ? '<div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">—</div></div>' : '',
+    show.value ? '<div class="stat-card"><div class="stat-label">Total value</div><div class="stat-val" id="statValue">—</div></div>' : '',
+    show.avg   ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
+    show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>' : '',
+  ].filter(Boolean).join('');
+  const row = document.getElementById('statsRow');
+  if (row) row.innerHTML = cards;
+}
+
+  document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='— / '+S.books.length));
+  document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—');
+  document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—');
+  document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—');
   // Populate publisher filter dropdown
   const pubSelect=document.getElementById('filterPublisher');
   if(pubSelect&&pubSelect.options.length<=1){
@@ -1406,7 +1451,7 @@ function renderCatalog(){
     if (!groupMap.has(k)) groupMap.set(k, []);
     groupMap.get(k).push(b);
   });
-  document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length;
+  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length);
 
   // Badge count: active + wishlist + draft (not sold)
   const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;
@@ -1948,12 +1993,12 @@ async function searchCoverSource(source) {
       // Try local database first — instant, no network call
       const localUrl = lookupConjuringCover(title);
       if (localUrl) {
-        images.push({ url: localUrl, label: title + ' (local DB match)', source: 'Conjuring Archive' });
+        images.push({ url: localUrl, label: title + ' (local DB match)', source: 'Local Database' });
         statusEl.textContent = 'Found in local database — also checking online…';
       }
       const q = encodeURIComponent(title);
       const searchUrl = 'https://www.conjuringarchive.com/list/search?q=' + q;
-      statusEl.textContent = localUrl ? 'Found locally + checking online…' : 'Fetching Conjuring Archive…';
+      statusEl.textContent = localUrl ? 'Found locally + checking online…' : 'Searching local database…';
       const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
       const data = await resp.json();
       if (!data.success) throw new Error(data.error || 'Fetch failed');
@@ -1975,7 +2020,7 @@ async function searchCoverSource(source) {
                 let src = m[1].startsWith('http') ? m[1] : 'https://www.conjuringarchive.com' + m[1];
                 if (!images.find(i => i.url === src)) {
                   const titleM = dd.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-                  images.push({ url: src, label: titleM ? titleM[1].trim() : 'Conjuring Archive', source: 'Conjuring Archive' });
+                  images.push({ url: src, label: titleM ? titleM[1].trim() : 'Local Database', source: 'Local Database' });
                 }
                 break;
               }
@@ -1983,7 +2028,7 @@ async function searchCoverSource(source) {
           }
         } catch(e2) {}
       }
-    } catch(e) { statusEl.textContent = 'Conjuring Archive error: ' + e.message; }
+    } catch(e) { statusEl.textContent = 'Local database error: ' + e.message; }
   }
 
   if (source === 'magicref') {
@@ -3220,7 +3265,7 @@ async function applyConjuringMatch(match, scanSource) {
   // 3. Show status
   const statusEl = document.getElementById('scanDetail');
   if (statusEl && scanSource === 'scan') {
-    statusEl.textContent = 'Matched in Conjuring Archive — fetching metadata…';
+    statusEl.textContent = 'Matched in local database — fetching metadata…';
   }
 
   // 4. Scrape metadata from the detail page
@@ -3286,7 +3331,7 @@ async function scrapeConjuringMetadata(bookId) {
     const filled = [author, year, publisher].filter(Boolean).length;
     if (filled > 0) {
       const statusEl = document.getElementById('scanDetail');
-      if (statusEl) statusEl.textContent = 'Conjuring Archive: ' + filled + ' field' + (filled !== 1 ? 's' : '') + ' filled from database.';
+      if (statusEl) statusEl.textContent = 'Local database: ' + filled + ' field' + (filled !== 1 ? 's' : '') + ' filled.';
     }
   } catch(e) {
     // Silently fail — metadata scrape is non-critical
@@ -3348,7 +3393,7 @@ function checkConjuringDB(title) {
     const existing = contentEl ? contentEl.innerHTML : '';
     const suggId = 'conjuringSugg_' + Date.now();
     const imgHtml = '<div id="' + suggId + '" style="margin-top:8px;">' +
-      '<div style="font-size:10px;font-weight:500;color:var(--tier1);margin-bottom:6px;">Cover found in Conjuring Archive — tap to use</div>' +
+      '<div style="font-size:10px;font-weight:500;color:var(--tier1);margin-bottom:6px;">Cover found in local database — tap to use</div>' +
       '<img src="' + url + '" style="max-width:80px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;display:block;" ' +
         'onmouseover="this.style.borderColor=\'var(--tier1)\'" onmouseout="this.style.borderColor=\'transparent\'" ' +
         'onclick="acceptConjuringSuggestion(\'' + url + '\',\'' + suggId + '\')" title="Tap to use this cover"/>' +
@@ -3587,13 +3632,13 @@ const TUTORIAL_SLIDES = [
     title: 'Book Details Form',
     subtitle: 'Auto-filled, always editable',
     graphic: '<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"><rect x="40" y="20" width="200" height="140" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><rect x="52" y="34" width="80" height="8" rx="4" fill="rgba(255,255,255,0.15)"/><rect x="52" y="48" width="176" height="18" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/><rect x="58" y="53" width="90" height="8" rx="4" fill="rgba(201,168,76,0.7)"/><rect x="52" y="74" width="80" height="8" rx="4" fill="rgba(255,255,255,0.15)"/><rect x="52" y="88" width="176" height="18" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/><rect x="58" y="93" width="60" height="8" rx="4" fill="rgba(201,168,76,0.7)"/><rect x="52" y="114" width="80" height="8" rx="4" fill="rgba(255,255,255,0.15)"/><rect x="52" y="128" width="82" height="18" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/><rect x="146" y="128" width="82" height="18" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.5"/><rect x="58" y="133" width="40" height="8" rx="4" fill="rgba(201,168,76,0.7)"/></svg>',
-    body: 'Fields like Title, Author, Publisher, and Year are filled from your scan. You can edit anything before saving. Type in the Title field and MagiLib instantly checks the Conjuring Archive database (3,499 titles) for a matching cover.'
+    body: 'Fields like Title, Author, Publisher, and Year are filled from your scan. You can edit anything before saving. Type in the Title field and MagiLib instantly checks the local database (3,499 titles) for a matching cover.'
   },
   {
     title: 'Cover Images',
     subtitle: 'Four ways to find the right cover',
     graphic: '<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"><rect x="30" y="30" width="55" height="70" rx="6" fill="rgba(42,31,107,0.6)" stroke="#2A1F6B" stroke-width="1"/><rect x="98" y="30" width="55" height="70" rx="6" fill="rgba(42,31,107,0.4)" stroke="#2A1F6B" stroke-width="1"/><rect x="166" y="30" width="55" height="70" rx="6" fill="rgba(42,31,107,0.4)" stroke="#2A1F6B" stroke-width="1"/><rect x="95" y="115" width="90" height="32" rx="8" fill="#2A1F6B"/><circle cx="57" cy="30" r="8" fill="#C9A84C"/></svg>',
-    body: 'Tap Sources on the cover panel to search the Conjuring Archive database, browse Google Images, upload a photo from your camera roll, or paste any image URL directly. The Conjuring Archive has 3,499 magic book covers indexed for instant matching.'
+    body: 'Tap Sources on the cover panel to search the local database (3,499 magic book covers), browse Google Images, upload a photo from your camera roll, or paste any image URL directly.'
   },
   {
     title: 'Condition & Market Value',
@@ -3777,26 +3822,59 @@ function processBulkNext() {
 function showPriceReviewCard(b, result, idx, total) {
   const sym = currSym();
   const currency = S.settings.currency || 'AUD';
+
+  // Counter + title + author
   document.getElementById('priceReviewCounter').textContent = (idx+1) + ' of ' + total + ' books';
-  document.getElementById('priceReviewTitle').textContent = b.title + (b.author ? ' — ' + b.author : '');
-  document.getElementById('priceReviewNew').textContent = sym + result.recommended + ' ' + currency;
+  document.getElementById('priceReviewTitle').textContent = b.title || 'Untitled';
+  document.getElementById('priceReviewAuthor').textContent = b.author || '';
+
+  // Cover thumbnail
+  const coverWrap = document.getElementById('priceReviewCoverWrap');
+  const coverUrl = b.rawCover || b.coverUrl || '';
+  if (coverUrl) {
+    const _img = document.createElement('img'); _img.src = coverUrl; _img.style.cssText = 'width:100%;height:100%;object-fit:cover;'; _img.onerror = function(){ coverWrap.innerHTML='\U0001f4d6'; coverWrap.style.opacity='0.3'; }; coverWrap.innerHTML=''; coverWrap.appendChild(_img);
+    coverWrap.style.opacity = '1';
+  } else {
+    coverWrap.innerHTML = '📖';
+    coverWrap.style.opacity = '0.3';
+  }
+
+  // Existing price
   const existing = parseFloat(b.price) || 0;
-  document.getElementById('priceReviewOld').textContent = existing > 0 ? 'Current: ' + sym + existing.toFixed(0) : 'No current price';
+  document.getElementById('priceReviewOld').textContent = existing > 0 ? 'Current price: ' + sym + existing.toFixed(0) : 'No current price set';
+
+  // Suggested price
+  document.getElementById('priceReviewNew').textContent = sym + result.recommended + ' ' + currency;
+
+  // Currency symbol on input
+  document.getElementById('priceReviewCurrSym').textContent = sym;
+
+  // Pre-fill custom input with suggested price
+  document.getElementById('priceReviewCustom').value = result.recommended.toFixed(2);
+
+  // Sources
   document.getElementById('priceReviewSources').innerHTML = result.sources
     .map(s => (s.url ? '<a href="'+s.url+'" target="_blank" style="color:var(--accent);text-decoration:none;">' : '') +
                s.name + ': ' + sym + s.price + ' (' + s.detail + ')' +
                (s.url ? '</a>' : ''))
     .join('<br>');
-  const ov = document.getElementById('priceReviewOverlay');
-  ov.style.display = 'flex';
+
+  document.getElementById('priceReviewOverlay').style.display = 'flex';
+  // Focus the custom input for quick keyboard editing
+  setTimeout(() => document.getElementById('priceReviewCustom').select(), 100);
 }
 
 function priceReviewApprove() {
   if (!_bulkPending) return;
   const { bookIdx, newPrice } = _bulkPending;
   const b = S.books[bookIdx];
+  // Use custom input value if set, otherwise fall back to suggested price
+  const customInput = document.getElementById('priceReviewCustom');
+  const finalPrice = customInput && parseFloat(customInput.value) > 0
+    ? parseFloat(customInput.value)
+    : newPrice;
   const oldPrice = b.price;
-  b.price = newPrice.toFixed(2);
+  b.price = finalPrice.toFixed(2);
   // Write to sheet
   const rowNum = bookIdx + 2;
   const scriptUrl = getScriptUrl();
@@ -3987,6 +4065,11 @@ function clearFilters() {
   S.filterCondition = 'all';
   S.sortBy = 'dateAdded';
   S.sortDir = 'desc';
+  // Restore stat toggle checkboxes from settings
+  ['total','value','avg','top'].forEach(k => {
+    const el = document.getElementById('s-stat-' + k);
+    if (el && S.settings['stat' + k.charAt(0).toUpperCase() + k.slice(1)] === false) el.checked = false;
+  });
   // Reset condition chips
   document.querySelectorAll('.filter-chip').forEach(b => {
     b.classList.remove('active');
@@ -4064,7 +4147,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "My cover image isn't showing — it shows a book icon instead.",
-    a: "This usually means the cover URL stored in the sheet has expired or is blocked. Open the book, tap Edit → Update Cover, and find a new cover using the Conjuring Archive or Google Images tab."
+    a: "This usually means the cover URL stored in the sheet has expired or is blocked. Open the book, tap Edit → Update Cover, and find a new cover using the Local Database or Google Images tab."
   },
   {
     q: "How do I mark a book as sold?",
@@ -4611,7 +4694,7 @@ function renderWizardStep() {
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
         <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images</button>
-        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">Conjuring Archive</button>
+        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">Local Database</button>
         <label class="btn-secondary" style="font-size:12px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" accept="image/*" style="display:none" onchange="pickerUploadCover(event)"></label>
       </div>
       <!-- Google Images instruction card — shown when Google Images is active -->
@@ -4772,28 +4855,54 @@ function renderWizardStep() {
 
 
 <!-- ── PRICE REVIEW OVERLAY ── -->
-<div id="priceReviewOverlay" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(10,8,20,0.85);display:none;align-items:flex-end;justify-content:center;">
-  <div style="background:var(--paper-card);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding-bottom:max(20px,env(safe-area-inset-bottom));">
-    <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+<div id="priceReviewOverlay" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(10,8,20,0.82);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+  <div style="background:var(--paper-card);border-radius:var(--radius-lg);width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+
+    <!-- Header -->
+    <div style="padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
       <div>
-        <div id="priceReviewCounter" style="font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;"></div>
-        <div id="priceReviewTitle" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);"></div>
+        <div id="priceReviewCounter" style="font-size:10px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink);">Price Review</div>
       </div>
-      <button onclick="stopBulkPriceRefresh()" style="background:none;border:none;font-size:20px;color:var(--ink-faint);cursor:pointer;padding:4px 8px;">✕</button>
+      <button onclick="stopBulkPriceRefresh()" style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:50%;width:30px;height:30px;font-size:14px;color:var(--ink-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
-    <div style="padding:14px 20px;">
-      <div id="priceReviewBody" style="background:var(--paper-warm);border-radius:10px;padding:14px;margin-bottom:14px;">
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
-          <div id="priceReviewNew" style="font-size:26px;font-weight:600;color:var(--ink);"></div>
-          <div id="priceReviewOld" style="font-size:14px;color:var(--ink-faint);"></div>
+
+    <!-- Book identity -->
+    <div style="padding:16px 20px;display:flex;gap:14px;align-items:flex-start;border-bottom:0.5px solid var(--border);">
+      <div id="priceReviewCoverWrap" style="width:56px;height:70px;flex-shrink:0;border-radius:6px;overflow:hidden;background:var(--paper-warm);border:0.5px solid var(--border-med);display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0.4;">📖</div>
+      <div style="flex:1;min-width:0;">
+        <div id="priceReviewTitle" style="font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:3px;"></div>
+        <div id="priceReviewAuthor" style="font-size:12px;color:var(--ink-faint);"></div>
+        <div id="priceReviewOld" style="font-size:11px;color:var(--ink-light);margin-top:4px;"></div>
+      </div>
+    </div>
+
+    <!-- Price data -->
+    <div style="padding:14px 20px;background:var(--paper-warm);border-bottom:0.5px solid var(--border);">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);">Suggested price</div>
+      </div>
+      <div id="priceReviewNew" style="font-size:30px;font-weight:700;color:var(--ink);margin-bottom:8px;font-family:'DM Sans',sans-serif;"></div>
+      <div id="priceReviewSources" style="font-size:11px;color:var(--ink-light);line-height:1.7;"></div>
+    </div>
+
+    <!-- Custom price input -->
+    <div style="padding:14px 20px;border-bottom:0.5px solid var(--border);">
+      <label style="font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:7px;">Set price</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;display:flex;align-items:center;background:var(--paper);border:0.5px solid var(--border-med);border-radius:8px;overflow:hidden;">
+          <span id="priceReviewCurrSym" style="padding:0 10px;font-size:14px;color:var(--ink-faint);font-weight:500;border-right:0.5px solid var(--border-med);background:var(--paper-warm);">A$</span>
+          <input type="number" id="priceReviewCustom" min="0" step="0.01" style="flex:1;padding:10px 12px;border:none;background:transparent;font-size:16px;font-family:'DM Sans',sans-serif;color:var(--ink);outline:none;" placeholder="0.00"/>
         </div>
-        <div id="priceReviewSources" style="font-size:11px;color:var(--ink-light);line-height:1.6;"></div>
+        <button onclick="priceReviewApprove()" style="padding:10px 18px;background:var(--accent);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Update</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <button onclick="priceReviewDecline()" style="padding:13px;background:transparent;border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--ink-light);cursor:pointer;">Skip →</button>
-        <button onclick="priceReviewApprove()" style="padding:13px;background:var(--accent);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#fff;cursor:pointer;">Update Price ✓</button>
-      </div>
-      <button onclick="stopBulkPriceRefresh()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-faint);cursor:pointer;">Stop refresh</button>
+      <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Pre-filled with suggested price — edit as needed</div>
+    </div>
+
+    <!-- Actions -->
+    <div style="padding:14px 20px;display:flex;gap:10px;">
+      <button onclick="priceReviewDecline()" style="flex:1;padding:11px;background:transparent;border:0.5px solid var(--border-med);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink-light);cursor:pointer;">Skip this book</button>
+      <button onclick="stopBulkPriceRefresh()" style="padding:11px 16px;background:transparent;border:0.5px solid var(--border-med);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-faint);cursor:pointer;">Stop</button>
     </div>
   </div>
 </div>
