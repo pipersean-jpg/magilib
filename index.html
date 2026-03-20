@@ -904,6 +904,27 @@ input[type=file].file-input{display:none;}
       </div>
     </div>
   </div>
+  <div class="settings-panel" style="margin-top:0;">
+    <div class="section-title">Setup</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
+    <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">✦ Run Setup Wizard</button>
+  </div>
+</div>
+
+<!-- SETUP WIZARD MODAL -->
+<div class="modal-overlay hidden" id="wizardOverlay" style="z-index:600;">
+  <div class="modal" style="max-width:540px;border-radius:20px;overflow:hidden;">
+    <div class="modal-handle"></div>
+    <div style="height:3px;background:var(--border);position:relative;">
+      <div id="wizardProgress" style="position:absolute;left:0;top:0;height:100%;background:var(--accent);transition:width 0.4s ease;width:0%;"></div>
+    </div>
+    <div id="wizardStepContent" style="padding:28px 24px 8px;min-height:320px;"></div>
+    <div style="padding:16px 24px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:0.5px solid var(--border);">
+      <button id="wizardBackBtn" onclick="wizardBack()" style="padding:9px 18px;border:0.5px solid var(--border-med);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-light);visibility:hidden;">← Back</button>
+      <div style="display:flex;gap:6px;" id="wizardDots"></div>
+      <button id="wizardNextBtn" onclick="wizardNext()" style="padding:9px 22px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-width:90px;">Next →</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay hidden" id="modalOverlay" onclick="closeModal(event)">
@@ -1700,7 +1721,17 @@ async function searchCoverSource(source) {
 
   const images = [];
 
-  // ── GOOGLE IMAGES — top 5 book thumbnails + "Open Google Images" card ──
+  // Always reset Google Images UI when switching sources
+  const _gCard = document.getElementById('googleImagesCard');
+  const _gUrlArea = document.getElementById('pickerUrlArea');
+  const _gPf = document.getElementById('pickerFooter');
+  if (source !== 'images') {
+    if (_gCard) _gCard.style.display = 'none';
+    if (_gUrlArea) _gUrlArea.style.display = 'none';
+    if (resultsEl) resultsEl.style.display = 'grid';
+    if (_gPf) _gPf.style.display = 'block';
+  }
+
   // ── GOOGLE IMAGES — show instruction card + URL field, no results grid ──
   if (source === 'images') {
     const searchQuery = encodeURIComponent('"' + title + '"' + (author ? ' "' + author + '"' : '') + ' book cover');
@@ -2286,6 +2317,22 @@ function applyPickerUrl() {
   if (!url) return;
   selectPickedCover(url, null);
 }
+async function pasteUrlFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const inp = document.getElementById('pickerUrlInput');
+    if (inp && text) {
+      inp.value = text.trim();
+      inp.focus();
+      const btn = document.getElementById('pickerClipboardBtn');
+      if (btn) { btn.textContent = '✓ Pasted'; setTimeout(() => { btn.textContent = '📋 Paste'; }, 1500); }
+    }
+  } catch(e) {
+    const inp = document.getElementById('pickerUrlInput');
+    if (inp) { inp.focus(); inp.select(); }
+    showToast('Tap the URL field and paste manually', 'info');
+  }
+}
 
 
 // ── EDIT MODAL CONDITION ──
@@ -2694,7 +2741,251 @@ function clearFilters() {
   showToast('Filters cleared', 'info', 1500);
 }
 
-document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
+document.addEventListener('DOMContentLoaded', function() {
+  loadSettings();
+  // Show wizard automatically if no scriptUrl set and wizard hasn't been dismissed
+  const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+  if (!stored.scriptUrl && !stored.wizardSeen) {
+    setTimeout(() => openWizard(false), 600);
+  }
+});
+
+// ── SETUP WIZARD ──
+const WIZARD_STEPS = 4;
+let wizardStep = 0;
+let wizardSkippedFrom = null;
+
+function openWizard(fromSettings) {
+  wizardStep = 0;
+  wizardSkippedFrom = null;
+  document.getElementById('wizardOverlay').classList.remove('hidden');
+  renderWizardStep();
+}
+
+function closeWizard(markSeen) {
+  document.getElementById('wizardOverlay').classList.add('hidden');
+  if (markSeen) {
+    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+    s.wizardSeen = true;
+    localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+  }
+}
+
+function wizardNext() {
+  if (wizardStep === 1) {
+    // Validate Apps Script URL before proceeding
+    const url = document.getElementById('wiz-scriptUrl').value.trim();
+    if (url && !url.startsWith('https://script.google.com')) {
+      showWizardError('That doesn't look like an Apps Script URL. It should start with https://script.google.com/…');
+      return;
+    }
+    if (url) {
+      // Save it
+      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+      s.scriptUrl = url;
+      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+      S.settings.scriptUrl = url;
+      const el = document.getElementById('s-scriptUrl');
+      if (el) el.value = url;
+    }
+  }
+  if (wizardStep === 2) {
+    // Save Cloudinary if filled
+    const cn = (document.getElementById('wiz-cloudName') || {}).value?.trim();
+    const cp = (document.getElementById('wiz-cloudPreset') || {}).value?.trim();
+    if (cn || cp) {
+      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+      if (cn) s.cloudName = cn;
+      if (cp) s.cloudPreset = cp;
+      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+      S.settings.cloudName = cn;
+      S.settings.cloudPreset = cp;
+      const elCn = document.getElementById('s-cloudName');
+      const elCp = document.getElementById('s-cloudPreset');
+      if (elCn && cn) elCn.value = cn;
+      if (elCp && cp) elCp.value = cp;
+    }
+  }
+  if (wizardStep < WIZARD_STEPS - 1) {
+    wizardStep++;
+    renderWizardStep();
+  } else {
+    // Done
+    closeWizard(true);
+    showToast('All set! Welcome to MagiLib ✦', 'success');
+    showView('entry');
+  }
+}
+
+function wizardBack() {
+  if (wizardStep > 0) { wizardStep--; renderWizardStep(); }
+}
+
+function wizardSkipToStep(n) {
+  wizardSkippedFrom = wizardStep;
+  wizardStep = n;
+  renderWizardStep();
+}
+
+function showWizardError(msg) {
+  const el = document.getElementById('wizardError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function renderWizardStep() {
+  const content = document.getElementById('wizardStepContent');
+  const backBtn = document.getElementById('wizardBackBtn');
+  const nextBtn = document.getElementById('wizardNextBtn');
+  const progress = document.getElementById('wizardProgress');
+  const dots = document.getElementById('wizardDots');
+
+  // Progress bar
+  progress.style.width = ((wizardStep / (WIZARD_STEPS - 1)) * 100) + '%';
+
+  // Dots
+  dots.innerHTML = Array.from({length: WIZARD_STEPS}, (_, i) =>
+    `<div style="width:${i===wizardStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===wizardStep?'var(--accent)':i<wizardStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
+  ).join('');
+
+  // Back button
+  backBtn.style.visibility = wizardStep > 0 ? 'visible' : 'hidden';
+
+  const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+
+  if (wizardStep === 0) {
+    // Welcome
+    nextBtn.textContent = 'Get started →';
+    content.innerHTML = `
+      <div style="text-align:center;padding:12px 0 20px;">
+        <div style="font-size:48px;margin-bottom:12px;">✦</div>
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--ink);margin-bottom:10px;">Welcome to MagiLib</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;max-width:380px;margin:0 auto;">
+          Your personal catalogue for magic and conjuring books.<br>
+          It takes about 5 minutes to get set up — let's walk through it together.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">📋</div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Connect your Google Sheet</div><div style="font-size:12px;color:var(--ink-light);">Your books live in a free Google Sheet you control</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">🖼</div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Set up cover storage <span style="font-size:11px;color:var(--ink-faint);font-weight:400;">(optional)</span></div><div style="font-size:12px;color:var(--ink-light);">Free Cloudinary account for high-res cover images</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
+          <div style="font-size:22px;flex-shrink:0;">🚀</div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Start cataloguing</div><div style="font-size:12px;color:var(--ink-light);">Add books with AI-powered lookup and pricing</div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  else if (wizardStep === 1) {
+    // Google Sheet setup
+    nextBtn.textContent = stored.scriptUrl ? 'Next →' : 'Skip for now →';
+    const hasUrl = stored.scriptUrl || '';
+    content.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 1 of 2</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:6px;">Connect Google Sheets</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">MagiLib saves your books to a Google Sheet you own. You'll need to create a sheet and deploy an Apps Script.</div>
+      </div>
+      <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">Setup instructions</div>
+        <ol style="font-size:12px;color:var(--ink);line-height:2;margin:0;padding-left:18px;">
+          <li>Open <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);font-weight:500;">sheets.google.com</a> and create a new spreadsheet</li>
+          <li>Go to <strong>Extensions → Apps Script</strong></li>
+          <li>Replace all code with the <a href="https://github.com/pipersean-jpg/magilib" target="_blank" style="color:var(--accent);font-weight:500;">MagiLib Apps Script</a></li>
+          <li>Click <strong>Deploy → New deployment → Web app</strong></li>
+          <li>Set "Who has access" to <strong>Anyone</strong>, then Deploy</li>
+          <li>Copy the deployment URL and paste it below</li>
+        </ol>
+      </div>
+      <div style="margin-bottom:6px;">
+        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Apps Script URL</label>
+        <input type="text" id="wiz-scriptUrl" value="${hasUrl}" placeholder="https://script.google.com/macros/s/…/exec"
+          style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
+          oninput="document.getElementById('wizardNextBtn').textContent=this.value.trim()?'Next →':'Skip for now →'"/>
+        <div id="wizardError" style="display:none;font-size:12px;color:#a32d2d;margin-top:6px;padding:6px 10px;background:#fdf0f0;border-radius:6px;"></div>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">You can add this later in Settings if you're not ready yet.</div>
+      </div>
+    `;
+    // Clear error on input
+    setTimeout(() => {
+      const inp = document.getElementById('wiz-scriptUrl');
+      if (inp) inp.addEventListener('input', () => {
+        const e = document.getElementById('wizardError');
+        if (e) e.style.display = 'none';
+      });
+    }, 50);
+  }
+
+  else if (wizardStep === 2) {
+    // Cloudinary (optional)
+    nextBtn.textContent = 'Next →';
+    const cn = stored.cloudName || '';
+    const cp = stored.cloudPreset || '';
+    content.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 2 of 2 — Optional</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:6px;">Cover Image Storage</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">Cloudinary lets you store full-resolution cover images. It's completely free and takes 2 minutes to set up — but you can skip this and add it later.</div>
+      </div>
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <ol style="font-size:12px;color:var(--ink);line-height:2;margin:0;padding-left:18px;">
+          <li>Sign up free at <a href="https://cloudinary.com" target="_blank" style="color:var(--accent);font-weight:500;">cloudinary.com</a> (no credit card)</li>
+          <li>Copy your <strong>Cloud Name</strong> from the dashboard</li>
+          <li>Go to <strong>Settings → Upload → Add upload preset</strong></li>
+          <li>Set to <strong>Unsigned</strong>, save, copy the preset name</li>
+        </ol>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:5px;">Cloud Name</label>
+          <input type="text" id="wiz-cloudName" value="${cn}" placeholder="your-cloud-name"
+            style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:5px;">Upload Preset</label>
+          <input type="text" id="wiz-cloudPreset" value="${cp}" placeholder="unsigned_preset_name"
+            style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
+        </div>
+        <div style="font-size:11px;color:var(--ink-faint);">Leave blank to skip — covers will still work using URLs and base64.</div>
+      </div>
+    `;
+  }
+
+  else if (wizardStep === 3) {
+    // Done
+    nextBtn.textContent = 'Go to my library ✦';
+    backBtn.style.visibility = 'hidden';
+    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+    const hasSheet = !!s.scriptUrl;
+    const hasCloud = !!s.cloudName;
+    content.innerHTML = `
+      <div style="text-align:center;padding:16px 0 24px;">
+        <div style="font-size:52px;margin-bottom:14px;">${hasSheet ? '✦' : '🎩'}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;">${hasSheet ? 'You're all set!' : 'Almost ready!'}</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;max-width:360px;margin:0 auto;">
+          ${hasSheet ? 'MagiLib is connected and ready to catalogue your collection.' : 'You can start browsing, but you'll need to add your Apps Script URL in Settings before saving books.'}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:${hasSheet?'var(--success-bg)':'var(--paper-warm)'};border:0.5px solid ${hasSheet?'var(--tier1-border)':'var(--border)'};">
+          <span style="font-size:16px;">${hasSheet?'✓':'○'}</span>
+          <div style="font-size:13px;font-weight:500;color:${hasSheet?'var(--success)':'var(--ink-light)'};">Google Sheet ${hasSheet?'connected':'not configured'}</div>
+          ${!hasSheet?`<button onclick="wizardStep=1;renderWizardStep();" style="margin-left:auto;padding:4px 10px;font-size:11px;border:0.5px solid var(--accent);border-radius:6px;background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;">Fix →</button>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:${hasCloud?'var(--success-bg)':'var(--paper-warm)'};border:0.5px solid ${hasCloud?'var(--tier1-border)':'var(--border)'};">
+          <span style="font-size:16px;">${hasCloud?'✓':'○'}</span>
+          <div style="font-size:13px;font-weight:500;color:${hasCloud?'var(--success)':'var(--ink-light)'};">Cloudinary ${hasCloud?'connected':'not configured (optional)'}</div>
+          ${!hasCloud?`<button onclick="wizardStep=2;renderWizardStep();" style="margin-left:auto;padding:4px 10px;font-size:11px;border:0.5px solid var(--border-med);border-radius:6px;background:transparent;color:var(--ink-light);cursor:pointer;font-family:'DM Sans',sans-serif;">Set up →</button>`:''}
+        </div>
+      </div>
+    `;
+  }
+}
 </script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#a32d2d;color:white;padding:14px 20px;font-size:13px;font-weight:500;display:none;align-items:center;justify-content:space-between;gap:12px;">
@@ -2749,6 +3040,7 @@ document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
       <div id="pickerUrlArea" style="display:none;margin-top:10px;">
         <div class="url-input-row">
           <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…"/>
+          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;">📋 Paste</button>
           <button onclick="applyPickerUrl()">Set</button>
         </div>
       </div>
