@@ -4406,5 +4406,31 @@ function renderWizardStep() {
     </div>
   </div>
 </div>
+
+<script>
+window.addEventListener('load', () => {
+  const nav = document.querySelector('.nav');
+  const view = document.querySelector('.view.active') || document.querySelector('.view');
+  const firstCard = view ? view.querySelector('.camera-hero, .form-section') : null;
+  
+  const cs = el => el ? window.getComputedStyle(el) : null;
+  const navCS = cs(nav);
+  const viewCS = cs(view);
+  const cardCS = cs(firstCard);
+  
+  const info = [
+    'NAV: pl=' + navCS?.paddingLeft + ' pr=' + navCS?.paddingRight + ' w=' + nav?.offsetWidth,
+    'VIEW: pl=' + viewCS?.paddingLeft + ' pr=' + viewCS?.paddingRight + ' w=' + view?.offsetWidth + ' maxW=' + viewCS?.maxWidth + ' ml=' + viewCS?.marginLeft,
+    'CARD: ml=' + cardCS?.marginLeft + ' mr=' + cardCS?.marginRight,
+    'BODY w=' + document.body.offsetWidth,
+  ].join('\n');
+  
+  const el = document.createElement('pre');
+  el.style.cssText = 'position:fixed;bottom:80px;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;padding:8px;z-index:9999;margin:0;white-space:pre-wrap;';
+  el.textContent = info;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 15000);
+});
+</script>
 </body>
 </html>
