@@ -805,11 +805,10 @@ input[type=file].file-input{display:none;}
       <span class="search-icon">⌕</span>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="clearFilters()" class="btn-secondary" style="font-size:12px;padding:8px 12px;" title="Clear all filters">✕ Filters</button>
       <button onclick="exportCSV()" class="btn-secondary" style="font-size:12px;padding:8px 12px;" title="Export to CSV">↓ CSV</button>
       <button onclick="toggleView('grid')" id="viewGrid" class="btn-primary" style="font-size:16px;padding:8px 12px;" title="Grid view">⊞</button>
       <button onclick="toggleView('list')" id="viewList" class="btn-secondary" style="font-size:16px;padding:8px 12px;" title="List view">☰</button>
-      <button class="btn-primary" onclick="loadCatalog()" style="font-size:13px;padding:8px 12px;">↻</button>
+      <button class="btn-primary" onclick="loadCatalog()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg> Refresh Library</button>
     </div>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--border);margin-bottom:16px;">
@@ -839,7 +838,7 @@ input[type=file].file-input{display:none;}
     <button id="showSoldChip" onclick="toggleShowSold(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #f5b7b5;background:transparent;color:#791F1F;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Sold</button>
     <button id="showWishlistChip" onclick="toggleWishlist(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #b5d4f4;background:transparent;color:#0C447C;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Wishlist</button>
     <button id="showDraftsChip" onclick="toggleDrafts(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #d3d1c7;background:transparent;color:#444441;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Drafts</button>
-    <button onclick="clearFilters()" style="margin-left:auto;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border-med);background:transparent;color:var(--ink-light);font-family:'DM Sans',sans-serif;min-height:36px;">&#x2715; Clear</button>
+    <button onclick="clearFilters()" style="margin-left:auto;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border-med);background:transparent;color:var(--ink-light);font-family:'DM Sans',sans-serif;min-height:36px;">✕ Clear Filters</button>
   </div>
   <div class="stats-row">
     <div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">—</div></div>
@@ -1022,7 +1021,7 @@ input[type=file].file-input{display:none;}
     <div class="modal-actions" style="display:block;padding:12px 16px 16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
         <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-        <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> eBay</button>
+        <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> eBay</button>
         <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -1488,7 +1487,7 @@ function openModal(idx){
   // Render star rating
   renderModalStars(b);
   // If draft, open in Add form instead
-  if (b.draft === 'Draft') { openDraftInAddForm(idx); return; }
+  if (b.draft === 'Draft') { openDraftActions(idx); return; }
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 function openEbayModal(){
@@ -2037,7 +2036,9 @@ function openEditFromModal() {
 
   closeModal();
   document.getElementById('editModalOverlay').classList.remove('hidden');
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  // Scroll the modal's own content to top, not the page
+  const editScroll = document.getElementById('editModalScroll');
+  if (editScroll) editScroll.scrollTop = 0;
   // Reset dirty flag and attach change listeners to all fields
   _editDirty = false;
   setTimeout(() => {
@@ -2152,11 +2153,15 @@ async function saveEdit() {
 
 // ── CAPITALISATION ──
 // Converts text to title case, respecting common small words
+// Tokens that must always appear in a specific casing regardless of position
+const PROTECTED_TOKENS = { 'l&l': 'L&L', 'bwm': 'BWM', 'tcc': 'TCC', 'ibm': 'IBM', 'usa': 'USA', 'uk': 'UK' };
+
 function toTitleCase(str) {
   if (!str) return str;
   const small = new Set(['a','an','the','and','but','or','for','nor','on','at','to','by','in','of','up','as','is','it']);
-  return str.toLowerCase().replace(/[^\s-]+/g, (word, idx, full) => {
-    // Always capitalise first/last word and words after punctuation
+  const result = str.toLowerCase().replace(/[^\s-]+/g, (word, idx, full) => {
+    const lower = word.toLowerCase();
+    if (PROTECTED_TOKENS[lower]) return PROTECTED_TOKENS[lower];
     const isFirst = idx === 0;
     const isAfterPunct = idx > 0 && /[:(—\/]/.test(full[idx-1]);
     if (isFirst || isAfterPunct || !small.has(word)) {
@@ -2164,6 +2169,18 @@ function toTitleCase(str) {
     }
     return word;
   });
+  return result;
+}
+
+// For publisher fields: check the canonical PUBLISHERS list for an exact case-insensitive match first
+function toTitleCasePublisher(str) {
+  if (!str) return str;
+  if (typeof PUBLISHERS !== 'undefined') {
+    const lower = str.toLowerCase().trim();
+    const match = PUBLISHERS.find(p => p.toLowerCase() === lower);
+    if (match) return match; // return the canonical casing from the list
+  }
+  return toTitleCase(str);
 }
 
 // Apply title case to a field value
@@ -2258,7 +2275,7 @@ async function fetchBookIntelligence(title, author) {
   try {
     const data = await callClaude([{role:'user', content:
       `You are a magic and conjuring book expert. For the book "${title}"${author ? ' by "' + author + '"' : ''}, provide:
-1. A brief intelligence summary: rarity/scarcity, historical significance, collector notes, typical condition issues. Under 60 words.
+1. A brief intelligence summary: rarity/scarcity, historical significance, collector notes, typical condition issues. Under 60 words. Do NOT include a heading or label like "Intelligence Summary:" — just write the summary directly.
 2. Any known bibliographic facts you are confident about as JSON on the last line:
 {"year":"","publisher":"","edition":""}
 Leave fields blank if uncertain. Do not guess.`
@@ -2275,7 +2292,7 @@ Leave fields blank if uncertain. Do not guess.`
           showToast('Year filled from Book Intelligence', 'info', 2000);
         }
         if (meta.publisher && !document.getElementById('f-publisher').value) {
-          document.getElementById('f-publisher').value = toTitleCase(meta.publisher);
+          document.getElementById('f-publisher').value = toTitleCasePublisher(meta.publisher);
           showToast('Publisher filled from Book Intelligence', 'info', 2000);
         }
         if (meta.edition && !document.getElementById('f-edition').value) {
@@ -2284,7 +2301,9 @@ Leave fields blank if uncertain. Do not guess.`
       } catch(e) { /* JSON parse failed — ignore */ }
     }
     // Show summary text (everything before the JSON line)
-    const summaryText = raw.replace(/\{[^}]*"year"[^}]*\}$/m, '').trim();
+    const summaryText = raw.replace(/\{[^}]*"year"[^}]*\}$/m, '').trim()
+      .replace(/^\*?\*?Intelligence Summary\*?\*?:\s*/i, '')
+      .replace(/^\*?\*?Summary\*?\*?:\s*/i, '').trim();
     showAiInfoCard(summaryText || '<span style="color:var(--ink-faint);font-style:italic;">No intelligence found for this title.</span>');
   } catch(e) {
     showAiInfoCard('<span style="color:var(--ink-faint);font-style:italic;">No intelligence found for this title.</span>');
@@ -2461,7 +2480,12 @@ async function pasteUrlFromClipboard() {
       inp.value = text.trim();
       inp.focus();
       const btn = document.getElementById('pickerClipboardBtn');
-      if (btn) { btn.textContent = '✓ Pasted'; setTimeout(() => { btn.textContent = '📋 Paste'; }, 1500); }
+      if (btn) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '✓ Pasted';
+        btn.style.color = 'var(--success)';
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.style.color = ''; }, 1500);
+      }
     }
   } catch(e) {
     const inp = document.getElementById('pickerUrlInput');
@@ -2537,36 +2561,328 @@ function uploadEditCover(event) {
 }
 
 // ── IMPROVED PRICE FETCH: parallel sources, honest about uncertainty ──
+// ── LIVE PRICE SCRAPING ──
+async function scrapeQTTEPrices(title, author) {
+  const results = [];
+  const normT = s => s.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+
+  // Strategy 1: search by author if we have one (QTTE author pages are well-indexed)
+  // Strategy 2: fall back to title-only search
+  const searchUrls = [];
+  if (author) {
+    const authorQ = encodeURIComponent(author.replace(/['"]/g,''));
+    searchUrls.push('https://quickerthantheeye.com/products/find/author/' + authorQ);
+  }
+  const titleQ = encodeURIComponent(title.replace(/['"]/g,''));
+  searchUrls.push('https://quickerthantheeye.com/products/find/any/' + titleQ);
+
+  for (const searchUrl of searchUrls) {
+    try {
+      const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
+      const data = await resp.json();
+      if (!data.success) continue;
+      const html = data.html;
+
+      // QTTE product pages embed price as plain "$XX.XX" near the title
+      // Extract all product links with their surrounding context
+      const linkBlocks = [...html.matchAll(/href="((?:https?:\/\/(?:www\.)?quickerthantheeye\.com)?\/p\/[^"]+)"[^>]*>([\s\S]{0,600}?)<\/a>/gi)];
+
+      for (const [, href, block] of linkBlocks.slice(0, 20)) {
+        const blockText = block.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+        // Check if this block's title is close to what we're searching for
+        const blockTitle = blockText.slice(0, 100).trim();
+        if (!blockTitle) continue;
+        const similarity = normT(blockTitle).includes(normT(title).slice(0,8)) ||
+                           normT(title).includes(normT(blockTitle).slice(0,8));
+        const priceM = blockText.match(/\$([\d,]+(?:\.\d{2})?)/);
+        if (priceM && similarity) {
+          const priceUSD = parseFloat(priceM[1].replace(',',''));
+          if (priceUSD >= 5 && priceUSD <= 5000) {
+            const url = href.startsWith('http') ? href : 'https://quickerthantheeye.com' + href;
+            results.push({ name: 'Quicker Than The Eye', priceUSD, title: blockTitle.slice(0,80), url, status: 'listed' });
+            break;
+          }
+        }
+      }
+
+      // Fallback: if the page IS the product page (direct hit), grab price from it
+      if (results.length === 0) {
+        const h1M = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+        const pageTitle = h1M ? h1M[1].trim() : '';
+        if (normT(pageTitle).includes(normT(title).slice(0,8))) {
+          const priceM = html.match(/\$([\d,]+(?:\.\d{2})?)/);
+          if (priceM) {
+            const priceUSD = parseFloat(priceM[1].replace(',',''));
+            if (priceUSD >= 5 && priceUSD <= 5000) {
+              results.push({ name: 'Quicker Than The Eye', priceUSD, title: pageTitle, url: searchUrl, status: 'listed' });
+            }
+          }
+        }
+      }
+
+      if (results.length > 0) break; // found something, no need to try next URL
+    } catch(e) { /* silently fail */ }
+  }
+  return results;
+}
+
+async function scrapeCollectingMagicBooks(title, author) {
+  const results = [];
+  try {
+    const q = encodeURIComponent(title + (author ? ' ' + author : ''));
+    const searchUrl = 'https://collectingmagicbooks.com/?s=' + q;
+    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
+    const data = await resp.json();
+    if (!data.success) return results;
+    const priceMatches = [...data.html.matchAll(/\$\s*([\d,]+(?:\.\d{2})?)/g)];
+    const urlM = data.html.match(/href="(https?:\/\/collectingmagicbooks\.com\/[^"?]+)"/i);
+    if (priceMatches.length > 0) {
+      const priceUSD = parseFloat(priceMatches[0][1].replace(',',''));
+      if (priceUSD >= 5 && priceUSD <= 2000) {
+        results.push({ name: 'Collecting Magic Books', priceUSD, title, url: urlM ? urlM[1] : searchUrl, status: 'listed' });
+      }
+    }
+  } catch(e) { /* silently fail */ }
+  return results;
+}
+
+// ── PRICING CONSTANTS ──
+const RETAIL_DISCOUNT = 0.80;   // -20% from retail for in-stock titles
+const USD_RATES = { AUD: 1.55, GBP: 0.79, EUR: 0.92, USD: 1.0 };
+const MIN_SOURCES  = 3;         // minimum real data points to return a price
+
+function usdToLocal(usd, currency) {
+  return Math.round(usd * (USD_RATES[currency] || 1.55) * 100) / 100;
+}
+
+// Scrape Vanishing Inc for in-stock status and retail price
+async function scrapeVanishingInc(title, author) {
+  try {
+    const q = encodeURIComponent((title + (author ? ' ' + author : '')).replace(/['"]/g, ''));
+    const url = 'https://www.vanishingincmagic.com/search/' + q + '/';
+    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
+    const data = await resp.json();
+    if (!data.success) return null;
+    const raw = data.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    const normT = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normTitle = normT(title);
+    // Look for price patterns near title match
+    const priceMatch = raw.match(/\$([\d,]+(?:\.\d{2})?)/);
+    // Check for "in stock" / "add to cart" signal
+    const inStock = /add to cart|in stock/i.test(raw);
+    if (priceMatch && inStock) {
+      const priceUSD = parseFloat(priceMatch[1].replace(',', ''));
+      if (priceUSD >= 5 && priceUSD <= 500) {
+        return { name: 'Vanishing Inc', priceUSD, url, inStock: true, source: 'retail' };
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+// Scrape Penguin Magic for in-stock status and retail price
+async function scrapePenguinMagic(title, author) {
+  try {
+    const q = encodeURIComponent(title + (author ? ' ' + author : ''));
+    const url = 'https://www.penguinmagic.com/magicsearch?q=' + q;
+    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
+    const data = await resp.json();
+    if (!data.success) return null;
+    const raw = data.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    const inStock = /add to cart|in stock/i.test(raw);
+    const priceMatch = raw.match(/\$([\d,]+(?:\.\d{2})?)/);
+    if (priceMatch && inStock) {
+      const priceUSD = parseFloat(priceMatch[1].replace(',', ''));
+      if (priceUSD >= 5 && priceUSD <= 500) {
+        return { name: 'Penguin Magic', priceUSD, url, inStock: true, source: 'retail' };
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function showPriceUnavailable(reason) {
+  const sym = currSym();
+  const currency = S.settings.currency || 'AUD';
+  document.getElementById('priceDisplay').innerHTML = '<span style="font-size:13px;color:var(--ink-faint);">Unable to calculate</span>';
+  document.getElementById('priceRange').textContent = reason || 'Fewer than 3 verified sources found. Check eBay sold listings manually.';
+  document.getElementById('f-price').value = '';
+  const sb = document.getElementById('sourceBreakdown');
+  if (sb) sb.style.display = 'none';
+}
+
 async function fetchPrice(){
-  const title=document.getElementById('f-title').value.trim();
-  const author=document.getElementById('f-author').value.trim();
-  if(!title){showToast('Please enter a title first','error');return;}
-  const btn=document.getElementById('fetchPriceBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Checking sources…';
-  const currency=S.settings.currency||'AUD';
-  try{
-    const data=await callClaude([{role:'user',content:`You are a rare book pricing expert specialising in magic and conjuring books.
+  const title  = document.getElementById('f-title').value.trim();
+  const author = document.getElementById('f-author').value.trim();
+  if (!title) { showToast('Please enter a title first', 'error'); return; }
 
-Title: "${title}"${author?' Author: '+author:''}
+  const btn = document.getElementById('fetchPriceBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Checking sources…';
+  const currency = S.settings.currency || 'AUD';
+  const sym = currSym();
 
-Estimate the current second-hand market value using this priority order:
-TIER 1 (specialist magic dealers): Magic Collectibles (magiccollectibles.com), Quicker Than The Eye (quickerthantheeye.com), Collecting Magic Books (collectingmagicbooks.com), eBay Magic Books category sold (ebay.com/sch/14012 LH_Sold=1)
-TIER 2: eBay general sold listings
-TIER 3: AbeBooks, Amazon listed prices (often inflated)
+  try {
+    // ── STEP 1: Check retail sources (Vanishing Inc + Penguin Magic) in parallel ──
+    btn.innerHTML = '<span class="spinner"></span> Checking retail stock…';
+    const [viResult, pmResult, qtteResults, cmbResults] = await Promise.all([
+      scrapeVanishingInc(title, author),
+      scrapePenguinMagic(title, author),
+      scrapeQTTEPrices(title, author),
+      scrapeCollectingMagicBooks(title, author)
+    ]);
+
+    const allSources = [];
+
+    // ── STEP 2: Apply retail formula if in stock ──
+    // If Vanishing Inc or Penguin Magic shows in-stock, title is current production.
+    // Use retail price × USD rate × 0.80 — do not treat as rare/scarce.
+    const retailSource = viResult || pmResult;
+    if (retailSource) {
+      const retailAUD = usdToLocal(retailSource.priceUSD, currency);
+      const marketAUD = Math.round(retailAUD * RETAIL_DISCOUNT);
+      allSources.push({
+        name: retailSource.name,
+        price: marketAUD,
+        priceUSD: retailSource.priceUSD,
+        detail: 'In stock — retail ' + sym + retailAUD.toFixed(0) + ' × 0.80 = market ' + sym + marketAUD,
+        url: retailSource.url,
+        urlLabel: 'View listing',
+        tier: 1,
+        tag: 'listed',
+        isRetail: true
+      });
+      // Also add second retail source if found
+      if (viResult && pmResult) {
+        const r2AUD = usdToLocal(pmResult.priceUSD, currency);
+        const m2AUD = Math.round(r2AUD * RETAIL_DISCOUNT);
+        allSources.push({
+          name: pmResult.name,
+          price: m2AUD,
+          priceUSD: pmResult.priceUSD,
+          detail: 'In stock — retail ' + sym + r2AUD.toFixed(0) + ' × 0.80 = market ' + sym + m2AUD,
+          url: pmResult.url,
+          urlLabel: 'View listing',
+          tier: 1,
+          tag: 'listed',
+          isRetail: true
+        });
+      }
+    }
+
+    // ── STEP 3: Add specialist dealer live listings (QTTE, CMB) ──
+    for (const r of [...qtteResults, ...cmbResults]) {
+      allSources.push({
+        name: r.name,
+        price: usdToLocal(r.priceUSD, currency),
+        priceUSD: r.priceUSD,
+        detail: r.title + ' — asking price',
+        url: r.url,
+        urlLabel: 'View listing',
+        tier: 1,
+        tag: 'specialist'
+      });
+    }
+
+    // ── STEP 4: Ask Claude ONLY for eBay sold data (last 2 years) — no AbeBooks, no Amazon, no forums ──
+    btn.innerHTML = '<span class="spinner"></span> Checking sold listings…';
+    const realPriceContext = allSources.length > 0
+      ? 'VERIFIED LIVE PRICES (use these as ground truth):\n' +
+        allSources.map(s => '- ' + s.name + ': ' + sym + s.price.toFixed(0) + ' ' + currency + ' (USD $' + s.priceUSD + ')').join('\n')
+      : 'No live listings found on specialist dealer sites.';
+
+    const claudeData = await callClaude([{role:'user', content:
+      `You are a magic book pricing expert. Your ONLY job here is to find eBay SOLD listings data.
+
+Title: "${title}"${author ? ' by ' + author : ''}
+
+${realPriceContext}
+
+Search your knowledge for eBay COMPLETED/SOLD listings for this exact title within the last 2 years ONLY.
+- Ignore AbeBooks, Amazon, Alibris — do NOT include them
+- Ignore Genii Forum, Magic Cafe, or any discussion forums
+- Ignore any data older than 2 years
+- If you cannot find at least 1 genuine eBay sold listing from the last 2 years, return an empty ebay_sold array
 
 Reply ONLY with valid JSON, no markdown:
-{"avg":number,"low":number,"high":number,"currency":"${currency}","sources":[{"name":"string","price":number_or_null,"detail":"string","url":"string","urlLabel":"string","tier":1,"tag":"specialist|sold|listed"}],"recommended":number,"confidence":"high|medium|low","notes":"string"}`}],900);
-    const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-    const sym=currSym();
-    document.getElementById('priceDisplay').innerHTML=`${sym}${json.recommended.toFixed(0)} <span>${currency}</span>`;
-    document.getElementById('priceRange').textContent=`Range: ${sym}${json.low.toFixed(0)} – ${sym}${json.high.toFixed(0)} · ${json.confidence} confidence`;
-    document.getElementById('f-price').value=json.recommended.toFixed(2);
-    renderSources(json.sources);
-    // Show notes in intelligence card only (no toast popup)
-    if(json.notes)showAiInfoCard(json.notes);
-    fetchBookIntelligence(title,author);
-  }catch(err){showToast('Price fetch failed: '+err.message,'error');}
-  btn.disabled=false;btn.textContent='Fetch Price Estimate';
+{"ebay_sold":[{"price_usd":number,"condition":"string","date":"string","detail":"string"}],"notes":"string"}`
+    }], 500);
+
+    const claudeJson = JSON.parse(claudeData.content[0].text.replace(/```json|```/g,'').trim());
+
+    // Add eBay sold sources (converted to local currency)
+    for (const sold of (claudeJson.ebay_sold || [])) {
+      if (sold.price_usd && sold.price_usd > 0) {
+        allSources.push({
+          name: 'eBay Sold',
+          price: usdToLocal(sold.price_usd, currency),
+          priceUSD: sold.price_usd,
+          detail: (sold.condition || '') + (sold.date ? ' · ' + sold.date : '') + (sold.detail ? ' · ' + sold.detail : ''),
+          url: 'https://www.ebay.com.au/sch/i.html?_nkw=' + encodeURIComponent(title + ' ' + author) + '&LH_Sold=1&LH_Complete=1',
+          urlLabel: 'eBay sold listings',
+          tier: 2,
+          tag: 'sold'
+        });
+      }
+    }
+
+    // ── STEP 5: Enforce minimum sources rule ──
+    if (allSources.length < MIN_SOURCES) {
+      showPriceUnavailable(
+        'Only ' + allSources.length + ' of ' + MIN_SOURCES + ' required sources found. ' +
+        (allSources.length > 0 ? 'Partial data: ' + allSources.map(s => s.name).join(', ') + '.' : '') +
+        ' Check eBay sold listings for current market data.'
+      );
+      renderSources(allSources.map(s => ({...s, urlLabel: s.urlLabel || 'View'})));
+      btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
+      return;
+    }
+
+    // ── STEP 6: Calculate recommended price ──
+    // If retail source found: use retail formula as the recommended price
+    // Otherwise: median of all verified sources
+    let recommended;
+    let low, high;
+    const prices = allSources.map(s => s.price).filter(p => p > 0).sort((a,b) => a-b);
+
+    if (retailSource && allSources.some(s => s.isRetail)) {
+      // Title is in production — recommended = retail formula price
+      recommended = allSources.find(s => s.isRetail).price;
+      low  = Math.round(recommended * 0.85);
+      high = Math.round(recommended * 1.10);
+    } else {
+      // Rare/secondary market title — median of verified sources
+      recommended = Math.round(prices[Math.floor(prices.length / 2)]);
+      low  = prices[0];
+      high = prices[prices.length - 1];
+    }
+
+    // ── STEP 7: Display results ──
+    document.getElementById('priceDisplay').innerHTML = `${sym}${recommended.toFixed(0)} <span>${currency}</span>`;
+    const confidence = retailSource ? 'high' : allSources.length >= 4 ? 'high' : 'medium';
+    document.getElementById('priceRange').textContent =
+      `Range: ${sym}${low} – ${sym}${high} · ${confidence} confidence · ${allSources.length} sources`;
+    document.getElementById('f-price').value = recommended.toFixed(2);
+
+    renderSources(allSources.map(s => ({
+      name: s.name,
+      price: s.price,
+      detail: s.detail,
+      url: s.url,
+      urlLabel: s.urlLabel,
+      tier: s.tier,
+      tag: s.tag
+    })));
+
+    if (claudeJson.notes) showAiInfoCard(claudeJson.notes);
+    fetchBookIntelligence(title, author);
+
+  } catch(err) {
+    showToast('Price fetch failed: ' + err.message, 'error');
+    showPriceUnavailable('Error fetching data — please try again.');
+  }
+
+  btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
 }
 
 
@@ -2713,7 +3029,7 @@ async function scrapeConjuringMetadata(bookId) {
 
     fill('f-author', author);
     fill('f-year', year.match(/\d{4}/) ? year.match(/\d{4}/)[0] : '');
-    fill('f-publisher', publisher);
+    fill('f-publisher', toTitleCasePublisher(publisher));
 
     const filled = [author, year, publisher].filter(Boolean).length;
     if (filled > 0) {
@@ -3000,6 +3316,47 @@ async function quickAddFromQueue() {
 }
 
 // ── OPEN DRAFT IN ADD FORM ──
+// ── DRAFT ACTION SHEET ──
+let _draftActionIdx = null;
+
+function openDraftActions(idx) {
+  _draftActionIdx = idx;
+  const b = S.books[idx];
+  const titleEl = document.getElementById('draftActionTitle');
+  if (titleEl) titleEl.textContent = b.title || 'Untitled Draft';
+  document.getElementById('draftActionOverlay').classList.remove('hidden');
+}
+
+function closeDraftActions() {
+  document.getElementById('draftActionOverlay').classList.add('hidden');
+  _draftActionIdx = null;
+}
+
+function draftActionEdit() {
+  const idx = _draftActionIdx;
+  closeDraftActions();
+  setTimeout(() => openDraftInAddForm(idx), 120);
+}
+
+function draftActionDelete() {
+  const idx = _draftActionIdx;
+  if (idx === null) return;
+  const b = S.books[idx];
+  const rowNum = idx + 2;
+  closeDraftActions();
+
+  const scriptUrl = getScriptUrl();
+  if (scriptUrl) {
+    fetch(scriptUrl, { method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deleteRow: rowNum }) }).catch(() => {});
+  }
+
+  S.books.splice(idx, 1);
+  renderCatalog();
+  showToast('Draft deleted', 'success', 2500);
+}
+
 function openDraftInAddForm(idx) {
   const b = S.books[idx];
   if (!b) return;
@@ -3713,7 +4070,7 @@ function renderWizardStep() {
       <div id="pickerUrlArea" style="display:none;margin-top:10px;">
         <div class="url-input-row">
           <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…"/>
-          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;"style="display:inline-flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
+          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
           <button onclick="applyPickerUrl()">Set</button>
         </div>
       </div>
@@ -3736,7 +4093,7 @@ function renderWizardStep() {
       <div class="modal-title" id="editModalTitle">Edit Book</div>
       <button class="modal-close" onclick="closeEditModal()">✕</button>
     </div>
-    <div style="padding:20px;overflow-y:auto;max-height:75vh;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;">
+    <div id="editModalScroll" style="padding:20px;overflow-y:auto;max-height:75vh;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;">
       <input type="hidden" id="edit-rowIndex"/>
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:16px;border-bottom:0.5px solid var(--border);">
         <div id="editCoverFrame" style="width:90px;height:112px;background:var(--paper-warm);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;">
@@ -3792,6 +4149,28 @@ function renderWizardStep() {
 <!-- IMAGE ZOOM MODAL -->
 <div class="modal-overlay hidden" id="zoomOverlay" onclick="closeZoom()" style="background:rgba(0,0,0,0.85);align-items:center;justify-content:center;">
   <img id="zoomImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;" alt="Cover"/>
+</div>
+
+<!-- DRAFT ACTION SHEET -->
+<div class="modal-overlay hidden" id="draftActionOverlay" onclick="if(event.target===this)closeDraftActions()" style="align-items:flex-end;z-index:350;">
+  <div class="modal" style="border-radius:20px 20px 0 0;max-width:520px;padding-bottom:max(0px,env(safe-area-inset-bottom));">
+    <div class="modal-handle"></div>
+    <div style="padding:18px 20px 8px;">
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:4px;" id="draftActionTitle">Draft</div>
+      <div style="font-size:12px;color:var(--ink-faint);">What would you like to do with this draft?</div>
+    </div>
+    <div style="padding:12px 16px 20px;display:flex;flex-direction:column;gap:10px;">
+      <button onclick="draftActionEdit()" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Complete Draft
+      </button>
+      <button onclick="draftActionDelete()" style="width:100%;padding:14px;background:transparent;color:#a32d2d;border:1px solid #f5b7b5;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete Draft
+      </button>
+      <button onclick="closeDraftActions()" style="width:100%;padding:12px;background:transparent;color:var(--ink-light);border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay hidden" id="copiesOverlay" onclick="closeCopiesSheet(event)" style="align-items:flex-end;">
