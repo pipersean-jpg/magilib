@@ -84,7 +84,8 @@ input[type=file].file-input{display:none;}
 .el-notes{order:4;}
 .el-save{order:5;}
 @media(min-width:700px){
-  .el-book-details,.book-preview-panel,.el-condition,.el-notes,.el-save{order:unset;}
+  .el-book-details,.el-condition,.el-notes,.el-save{order:unset;grid-column:2;}
+  .book-preview-panel{order:unset;grid-column:1;grid-row:1/99;}
 }
 @media(min-width:700px){.entry-layout{grid-template-columns:300px 1fr;}}
 .book-preview-panel{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;box-sizing:border-box;}
