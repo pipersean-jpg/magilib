@@ -2664,12 +2664,11 @@ async function scrapeQTTEPrices(title, author) {
   return results;
 }
 
-async function scrapeCollectingMagicBooks(title, author) {
+async function scrapeCollectingMagicBooks(title, author, edition) {
   const results = [];
-  // GBP → AUD approximate rate (CMB is UK-based, prices in £)
   const GBP_TO_AUD = 2.02;
+  const normT = s => s.toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
 
-  // Build slug candidates from title — CMB uses /product-page/words-separated-by-hyphens
   const slugify = s => s.toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, '-').trim();
@@ -2677,21 +2676,23 @@ async function scrapeCollectingMagicBooks(title, author) {
   const titleSlug = slugify(title);
   const authorSlug = author ? slugify(author) : '';
 
-  // Try multiple URL patterns CMB uses
+  // Build all slug candidates — fetch ALL of them, not just first hit
+  // CMB often has multiple editions listed separately
   const urlCandidates = [
     'https://www.collectingmagicbooks.com/product-page/' + titleSlug,
     'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + authorSlug,
     authorSlug ? 'https://www.collectingmagicbooks.com/product-page/' + authorSlug + '-' + titleSlug : null,
+    // Edition-qualified slugs — "first edition", "second edition" etc
+    edition ? 'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + slugify(edition) + '-' + authorSlug : null,
+    edition ? 'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + slugify(edition) : null,
   ].filter(Boolean);
 
   const parsePrice = (html) => {
-    // Match £ price (GBP) — convert to AUD
     const gbpM = html.match(/£\s*([\d,]+(?:\.\d{2})?)/);
     if (gbpM) {
       const gbp = parseFloat(gbpM[1].replace(',',''));
       if (gbp >= 3 && gbp <= 2000) return { priceLocal: gbp, currency: 'GBP', priceAUD: Math.round(gbp * GBP_TO_AUD * 100) / 100 };
     }
-    // Fallback: match $ price
     const usdM = html.match(/\$\s*([\d,]+(?:\.\d{2})?)/);
     if (usdM) {
       const usd = parseFloat(usdM[1].replace(',',''));
@@ -2700,34 +2701,57 @@ async function scrapeCollectingMagicBooks(title, author) {
     return null;
   };
 
+  const seenUrls = new Set();
   for (const url of urlCandidates) {
     try {
       const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
       const data = await resp.json();
       if (!data.success) continue;
 
-      // Confirm page is actually about this title
-      const h1M = data.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      // Deduplicate by final URL (redirects may land on same page)
+      const finalUrl = data.url || url;
+      if (seenUrls.has(finalUrl)) continue;
+      seenUrls.add(finalUrl);
+
+      // Confirm page is about this title
+      const h1M = data.html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+                || data.html.match(/^#\s+(.+)$/m);
       const pageTitle = h1M ? h1M[1].replace(/<[^>]+>/g,'').trim() : '';
-      const normT = s => s.toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
-      if (pageTitle && !normT(pageTitle).includes(normT(title).slice(0,8))) continue;
+      if (pageTitle && normT(pageTitle).length > 3 && !normT(pageTitle).includes(normT(title).slice(0,8))) continue;
 
       const priceData = parsePrice(data.html);
       if (priceData) {
+        // Extract condition/edition detail from page for the source label
+        const condM = data.html.match(/Condition:\s*([^\n<]+)/i);
+        const yearM  = data.html.match(/Year:\s*(\d{4})/i);
+        const detail = [
+          condM ? condM[1].trim() : '',
+          yearM ? yearM[1] : ''
+        ].filter(Boolean).join(' · ');
+
         results.push({
           name: 'Collecting Magic Books',
           priceUSD: priceData.currency === 'USD' ? priceData.priceLocal : null,
           priceGBP: priceData.currency === 'GBP' ? priceData.priceLocal : null,
           priceAUD: priceData.priceAUD,
           title: pageTitle || title,
+          detail,
           url,
           status: 'listed',
           currency: priceData.currency
         });
-        break; // Found it
+        // Don't break — continue to find other editions
       }
     } catch(e) { /* try next candidate */ }
   }
+
+  // If we found multiple CMB results, prefer the one matching the user's edition
+  if (results.length > 1 && edition) {
+    const edNorm = normT(edition);
+    const editionMatch = results.find(r => normT(r.title).includes(edNorm) || normT(r.detail).includes(edNorm));
+    if (editionMatch) return [editionMatch]; // Return only the matching edition
+  }
+
   return results;
 }
 
@@ -2893,7 +2917,7 @@ async function fetchPrice(){
 
     // ── STEP 2: Live scrape specialist dealers + (if no local price) Claude retail check ──
     btn.innerHTML = '<span class="spinner"></span> Checking live listings…';
-    const scrapePromises = [scrapeQTTEPrices(title, author), scrapeCollectingMagicBooks(title, author)];
+    const scrapePromises = [scrapeQTTEPrices(title, author), scrapeCollectingMagicBooks(title, author, document.getElementById('f-edition') ? document.getElementById('f-edition').value.trim() : '')];
     if (!localPriceEntry && !isDiscontinued) scrapePromises.push(checkRetailAvailability(title, author));
     else scrapePromises.push(Promise.resolve(null));
 
