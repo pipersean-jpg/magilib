@@ -938,6 +938,13 @@ input[type=file].file-input{display:none;}
   </div>
 
   <div class="settings-panel" style="margin-top:0;">
+    <div class="section-title">Price Refresh</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Update market prices across your entire collection. Runs against the local price database — books within 10% of their current price are skipped automatically.</div>
+    <div id="bulkPriceStatus" style="display:none;font-size:12px;color:var(--ink-faint);margin-bottom:10px;"></div>
+    <button onclick="startBulkPriceRefresh()" id="bulkPriceBtn" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;display:inline-flex;align-items:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Refresh All Prices</button>
+  </div>
+
+  <div class="settings-panel" style="margin-top:0;">
     <div class="section-title">Help &amp; Feedback</div>
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Got a question, found a bug, or have a suggestion? We want to hear it.</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
@@ -1265,7 +1272,7 @@ function openDealerSearch(dealer, e) {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const urls = {
     ebay: buildEbayUrl(title, author),
-    qtte: 'https://www.quickerthantheeye.com/products/find/title/' + encodeURIComponent(title),
+    qtte: 'https://www.google.com/search?q=' + encodeURIComponent(title + (author ? ' ' + author : '') + ' site:quickerthantheeye.com'),
     cmb:  'https://www.collectingmagicbooks.com/all?search=' + q,
     mc:   'https://www.magiccollectibles.com/?s=' + q,
   };
@@ -3668,6 +3675,207 @@ function renderTutorialSlide() {
   `;
 }
 
+
+// ── PRICE REFRESH ──
+
+// Shared lookup: returns {recommended, sources[]} or null
+function localPriceLookup(title) {
+  if (typeof MARKET_DB === 'undefined') return null;
+  const currency = S.settings.currency || 'AUD';
+  const sym = currSym();
+  const USD_AUD = 1.55, GBP_AUD = 2.02;
+  const toAUD = (p, cur) => Math.round(p * (cur === 'GBP' ? GBP_AUD : USD_AUD));
+
+  const normKey = s => {
+    let k = s.replace(/[^\x00-\x7F]/g,' ')
+             .replace(/\([^)]*\)/g,' ')
+             .replace(/\s+-\s+.*$/,'')
+             .replace(/\s+by\s+.*$/i,'')
+             .toLowerCase()
+             .replace(/[^a-z0-9\s]/g,' ')
+             .replace(/\s+/g,' ').trim()
+             .replace(/^(the|a|an)\s+/,'');
+    return k;
+  };
+
+  const key = normKey(title);
+  const sources = [];
+  const priceEntry = lookupPriceDB(title);
+  if (priceEntry) {
+    const marketAUD = Math.round(toAUD(priceEntry.msrp,'USD') * 0.80);
+    sources.push({ name: "Murphy's Magic (In Print)", price: marketAUD, detail: 'Retail USD $' + priceEntry.msrp + ' × 0.80' });
+  }
+  if (MARKET_DB.qtte[key]) {
+    const e = MARKET_DB.qtte[key];
+    sources.push({ name: 'QTTE', price: toAUD(e.price,'USD'), detail: 'Listed USD $' + e.price, url: e.url });
+  }
+  const cmbEntries = MARKET_DB.cmb[key] || [];
+  cmbEntries.forEach(e => sources.push({ name: 'Collecting Magic Books', price: toAUD(e.price,'GBP'), detail: 'GBP £' + e.price, url: e.url }));
+  const ebayEntries = MARKET_DB.ebay[key] || [];
+  if (ebayEntries.length > 0) {
+    const avg = ebayEntries.reduce((s,e)=>s+e.price,0)/ebayEntries.length;
+    sources.push({ name: 'eBay Sold', price: toAUD(avg,'USD'), detail: ebayEntries.length + ' sold, avg USD $' + avg.toFixed(0) });
+  }
+  if (MARKET_DB.mc[key]) {
+    const e = MARKET_DB.mc[key];
+    sources.push({ name: 'Magic Collectibles', price: toAUD(e.price,'USD'), detail: 'Listed USD $' + e.price, url: e.url });
+  }
+  if (sources.length === 0) return null;
+  const prices = sources.map(s=>s.price).sort((a,b)=>a-b);
+  const recommended = sources.some(s=>s.name.includes("Murphy"))
+    ? sources.find(s=>s.name.includes("Murphy")).price
+    : prices[Math.floor(prices.length/2)];
+  return { recommended, sources };
+}
+
+// ── BULK REFRESH ──
+let _bulkQueue = [];
+let _bulkIdx = 0;
+let _bulkUpdated = 0;
+let _bulkSkipped = 0;
+let _bulkPending = null; // {idx, newPrice}
+
+function startBulkPriceRefresh() {
+  const unsold = S.books
+    .map((b,i) => ({b,i}))
+    .filter(({b}) => b.sold !== 'Sold' && b.draft !== 'Draft' && b.title);
+  if (unsold.length === 0) { showToast('No unsold books found','error'); return; }
+  _bulkQueue = unsold;
+  _bulkIdx = 0;
+  _bulkUpdated = 0;
+  _bulkSkipped = 0;
+  _bulkPending = null;
+  document.getElementById('bulkPriceStatus').style.display = 'none';
+  processBulkNext();
+}
+
+function processBulkNext() {
+  // Skip books with no price result or within 10%
+  while (_bulkIdx < _bulkQueue.length) {
+    const {b, i} = _bulkQueue[_bulkIdx];
+    const result = localPriceLookup(b.title);
+    if (!result) { _bulkIdx++; _bulkSkipped++; continue; }
+    const newPrice = result.recommended;
+    const existingPrice = parseFloat(b.price) || 0;
+    // Auto-skip if within 10%
+    if (existingPrice > 0 && Math.abs(newPrice - existingPrice) / existingPrice <= 0.10) {
+      _bulkIdx++; _bulkSkipped++; continue;
+    }
+    // Show review card
+    _bulkPending = { bookIdx: i, newPrice };
+    showPriceReviewCard(b, result, _bulkIdx, _bulkQueue.length);
+    return;
+  }
+  // Done
+  closePriceReviewOverlay();
+  const msg = _bulkUpdated + ' price' + (_bulkUpdated!==1?'s':'') + ' updated, ' + _bulkSkipped + ' skipped.';
+  document.getElementById('bulkPriceStatus').textContent = '✓ Done — ' + msg;
+  document.getElementById('bulkPriceStatus').style.display = 'block';
+  showToast('Price refresh complete — ' + msg, 'success', 4000);
+}
+
+function showPriceReviewCard(b, result, idx, total) {
+  const sym = currSym();
+  const currency = S.settings.currency || 'AUD';
+  document.getElementById('priceReviewCounter').textContent = (idx+1) + ' of ' + total + ' books';
+  document.getElementById('priceReviewTitle').textContent = b.title + (b.author ? ' — ' + b.author : '');
+  document.getElementById('priceReviewNew').textContent = sym + result.recommended + ' ' + currency;
+  const existing = parseFloat(b.price) || 0;
+  document.getElementById('priceReviewOld').textContent = existing > 0 ? 'Current: ' + sym + existing.toFixed(0) : 'No current price';
+  document.getElementById('priceReviewSources').innerHTML = result.sources
+    .map(s => (s.url ? '<a href="'+s.url+'" target="_blank" style="color:var(--accent);text-decoration:none;">' : '') +
+               s.name + ': ' + sym + s.price + ' (' + s.detail + ')' +
+               (s.url ? '</a>' : ''))
+    .join('<br>');
+  const ov = document.getElementById('priceReviewOverlay');
+  ov.style.display = 'flex';
+}
+
+function priceReviewApprove() {
+  if (!_bulkPending) return;
+  const { bookIdx, newPrice } = _bulkPending;
+  const b = S.books[bookIdx];
+  const oldPrice = b.price;
+  b.price = newPrice.toFixed(2);
+  // Write to sheet
+  const rowNum = bookIdx + 2;
+  const scriptUrl = getScriptUrl();
+  if (scriptUrl) {
+    fetch(scriptUrl, { method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ updateCell: { row: rowNum, col: 9, value: b.price } })
+    }).catch(()=>{});
+  }
+  _bulkUpdated++;
+  _bulkPending = null;
+  _bulkIdx++;
+  processBulkNext();
+}
+
+function priceReviewDecline() {
+  _bulkSkipped++;
+  _bulkPending = null;
+  _bulkIdx++;
+  processBulkNext();
+}
+
+function stopBulkPriceRefresh() {
+  closePriceReviewOverlay();
+  if (_bulkUpdated > 0 || _bulkSkipped > 0) {
+    const msg = _bulkUpdated + ' updated, ' + _bulkSkipped + ' skipped before stopping.';
+    document.getElementById('bulkPriceStatus').textContent = msg;
+    document.getElementById('bulkPriceStatus').style.display = 'block';
+  }
+}
+
+function closePriceReviewOverlay() {
+  document.getElementById('priceReviewOverlay').style.display = 'none';
+  _bulkPending = null;
+}
+
+// ── FETCH PRICE IN EDIT MODAL ──
+async function fetchPriceForEdit() {
+  const title = (document.getElementById('edit-title').value || '').trim();
+  const author = (document.getElementById('edit-author').value || '').trim();
+  if (!title) { showToast('Title is required', 'error'); return; }
+
+  const btn = document.getElementById('editFetchPriceBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Looking up…';
+
+  const result = localPriceLookup(title);
+
+  if (!result) {
+    // Check discontinued list
+    const discEntry = (typeof MARKET_DB !== 'undefined' && MARKET_DB.disc) ? MARKET_DB.disc[title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()] : null;
+    const msg = discEntry ? '⚠ Possibly Out of Print — not found in any price database.' : 'Not found in any price database.';
+    showToast(msg, 'error', 4000);
+    btn.disabled = false;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Fetch Price';
+    return;
+  }
+
+  const sym = currSym();
+  const currency = S.settings.currency || 'AUD';
+  const newPrice = result.recommended;
+  const sourceText = result.sources.map(s => s.name + ': ' + sym + s.price).join(' · ');
+
+  // Show inline confirmation in the modal
+  const confirmed = confirm('Update market price to ' + sym + newPrice + ' ' + currency + '? Sources: ' + sourceText);
+
+  if (confirmed) {
+    const priceEl = document.getElementById('edit-price');
+    if (priceEl) {
+      priceEl.value = newPrice.toFixed(2);
+      _markEditDirty();
+      showToast('Price updated to ' + sym + newPrice, 'success', 2500);
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Fetch Price';
+}
+
 // ── DRAFT ACTION SHEET ──
 let _draftActionIdx = null;
 
@@ -4493,6 +4701,7 @@ function renderWizardStep() {
     </div>
     <div style="padding:14px 20px;border-top:0.5px solid var(--border);display:flex;gap:10px;justify-content:flex-end;padding-bottom:max(14px,env(safe-area-inset-bottom));">
       <button class="btn-secondary" onclick="_editDirty=false;closeEditModal()">Cancel</button>
+      <button class="btn-secondary" id="editFetchPriceBtn" onclick="fetchPriceForEdit()" style="display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Fetch Price</button>
       <button class="btn-primary" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
     </div>
   </div>
@@ -4561,5 +4770,32 @@ function renderWizardStep() {
   </div>
 </div>
 
+
+<!-- ── PRICE REVIEW OVERLAY ── -->
+<div id="priceReviewOverlay" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(10,8,20,0.85);display:none;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--paper-card);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding-bottom:max(20px,env(safe-area-inset-bottom));">
+    <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div id="priceReviewCounter" style="font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;"></div>
+        <div id="priceReviewTitle" style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);"></div>
+      </div>
+      <button onclick="stopBulkPriceRefresh()" style="background:none;border:none;font-size:20px;color:var(--ink-faint);cursor:pointer;padding:4px 8px;">✕</button>
+    </div>
+    <div style="padding:14px 20px;">
+      <div id="priceReviewBody" style="background:var(--paper-warm);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+          <div id="priceReviewNew" style="font-size:26px;font-weight:600;color:var(--ink);"></div>
+          <div id="priceReviewOld" style="font-size:14px;color:var(--ink-faint);"></div>
+        </div>
+        <div id="priceReviewSources" style="font-size:11px;color:var(--ink-light);line-height:1.6;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button onclick="priceReviewDecline()" style="padding:13px;background:transparent;border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--ink-light);cursor:pointer;">Skip →</button>
+        <button onclick="priceReviewApprove()" style="padding:13px;background:var(--accent);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#fff;cursor:pointer;">Update Price ✓</button>
+      </div>
+      <button onclick="stopBulkPriceRefresh()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-faint);cursor:pointer;">Stop refresh</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
