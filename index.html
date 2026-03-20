@@ -172,7 +172,7 @@ input[type=file].file-input{display:none;}
 .star.lit{color:var(--gold);}
 .wishlist-badge{display:inline-block;background:#E6F1FB;color:#185fa5;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-left:6px;}
 .draft-badge{display:inline-block;background:#F1EFE8;color:#5f5e5a;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-left:6px;}
-.copies-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:white;font-size:9px;font-weight:600;min-width:17px;height:17px;border-radius:9px;padding:0 4px;position:absolute;top:6px;right:6px;line-height:1;}
+.copies-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:white;font-size:10px;font-weight:700;min-width:20px;height:20px;border-radius:10px;padding:0 5px;position:absolute;top:7px;right:7px;line-height:1;box-shadow:0 0 0 2px var(--paper-card);}
 .copy-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.12s;-webkit-tap-highlight-color:transparent;}
 .copy-row:last-child{border-bottom:none;}
 .copy-row:hover{background:var(--paper-warm);}
@@ -1170,8 +1170,9 @@ function renderCatalog(){
   const sort=S.sortBy||'dateAdded';
   const dir=S.sortDir||'desc';
   books=[...books].sort((a,b2)=>{
-    if(sort==='title') return dir==='asc'?a.title.localeCompare(b2.title):b2.title.localeCompare(a.title);
-    if(sort==='author') return dir==='asc'?(a.author||'').localeCompare(b2.author||''):(b2.author||'').localeCompare(a.author||'');
+    const normSort = s => (s||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
+    if(sort==='title') return dir==='asc'?normSort(a.title).localeCompare(normSort(b2.title)):normSort(b2.title).localeCompare(normSort(a.title));
+    if(sort==='author') return dir==='asc'?normSort(a.author).localeCompare(normSort(b2.author)):normSort(b2.author).localeCompare(normSort(a.author));
     if(sort==='price') return dir==='asc'?(parseFloat(a.price)||0)-(parseFloat(b2.price)||0):(parseFloat(b2.price)||0)-(parseFloat(a.price)||0);
     if(sort==='year') return dir==='asc'?(parseInt(a.year)||0)-(parseInt(b2.year)||0):(parseInt(b2.year)||0)-(parseInt(a.year)||0);
     if(sort==='star') return dir==='asc'?(parseInt(a.star)||0)-(parseInt(b2.star)||0):(parseInt(b2.star)||0)-(parseInt(a.star)||0);
@@ -1244,10 +1245,10 @@ function renderCatalog(){
       ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')` 
       : `openModal(${idx})`;
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}" onclick="${clickHandler}" style="position:relative;">
-      ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       <div class="book-cover">
         ${hasCover?`<img src="${b.coverUrl}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
+        ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
       <div class="book-info">
         ${isListView?`<div class="book-info-thumb">${thumbHtml}</div>`:''}
