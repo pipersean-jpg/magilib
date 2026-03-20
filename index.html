@@ -35,8 +35,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .tab-btn{padding:7px 14px;border-radius:7px;border:0.5px solid transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-light);}
 .tab-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
 .tab-btn:hover:not(.active){background:var(--paper-warm);border-color:var(--border);color:var(--ink);}
-.view{display:none;padding:20px;max-width:1100px;margin:0 auto;}
+.view{display:none;padding:16px 12px;max-width:1100px;margin:0 auto;}
 .view.active{display:block;}
+@media(min-width:480px){.view{padding:20px;}}
 .camera-hero{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;}
 .camera-hero-title{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px;color:var(--ink);}
 .camera-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -912,12 +913,13 @@ input[type=file].file-input{display:none;}
 </div>
 
 <!-- SETUP WIZARD MODAL -->
-<div class="modal-overlay hidden" id="wizardOverlay" style="z-index:600;">
-  <div class="modal" style="max-width:540px;border-radius:20px;overflow:hidden;">
+<div class="modal-overlay hidden" id="wizardOverlay" style="z-index:600;" onclick="if(event.target===this)closeWizard(true)">
+  <div class="modal" style="max-width:540px;border-radius:20px;overflow:hidden;position:relative;">
     <div class="modal-handle"></div>
     <div style="height:3px;background:var(--border);position:relative;">
       <div id="wizardProgress" style="position:absolute;left:0;top:0;height:100%;background:var(--accent);transition:width 0.4s ease;width:0%;"></div>
     </div>
+    <button onclick="closeWizard(true)" style="position:absolute;top:14px;right:16px;background:transparent;border:none;font-size:18px;color:var(--ink-faint);cursor:pointer;line-height:1;padding:4px;z-index:1;">✕</button>
     <div id="wizardStepContent" style="padding:28px 24px 8px;min-height:320px;"></div>
     <div style="padding:16px 24px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:0.5px solid var(--border);">
       <button id="wizardBackBtn" onclick="wizardBack()" style="padding:9px 18px;border:0.5px solid var(--border-med);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-light);visibility:hidden;">← Back</button>
