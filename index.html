@@ -1186,7 +1186,7 @@ function renderCatalog(){
   const avg=prices.length?totalVal/prices.length:0;
   const top=prices.length?Math.max(...prices):0;
   const sym=currSym();
-  document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length;
+  document.getElementById('statTotal').textContent='— / '+S.books.length;
   document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—';
   document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—';
   document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—';
@@ -1216,6 +1216,7 @@ function renderCatalog(){
     if (!groupMap.has(k)) groupMap.set(k, []);
     groupMap.get(k).push(b);
   });
+  document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length;
 
   // Badge count: active + wishlist + draft (not sold)
   const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;
