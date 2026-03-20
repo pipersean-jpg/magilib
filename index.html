@@ -172,6 +172,11 @@ input[type=file].file-input{display:none;}
 .star.lit{color:var(--gold);}
 .wishlist-badge{display:inline-block;background:#E6F1FB;color:#185fa5;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-left:6px;}
 .draft-badge{display:inline-block;background:#F1EFE8;color:#5f5e5a;font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;margin-left:6px;}
+.copies-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:white;font-size:9px;font-weight:600;min-width:17px;height:17px;border-radius:9px;padding:0 4px;position:absolute;top:6px;right:6px;line-height:1;}
+.copy-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.12s;-webkit-tap-highlight-color:transparent;}
+.copy-row:last-child{border-bottom:none;}
+.copy-row:hover{background:var(--paper-warm);}
+.copy-thumb{width:36px;height:48px;border-radius:4px;background:var(--paper-warm);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
 .book-card.is-wishlist{border-color:#B5D4F4 !important;}
 .book-card.is-draft{opacity:0.7;border-style:dashed !important;}
 .flag-btn{padding:8px 14px;border:0.5px solid var(--border-med);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
@@ -1159,7 +1164,7 @@ function renderCatalog(){
     if(S.showWishlist) return ms&&mc&&mp&&b.sold==='Wishlist';
     if(S.showDrafts) return ms&&mc&&mp&&b.draft==='Draft';
     if(S.showSold) return ms&&mc&&mp&&b.sold==='Sold';
-    return ms&&mc&&mp&&b.sold!=='Sold'&&b.sold!=='Wishlist';
+    return ms&&mc&&mp&&b.sold!=='Sold'&&b.sold!=='Wishlist'&&b.draft!=='Draft';
   });
   // Sort
   const sort=S.sortBy||'dateAdded';
@@ -1181,7 +1186,7 @@ function renderCatalog(){
   const avg=prices.length?totalVal/prices.length:0;
   const top=prices.length?Math.max(...prices):0;
   const sym=currSym();
-  document.getElementById('statTotal').textContent=books.length+' / '+S.books.length;
+  document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length;
   document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—';
   document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—';
   document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—';
@@ -1198,17 +1203,50 @@ function renderCatalog(){
   const gridEl = document.getElementById('booksGrid');
   gridEl.parentElement.classList.toggle('list-view', isListView);
 
-  grid.innerHTML=books.map(b=>{
+  // ── GROUPING ──
+  // Normalise: strip leading The/A/An, lowercase, trim
+  const normTitle = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
+  const groupKey = b => normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();
+
+  // Build groups — each group keyed by normalised title+author
+  // Representative card = first non-sold copy, or first copy if all sold
+  const groupMap = new Map();
+  books.forEach(b => {
+    const k = groupKey(b);
+    if (!groupMap.has(k)) groupMap.set(k, []);
+    groupMap.get(k).push(b);
+  });
+
+  // Badge count: active + wishlist + draft (not sold)
+  const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;
+
+  // Representative copy: best condition non-sold, else first
+  const condOrder = ['Fine','Very Good','Good','Fair'];
+  const repCopy = copies => {
+    const active = copies.filter(b => b.sold !== 'Sold');
+    if (!active.length) return copies[0];
+    return active.sort((a,b2) => condOrder.indexOf(a.condition) - condOrder.indexOf(b2.condition))[0];
+  };
+
+  grid.innerHTML = [...groupMap.values()].map(copies => {
+    const b = repCopy(copies);
     const idx = S.books.indexOf(b);
     const hasCover = b.coverUrl && b.coverUrl !== '__local__';
     const isSold = b.sold === 'Sold';
+    const count = badgeCount(copies);
+    const totalCopies = copies.length;
+    const isGrouped = totalCopies > 1;
     const thumbHtml = hasCover
       ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
       : `<span>${b.coverUrl==='__local__'?'📷':'📖'}</span>`;
-    return `<div class="book-card${isSold?' is-sold':''}${b.sold==='Wishlist'?' is-wishlist':''}${b.draft==='Draft'?' is-draft':''}" onclick="openModal(${idx})">
+    const clickHandler = isGrouped
+      ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')` 
+      : `openModal(${idx})`;
+    return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}" onclick="${clickHandler}" style="position:relative;">
+      ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       <div class="book-cover">
         ${hasCover?`<img src="${b.coverUrl}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
-        <div class="sold-overlay"><span class="sold-badge">Sold</span></div>
+        ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
       </div>
       <div class="book-info">
         ${isListView?`<div class="book-info-thumb">${thumbHtml}</div>`:''}
@@ -1217,14 +1255,75 @@ function renderCatalog(){
           <div class="book-author-text">${b.author}</div>
           <div style="font-size:9px;color:var(--ink-faint);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.publisher||''} ${b.year?'· '+b.year:''}</div>
         </div>
-        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}</div>
-        ${b.star&&parseInt(b.star)>0?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">★</span>`).join('')}</div>`:''}
+        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}</div>
+        ${b.star&&parseInt(b.star)>0&&!isGrouped?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">★</span>`).join('')}</div>`:''}
       </div>
     </div>`;
   }).join('');
 }
 function filterCatalog(){renderCatalog();}
 function setFilter(val,btn){S.filterCondition=val;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCatalog();}
+
+function openCopiesSheet(key) {
+  const normTitle = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
+  const groupKey  = b => normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();
+  const copies = S.books
+    .map((b, idx) => ({b, idx}))
+    .filter(({b}) => groupKey(b) === key);
+  if (!copies.length) return;
+
+  const condOrder = ['Fine','Very Good','Good','Fair'];
+  copies.sort((a, z) => {
+    // Active before sold; within active sort by condition
+    const aActive = a.b.sold !== 'Sold' ? 0 : 1;
+    const zActive = z.b.sold !== 'Sold' ? 0 : 1;
+    if (aActive !== zActive) return aActive - zActive;
+    return condOrder.indexOf(a.b.condition) - condOrder.indexOf(z.b.condition);
+  });
+
+  const condClasses = {'Fine':'cond-fine','Very Good':'cond-vg','Good':'cond-good','Fair':'cond-fair'};
+  const sym = currSym();
+  const title = copies[0].b.title;
+
+  document.getElementById('copiesSheetTitle').innerHTML =
+    `<span style="font-family:'Playfair Display',serif;">${title}</span>
+     <span style="font-size:12px;font-weight:400;color:var(--ink-faint);margin-left:8px;">${copies.length} ${copies.length===1?'copy':'copies'}</span>`;
+
+  document.getElementById('copiesSheetBody').innerHTML = copies.map(({b, idx}) => {
+    const hasCover = b.coverUrl && b.coverUrl !== '__local__';
+    const isSold = b.sold === 'Sold';
+    const isWishlist = b.sold === 'Wishlist';
+    const isDraft = b.draft === 'Draft';
+    return `<div class="copy-row" onclick="closeCopiesSheet();setTimeout(()=>openModal(${idx}),120);">
+      <div class="copy-thumb">
+        ${hasCover
+          ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
+          : `<span style="font-size:16px;">${b.coverUrl==='__local__'?'📷':'📖'}</span>`}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+          <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'—'}</span>
+          ${b.price&&!isNaN(parseFloat(b.price))?`<span style="font-size:14px;font-weight:500;color:var(--ink);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
+          ${isSold?'<span class="draft-badge" style="background:#fdecea;color:#a32d2d;margin-left:0;">Sold</span>':''}
+          ${isWishlist?'<span class="wishlist-badge" style="margin-left:0;">Wishlist</span>':''}
+          ${isDraft?'<span class="draft-badge" style="margin-left:0;">Draft</span>':''}
+        </div>
+        <div style="font-size:12px;color:var(--ink-faint);">
+          ${[b.edition, b.year, b.dateAdded?'Added '+b.dateAdded:''].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+      <span style="color:var(--ink-faint);font-size:18px;margin-left:8px;">›</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('copiesOverlay').classList.remove('hidden');
+}
+
+function closeCopiesSheet(e) {
+  if (!e || e.target === document.getElementById('copiesOverlay')) {
+    document.getElementById('copiesOverlay').classList.add('hidden');
+  }
+}
 function openModal(idx){
   S.currentModalIdx=idx;
   const b=S.books[idx];if(!b)return;
@@ -2720,6 +2819,20 @@ document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
 <!-- IMAGE ZOOM MODAL -->
 <div class="modal-overlay hidden" id="zoomOverlay" onclick="closeZoom()" style="background:rgba(0,0,0,0.85);align-items:center;justify-content:center;">
   <img id="zoomImg" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;" alt="Cover"/>
+</div>
+
+<div class="modal-overlay hidden" id="copiesOverlay" onclick="closeCopiesSheet(event)" style="align-items:flex-end;">
+  <div class="modal" style="border-radius:20px 20px 0 0;max-height:80vh;display:flex;flex-direction:column;">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="copiesSheetTitle">Copies</div>
+      <button class="modal-close" onclick="closeCopiesSheet()">✕</button>
+    </div>
+    <div id="copiesSheetBody" style="overflow-y:auto;flex:1;"></div>
+    <div style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:0.5px solid var(--border);">
+      <button class="btn-secondary" style="width:100%;" onclick="closeCopiesSheet()">Close</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
