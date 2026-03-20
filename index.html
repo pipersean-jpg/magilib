@@ -910,6 +910,33 @@ input[type=file].file-input{display:none;}
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
     <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">✦ Run Setup Wizard</button>
   </div>
+
+  <!-- Version footer -->
+  <div style="text-align:center;padding:28px 20px 36px;border-top:0.5px solid var(--border);margin-top:8px;">
+    <div style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="openChangelog()">
+      <span style="font-family:'Playfair Display',serif;font-size:13px;color:var(--ink-faint);">MagiLib</span>
+      <span id="versionBadge" style="font-size:11px;font-weight:600;padding:3px 8px;background:var(--accent-light);color:var(--accent);border-radius:20px;border:0.5px solid var(--accent);letter-spacing:0.04em;">v1.0 beta</span>
+    </div>
+    <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Tap to see what's new</div>
+  </div>
+</div>
+
+<!-- CHANGELOG MODAL -->
+<div class="modal-overlay hidden" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()" style="z-index:600;">
+  <div class="modal" style="max-width:520px;border-radius:20px;overflow:hidden;">
+    <div class="modal-handle"></div>
+    <div class="modal-header" style="padding:18px 20px 14px;">
+      <div>
+        <div class="modal-title" style="font-family:'Playfair Display',serif;">What's New</div>
+        <div id="changelogVersionLabel" style="font-size:12px;color:var(--ink-faint);margin-top:2px;"></div>
+      </div>
+      <button class="modal-close" onclick="closeChangelog()">✕</button>
+    </div>
+    <div id="changelogBody" style="padding:4px 20px 8px;max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div style="padding:14px 20px 24px;border-top:0.5px solid var(--border);">
+      <button onclick="closeChangelog()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Got it ✦</button>
+    </div>
+  </div>
 </div>
 
 <!-- SETUP WIZARD MODAL -->
@@ -2749,8 +2776,94 @@ document.addEventListener('DOMContentLoaded', function() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!stored.scriptUrl && !stored.wizardSeen) {
     setTimeout(() => openWizard(false), 600);
+  } else {
+    // Only show changelog if wizard isn't showing
+    checkChangelog();
   }
 });
+
+// ── VERSION + CHANGELOG ──
+const APP_VERSION = 'v1.0 beta';
+
+const CHANGELOG = [
+  {
+    version: 'v1.0 beta',
+    date: 'March 2026',
+    sections: [
+      {
+        label: 'New',
+        color: 'var(--tier1)',
+        bg: 'var(--tier1-bg)',
+        border: 'var(--tier1-border)',
+        items: [
+          'Setup wizard — guided onboarding for new users',
+          'Copies grouping — books with the same title stack into one card with a ×N badge',
+          "Collector's Note and Where Acquired fields on every book",
+          'Paste from Clipboard button in Cover Image finder',
+          'Cloudinary connection test in Settings',
+        ]
+      },
+      {
+        label: 'Improved',
+        color: 'var(--tier2)',
+        bg: 'var(--tier2-bg)',
+        border: 'var(--tier2-border)',
+        items: [
+          "Draft flow — completing a draft now automatically removes it",
+          "Edit modal — all 19 sheet columns saved correctly",
+          "Condition flags now shown in a 2-column grid",
+          "Cover modal — switching tabs no longer leaves the Google Images panel visible",
+          "Mobile layout alignment tightened",
+        ]
+      },
+      {
+        label: 'Fixed',
+        color: 'var(--tier3)',
+        bg: 'var(--tier3-bg)',
+        border: 'var(--tier3-border)',
+        items: [
+          "Drafts no longer appear in the main catalog view",
+          "Sort by title and author strips leading The / A / An correctly",
+        ]
+      }
+    ]
+  }
+];
+
+function openChangelog(auto) {
+  const body = document.getElementById('changelogBody');
+  const vLabel = document.getElementById('changelogVersionLabel');
+  const entry = CHANGELOG[0];
+  vLabel.textContent = entry.version + ' — ' + entry.date;
+  body.innerHTML = entry.sections.map(sec => `
+    <div style="margin-bottom:18px;">
+      <div style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 9px;border-radius:20px;margin-bottom:10px;background:${sec.bg};color:${sec.color};border:0.5px solid ${sec.border};">${sec.label}</div>
+      <ul style="margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:7px;">
+        ${sec.items.map(item => `
+          <li style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--ink);line-height:1.5;">
+            <span style="color:${sec.color};font-size:10px;margin-top:4px;flex-shrink:0;">●</span>
+            ${item}
+          </li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  document.getElementById('changelogOverlay').classList.remove('hidden');
+  // Mark this version as seen
+  const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+  s.changelogSeen = APP_VERSION;
+  localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+}
+
+function closeChangelog() {
+  document.getElementById('changelogOverlay').classList.add('hidden');
+}
+
+function checkChangelog() {
+  const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+  if (s.changelogSeen !== APP_VERSION) {
+    setTimeout(() => openChangelog(true), 1000);
+  }
+}
 
 // ── SETUP WIZARD ──
 const WIZARD_STEPS = 4;
@@ -2778,7 +2891,7 @@ function wizardNext() {
     // Validate Apps Script URL before proceeding
     const url = document.getElementById('wiz-scriptUrl').value.trim();
     if (url && !url.startsWith('https://script.google.com')) {
-      showWizardError('That doesn't look like an Apps Script URL. It should start with https://script.google.com/…');
+      showWizardError("That doesn't look like an Apps Script URL — it should start with https://script.google.com/…");
       return;
     }
     if (url) {
@@ -2968,9 +3081,9 @@ function renderWizardStep() {
     content.innerHTML = `
       <div style="text-align:center;padding:16px 0 24px;">
         <div style="font-size:52px;margin-bottom:14px;">${hasSheet ? '✦' : '🎩'}</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;">${hasSheet ? 'You're all set!' : 'Almost ready!'}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;">${hasSheet ? "You're all set!" : 'Almost ready!'}</div>
         <div style="font-size:13px;color:var(--ink-light);line-height:1.7;max-width:360px;margin:0 auto;">
-          ${hasSheet ? 'MagiLib is connected and ready to catalogue your collection.' : 'You can start browsing, but you'll need to add your Apps Script URL in Settings before saving books.'}
+          ${hasSheet ? 'MagiLib is connected and ready to catalogue your collection.' : "You can start browsing, but you'll need to add your Apps Script URL in Settings before saving books."}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">
