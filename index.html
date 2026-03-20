@@ -2666,21 +2666,68 @@ async function scrapeQTTEPrices(title, author) {
 
 async function scrapeCollectingMagicBooks(title, author) {
   const results = [];
-  try {
-    const q = encodeURIComponent(title + (author ? ' ' + author : ''));
-    const searchUrl = 'https://collectingmagicbooks.com/?s=' + q;
-    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
-    const data = await resp.json();
-    if (!data.success) return results;
-    const priceMatches = [...data.html.matchAll(/\$\s*([\d,]+(?:\.\d{2})?)/g)];
-    const urlM = data.html.match(/href="(https?:\/\/collectingmagicbooks\.com\/[^"?]+)"/i);
-    if (priceMatches.length > 0) {
-      const priceUSD = parseFloat(priceMatches[0][1].replace(',',''));
-      if (priceUSD >= 5 && priceUSD <= 2000) {
-        results.push({ name: 'Collecting Magic Books', priceUSD, title, url: urlM ? urlM[1] : searchUrl, status: 'listed' });
-      }
+  // GBP → AUD approximate rate (CMB is UK-based, prices in £)
+  const GBP_TO_AUD = 2.02;
+
+  // Build slug candidates from title — CMB uses /product-page/words-separated-by-hyphens
+  const slugify = s => s.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-').trim();
+
+  const titleSlug = slugify(title);
+  const authorSlug = author ? slugify(author) : '';
+
+  // Try multiple URL patterns CMB uses
+  const urlCandidates = [
+    'https://www.collectingmagicbooks.com/product-page/' + titleSlug,
+    'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + authorSlug,
+    authorSlug ? 'https://www.collectingmagicbooks.com/product-page/' + authorSlug + '-' + titleSlug : null,
+  ].filter(Boolean);
+
+  const parsePrice = (html) => {
+    // Match £ price (GBP) — convert to AUD
+    const gbpM = html.match(/£\s*([\d,]+(?:\.\d{2})?)/);
+    if (gbpM) {
+      const gbp = parseFloat(gbpM[1].replace(',',''));
+      if (gbp >= 3 && gbp <= 2000) return { priceLocal: gbp, currency: 'GBP', priceAUD: Math.round(gbp * GBP_TO_AUD * 100) / 100 };
     }
-  } catch(e) { /* silently fail */ }
+    // Fallback: match $ price
+    const usdM = html.match(/\$\s*([\d,]+(?:\.\d{2})?)/);
+    if (usdM) {
+      const usd = parseFloat(usdM[1].replace(',',''));
+      if (usd >= 5 && usd <= 2000) return { priceLocal: usd, currency: 'USD', priceAUD: Math.round(usd * 1.55 * 100) / 100 };
+    }
+    return null;
+  };
+
+  for (const url of urlCandidates) {
+    try {
+      const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
+      const data = await resp.json();
+      if (!data.success) continue;
+
+      // Confirm page is actually about this title
+      const h1M = data.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      const pageTitle = h1M ? h1M[1].replace(/<[^>]+>/g,'').trim() : '';
+      const normT = s => s.toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
+      if (pageTitle && !normT(pageTitle).includes(normT(title).slice(0,8))) continue;
+
+      const priceData = parsePrice(data.html);
+      if (priceData) {
+        results.push({
+          name: 'Collecting Magic Books',
+          priceUSD: priceData.currency === 'USD' ? priceData.priceLocal : null,
+          priceGBP: priceData.currency === 'GBP' ? priceData.priceLocal : null,
+          priceAUD: priceData.priceAUD,
+          title: pageTitle || title,
+          url,
+          status: 'listed',
+          currency: priceData.currency
+        });
+        break; // Found it
+      }
+    } catch(e) { /* try next candidate */ }
+  }
   return results;
 }
 
@@ -2872,11 +2919,18 @@ async function fetchPrice(){
 
     // ── STEP 3: Add specialist dealer live listings (QTTE, CMB) ──
     for (const r of [...qtteResults, ...cmbResults]) {
+      // CMB prices may already be converted to AUD from GBP
+      const localPrice = r.priceAUD
+        ? Math.round(r.priceAUD)
+        : usdToLocal(r.priceUSD, currency);
+      const priceDetail = r.priceGBP
+        ? 'GBP £' + r.priceGBP + ' → ' + currSym() + localPrice + ' ' + currency
+        : 'USD $' + r.priceUSD + ' → ' + currSym() + localPrice + ' ' + currency;
       allSources.push({
         name: r.name,
-        price: usdToLocal(r.priceUSD, currency),
-        priceUSD: r.priceUSD,
-        detail: r.title + ' — asking price',
+        price: localPrice,
+        priceUSD: r.priceUSD || null,
+        detail: r.title + ' — asking price (' + priceDetail + ')',
         url: r.url,
         urlLabel: 'View listing',
         tier: 1,
