@@ -2798,7 +2798,6 @@ function lookupDiscDB(title) {
 // ── PRICING CONSTANTS ──
 const RETAIL_DISCOUNT = 0.80;   // -20% from retail for in-stock titles
 const USD_RATES = { AUD: 1.55, GBP: 0.79, EUR: 0.92, USD: 1.0 };
-const MIN_SOURCES  = 3;         // minimum real data points to return a price
 
 function usdToLocal(usd, currency) {
   return Math.round(usd * (USD_RATES[currency] || 1.55) * 100) / 100;
@@ -2980,14 +2979,9 @@ Reply ONLY with valid JSON, no markdown:
       }
     }
 
-    // ── STEP 5: Enforce minimum sources rule ──
-    if (allSources.length < MIN_SOURCES) {
-      showPriceUnavailable(
-        'Only ' + allSources.length + ' of ' + MIN_SOURCES + ' required sources found. ' +
-        (allSources.length > 0 ? 'Partial data: ' + allSources.map(s => s.name).join(', ') + '.' : '') +
-        ' Check eBay sold listings for current market data.'
-      );
-      renderSources(allSources.map(s => ({...s, urlLabel: s.urlLabel || 'View'})));
+    // ── STEP 5: Need at least 1 source to calculate ──
+    if (allSources.length === 0) {
+      showPriceUnavailable('No verified listings found. Check eBay sold listings for current market data.');
       btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
       return;
     }
@@ -3013,7 +3007,7 @@ Reply ONLY with valid JSON, no markdown:
 
     // ── STEP 7: Display results ──
     document.getElementById('priceDisplay').innerHTML = `${sym}${recommended.toFixed(0)} <span>${currency}</span>`;
-    const confidence = retailSource ? 'high' : allSources.length >= 4 ? 'high' : 'medium';
+    const confidence = retailSource ? 'high' : allSources.length >= 3 ? 'high' : allSources.length === 2 ? 'medium' : 'low';
     document.getElementById('priceRange').textContent =
       `Range: ${sym}${low} – ${sym}${high} · ${confidence} confidence · ${allSources.length} sources`;
     document.getElementById('f-price').value = recommended.toFixed(2);
