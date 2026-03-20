@@ -14,6 +14,7 @@
 <script src="/conjuring_db.js" defer></script>
 <script src="/magilib_price_db.js" defer></script>
 <script src="/magilib_disc_db.js" defer></script>
+<script src="/magilib_market_db.js" defer></script>
 <script src="/discontinued_db.js" defer></script>
 <script src="/price_db.js" defer></script>
 <title>MagiLib</title>
@@ -113,6 +114,8 @@ input[type=file].file-input{display:none;}
 .source-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink-faint);}
 .legend-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.search-dealer-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 6px;border:0.5px solid var(--border-med);border-radius:8px;font-size:11px;font-weight:500;color:var(--ink-light);text-decoration:none;background:var(--paper-warm);transition:all 0.15s;white-space:nowrap;}
+.search-dealer-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 .ebay-btn{display:block;margin-top:10px;padding:9px 14px;background:#f7f4ee;border:0.5px solid var(--border-med);border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;color:var(--accent);cursor:pointer;text-align:center;transition:all 0.15s;}
 .ebay-btn:hover{background:var(--accent-light);border-color:var(--accent);}
 .fetch-price-btn{width:100%;margin-top:8px;padding:10px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;}
@@ -340,7 +343,24 @@ input[type=file].file-input{display:none;}
           <div class="legend-item"><div class="legend-dot" style="background:var(--tier2)"></div>Sold</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--tier3)"></div>Listed</div>
         </div>
-        <a class="ebay-btn" href="#" onclick="openEbay(event)">View eBay sold listings ↗</a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <a class="search-dealer-btn" href="#" onclick="openDealerSearch('ebay',event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            eBay Sold
+          </a>
+          <a class="search-dealer-btn" href="#" onclick="openDealerSearch('qtte',event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            QTTE
+          </a>
+          <a class="search-dealer-btn" href="#" onclick="openDealerSearch('cmb',event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Collecting Magic
+          </a>
+          <a class="search-dealer-btn" href="#" onclick="openDealerSearch('mc',event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Magic Collectibles
+          </a>
+        </div>
         <button class="fetch-price-btn" id="fetchPriceBtn" onclick="fetchPrice()">Fetch Price Estimate</button>
       </div>
 
@@ -1221,6 +1241,24 @@ function applyManualUrl(){
   if(urlArea)urlArea.style.display='none';
 }
 function buildEbayUrl(title,author){const siteMap={EBAY_AU:'ebay.com.au',EBAY_US:'ebay.com',EBAY_GB:'ebay.co.uk'};const domain=siteMap[S.settings.marketplace||'EBAY_AU']||'ebay.com.au';return`https://www.${domain}/sch/i.html?_nkw=${encodeURIComponent(title+' '+author+' magic')}&LH_Sold=1&LH_Complete=1`;}
+function openDealerSearch(dealer, e) {
+  if (e) e.preventDefault();
+  const title  = document.getElementById('f-title').value.trim();
+  const author = document.getElementById('f-author').value.trim();
+  if (!title) { showToast('Enter a title first', 'error'); return; }
+  const q = encodeURIComponent(title + (author ? ' ' + author : ''));
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const urls = {
+    ebay: buildEbayUrl(title, author),
+    qtte: 'https://www.quickerthantheeye.com/products/find/any/' + q,
+    cmb:  'https://www.collectingmagicbooks.com/all?search=' + q,
+    mc:   'https://www.magiccollectibles.com/?s=' + q,
+  };
+  const url = urls[dealer];
+  if (!url) return;
+  if (isMobile) { window.location.href = url; } else { window.open(url, '_blank'); }
+}
+
 function openEbay(e){
   e.preventDefault();
   const title=document.getElementById('f-title').value.trim();
@@ -2673,18 +2711,24 @@ async function scrapeCollectingMagicBooks(title, author, edition) {
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, '-').trim();
 
-  const titleSlug = slugify(title);
+  const titleSlug  = slugify(title);
   const authorSlug = author ? slugify(author) : '';
+  const editionSlug = edition ? slugify(edition) : '';
+  const BASE = 'https://www.collectingmagicbooks.com/product-page/';
 
-  // Build all slug candidates — fetch ALL of them, not just first hit
-  // CMB often has multiple editions listed separately
-  const urlCandidates = [
-    'https://www.collectingmagicbooks.com/product-page/' + titleSlug,
-    'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + authorSlug,
-    authorSlug ? 'https://www.collectingmagicbooks.com/product-page/' + authorSlug + '-' + titleSlug : null,
-    // Edition-qualified slugs — "first edition", "second edition" etc
-    edition ? 'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + slugify(edition) + '-' + authorSlug : null,
-    edition ? 'https://www.collectingmagicbooks.com/product-page/' + titleSlug + '-' + slugify(edition) : null,
+  // Build all candidate URLs and fetch ALL in parallel
+  const candidates = [
+    BASE + titleSlug,
+    authorSlug ? BASE + titleSlug + '-' + authorSlug : null,
+    authorSlug ? BASE + authorSlug + '-' + titleSlug : null,
+    editionSlug ? BASE + titleSlug + '-' + editionSlug + '-' + authorSlug : null,
+    editionSlug ? BASE + titleSlug + '-' + editionSlug : null,
+    // Common edition variants — always try these regardless of edition field
+    authorSlug ? BASE + titleSlug + '-first-edition-' + authorSlug : null,
+    authorSlug ? BASE + titleSlug + '-second-edition-' + authorSlug : null,
+    authorSlug ? BASE + titleSlug + '-limited-edition-' + authorSlug : null,
+    authorSlug ? BASE + titleSlug + '-signed-edition-' + authorSlug : null,
+    authorSlug ? BASE + titleSlug + '-hardcover-' + authorSlug : null,
   ].filter(Boolean);
 
   const parsePrice = (html) => {
@@ -2701,55 +2745,45 @@ async function scrapeCollectingMagicBooks(title, author, edition) {
     return null;
   };
 
-  const seenUrls = new Set();
-  for (const url of urlCandidates) {
+  // Fetch all candidates in parallel
+  const fetchOne = async (url) => {
     try {
       const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
       const data = await resp.json();
-      if (!data.success) continue;
-
-      // Deduplicate by final URL (redirects may land on same page)
-      const finalUrl = data.url || url;
-      if (seenUrls.has(finalUrl)) continue;
-      seenUrls.add(finalUrl);
-
-      // Confirm page is about this title
-      const h1M = data.html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-                || data.html.match(/^#\s+(.+)$/m);
-      const pageTitle = h1M ? h1M[1].replace(/<[^>]+>/g,'').trim() : '';
-      if (pageTitle && normT(pageTitle).length > 3 && !normT(pageTitle).includes(normT(title).slice(0,8))) continue;
-
+      if (!data.success) return null;
       const priceData = parsePrice(data.html);
-      if (priceData) {
-        // Extract condition/edition detail from page for the source label
-        const condM = data.html.match(/Condition:\s*([^\n<]+)/i);
-        const yearM  = data.html.match(/Year:\s*(\d{4})/i);
-        const detail = [
-          condM ? condM[1].trim() : '',
-          yearM ? yearM[1] : ''
-        ].filter(Boolean).join(' · ');
+      if (!priceData) return null;
+      // Confirm this page is actually about the right title
+      const h1M = data.html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || data.html.match(/^#\s+(.+)$/m);
+      const pageTitle = h1M ? h1M[1].replace(/<[^>]+>/g,'').trim() : '';
+      if (pageTitle && normT(pageTitle).length > 3 && !normT(pageTitle).includes(normT(title).slice(0,6))) return null;
+      const condM = data.html.match(/Condition:\s*([^\n<]+)/i);
+      const yearM  = data.html.match(/Year:\s*(\d{4})/i);
+      return {
+        name: 'Collecting Magic Books',
+        priceGBP: priceData.currency === 'GBP' ? priceData.priceLocal : null,
+        priceUSD: priceData.currency === 'USD' ? priceData.priceLocal : null,
+        priceAUD: priceData.priceAUD,
+        title: pageTitle || title,
+        detail: [condM ? condM[1].trim() : '', yearM ? yearM[1] : ''].filter(Boolean).join(' · '),
+        url, status: 'listed', currency: priceData.currency
+      };
+    } catch(e) { return null; }
+  };
 
-        results.push({
-          name: 'Collecting Magic Books',
-          priceUSD: priceData.currency === 'USD' ? priceData.priceLocal : null,
-          priceGBP: priceData.currency === 'GBP' ? priceData.priceLocal : null,
-          priceAUD: priceData.priceAUD,
-          title: pageTitle || title,
-          detail,
-          url,
-          status: 'listed',
-          currency: priceData.currency
-        });
-        // Don't break — continue to find other editions
-      }
-    } catch(e) { /* try next candidate */ }
+  // Run all fetches in parallel, collect successful ones, deduplicate by price
+  const responses = await Promise.all(candidates.map(fetchOne));
+  const seen = new Set();
+  for (const r of responses) {
+    if (!r) continue;
+    const key = r.priceAUD + '|' + r.url;
+    if (!seen.has(key)) { seen.add(key); results.push(r); }
   }
 
-  // If we found multiple CMB results, prefer the one matching the user's edition
-  if (results.length > 1 && edition) {
-    const edNorm = normT(edition);
-    const editionMatch = results.find(r => normT(r.title).includes(edNorm) || normT(r.detail).includes(edNorm));
-    if (editionMatch) return [editionMatch]; // Return only the matching edition
+  // If multiple editions found and user specified one, prefer the match
+  if (results.length > 1 && editionSlug) {
+    const match = results.find(r => normT(r.title).includes(editionSlug.replace(/-/g,' ')));
+    if (match) return [match];
   }
 
   return results;
@@ -2863,196 +2897,193 @@ async function fetchPrice(){
 
   const btn = document.getElementById('fetchPriceBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Checking sources…';
+  btn.innerHTML = '<span class="spinner"></span> Searching…';
   const currency = S.settings.currency || 'AUD';
   const sym = currSym();
 
-  try {
-    // ── STEP 1: Check local DBs first (instant, no API call) ──
-    const localPriceEntry = lookupPriceDB(title);
-    const discEntry        = lookupDiscDB(title);
-    const isDiscontinued   = !!discEntry;
+  // ── Conversion rates ──
+  const USD_AUD = 1.55;
+  const GBP_AUD = 2.02;
+  const toAUD = (price, cur) => Math.round(price * (cur === 'GBP' ? GBP_AUD : USD_AUD));
 
-    const allSources = [];
-    let retailSource = null;
+  // ── Normalise title for DB lookup ──
+  const normKey = s => {
+    let k = s.replace(/[^\x00-\x7F]/g, ' ')
+             .replace(/\([^)]*\)/g, ' ')
+             .replace(/\[[^\]]*\]/g, ' ')
+             .replace(/\s+-\s+.*$/, '')
+             .replace(/\s+by\s+.*$/i, '')
+             .replace(/\s*(hardcover|softcover|paperback|hc\b|pb\b|magic trick|magic book|signed\b|oop\b)\s*/gi, ' ')
+             .toLowerCase()
+             .replace(/[^a-z0-9\s]/g, ' ')
+             .replace(/\s+/g, ' ').trim()
+             .replace(/^(the|a|an)\s+/, '');
+    return k;
+  };
 
-    if (localPriceEntry) {
-      // Title is in our master price list — currently in print, use MSRP formula
-      retailSource = {
-        name: "Murphy's Magic (MSRP)",
-        priceUSD: localPriceEntry.msrp,
-        url: 'https://www.murphysmagicsupplies.com',
-        inStock: true,
-        source: 'retail'
-      };
-      // Offer cover image via intelligence card (tap to use, not auto-load)
-      if (localPriceEntry.image && !S.coverUrl) {
-        const _sid = 'retailCover_' + Date.now();
-        const _imgUrl = localPriceEntry.image;
-        const _card = document.getElementById('aiInfoCard');
-        const _ct = document.getElementById('aiInfoContent');
-        if (_ct) {
-          const _wrap = document.createElement('div');
-          _wrap.id = _sid;
-          _wrap.style.marginTop = '8px';
-          const _lbl = document.createElement('div');
-          _lbl.style.cssText = 'font-size:10px;font-weight:500;color:var(--tier2);margin-bottom:5px;';
-          _lbl.textContent = 'Retail product image available — tap to use';
-          const _img = document.createElement('img');
-          _img.src = _imgUrl;
-          _img.style.cssText = 'max-width:80px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;display:block;';
-          _img.title = 'Tap to use as cover';
-          _img.addEventListener('click', () => acceptConjuringSuggestion(_imgUrl, _sid));
-          _wrap.appendChild(_lbl);
-          _wrap.appendChild(_img);
-          _ct.appendChild(_wrap);
-          if (_card) _card.style.display = 'block';
-        }
-      }
-    } else if (isDiscontinued) {
-      // Show out-of-print warning in intelligence card immediately
-      showAiInfoCard('<span style="color:var(--tier3);font-weight:600;">⚠ Possibly Out of Print</span><br>' +
-        '<span style="font-size:11px;color:var(--ink-light);">Found on discontinued list. Pricing from secondary market only.</span>');
-    }
+  const key = normKey(title);
+  const allSources = [];
 
-    // ── STEP 2: Live scrape specialist dealers + (if no local price) Claude retail check ──
-    btn.innerHTML = '<span class="spinner"></span> Checking live listings…';
-    const scrapePromises = [scrapeQTTEPrices(title, author), scrapeCollectingMagicBooks(title, author, document.getElementById('f-edition') ? document.getElementById('f-edition').value.trim() : '')];
-    if (!localPriceEntry && !isDiscontinued) scrapePromises.push(checkRetailAvailability(title, author));
-    else scrapePromises.push(Promise.resolve(null));
-
-    const [qtteResults, cmbResults, claudeRetail] = await Promise.all(scrapePromises);
-    if (!retailSource && claudeRetail) retailSource = claudeRetail;
-    if (retailSource) {
-      const retailAUD = usdToLocal(retailSource.priceUSD, currency);
-      const marketAUD = Math.round(retailAUD * RETAIL_DISCOUNT);
-      allSources.push({
-        name: retailSource.name,
-        price: marketAUD,
-        priceUSD: retailSource.priceUSD,
-        detail: 'In stock — retail ' + sym + retailAUD.toFixed(0) + ' × 0.80 = market ' + sym + marketAUD,
-        url: retailSource.url,
-        urlLabel: 'View listing',
-        tier: 1,
-        tag: 'listed',
-        isRetail: true
-      });
-      // Single retail source — Claude doesn't distinguish two retailers separately
-    }
-
-    // ── STEP 3: Add specialist dealer live listings (QTTE, CMB) ──
-    for (const r of [...qtteResults, ...cmbResults]) {
-      // CMB prices may already be converted to AUD from GBP
-      const localPrice = r.priceAUD
-        ? Math.round(r.priceAUD)
-        : usdToLocal(r.priceUSD, currency);
-      const priceDetail = r.priceGBP
-        ? 'GBP £' + r.priceGBP + ' → ' + currSym() + localPrice + ' ' + currency
-        : 'USD $' + r.priceUSD + ' → ' + currSym() + localPrice + ' ' + currency;
-      allSources.push({
-        name: r.name,
-        price: localPrice,
-        priceUSD: r.priceUSD || null,
-        detail: r.title + ' — asking price (' + priceDetail + ')',
-        url: r.url,
-        urlLabel: 'View listing',
-        tier: 1,
-        tag: 'specialist'
-      });
-    }
-
-    // ── STEP 4: Ask Claude ONLY for eBay sold data (last 2 years) — no AbeBooks, no Amazon, no forums ──
-    btn.innerHTML = '<span class="spinner"></span> Checking sold listings…';
-    const realPriceContext = allSources.length > 0
-      ? 'VERIFIED LIVE PRICES (use these as ground truth):\n' +
-        allSources.map(s => '- ' + s.name + ': ' + sym + s.price.toFixed(0) + ' ' + currency + ' (USD $' + s.priceUSD + ')').join('\n')
-      : 'No live listings found on specialist dealer sites.';
-
-    const claudeData = await callClaude([{role:'user', content:
-      `You are a magic book pricing expert. Your ONLY job here is to find eBay SOLD listings data.
-
-Title: "${title}"${author ? ' by ' + author : ''}
-
-${realPriceContext}
-
-Search your knowledge for eBay COMPLETED/SOLD listings for this exact title within the last 2 years ONLY.
-- Ignore AbeBooks, Amazon, Alibris — do NOT include them
-- Ignore Genii Forum, Magic Cafe, or any discussion forums
-- Ignore any data older than 2 years
-- If you cannot find at least 1 genuine eBay sold listing from the last 2 years, return an empty ebay_sold array
-
-Reply ONLY with valid JSON, no markdown:
-{"ebay_sold":[{"price_usd":number,"condition":"string","date":"string","detail":"string"}],"notes":"string"}`
-    }], 500);
-
-    const claudeJson = JSON.parse(claudeData.content[0].text.replace(/```json|```/g,'').trim());
-
-    // Add eBay sold sources (converted to local currency)
-    for (const sold of (claudeJson.ebay_sold || [])) {
-      if (sold.price_usd && sold.price_usd > 0) {
-        allSources.push({
-          name: 'eBay Sold',
-          price: usdToLocal(sold.price_usd, currency),
-          priceUSD: sold.price_usd,
-          detail: (sold.condition || '') + (sold.date ? ' · ' + sold.date : '') + (sold.detail ? ' · ' + sold.detail : ''),
-          url: 'https://www.ebay.com.au/sch/i.html?_nkw=' + encodeURIComponent(title + ' ' + author) + '&LH_Sold=1&LH_Complete=1',
-          urlLabel: 'eBay sold listings',
-          tier: 2,
-          tag: 'sold'
-        });
-      }
-    }
-
-    // ── STEP 5: Need at least 1 source to calculate ──
-    if (allSources.length === 0) {
-      showPriceUnavailable('No verified listings found. Check eBay sold listings for current market data.');
-      btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
-      return;
-    }
-
-    // ── STEP 6: Calculate recommended price ──
-    // If retail source found: use retail formula as the recommended price
-    // Otherwise: median of all verified sources
-    let recommended;
-    let low, high;
-    const prices = allSources.map(s => s.price).filter(p => p > 0).sort((a,b) => a-b);
-
-    if (retailSource && allSources.some(s => s.isRetail)) {
-      // Title is in production — recommended = retail formula price
-      recommended = allSources.find(s => s.isRetail).price;
-      low  = Math.round(recommended * 0.85);
-      high = Math.round(recommended * 1.10);
-    } else {
-      // Rare/secondary market title — median of verified sources
-      recommended = Math.round(prices[Math.floor(prices.length / 2)]);
-      low  = prices[0];
-      high = prices[prices.length - 1];
-    }
-
-    // ── STEP 7: Display results ──
-    document.getElementById('priceDisplay').innerHTML = `${sym}${recommended.toFixed(0)} <span>${currency}</span>`;
-    const confidence = retailSource ? 'high' : allSources.length >= 3 ? 'high' : allSources.length === 2 ? 'medium' : 'low';
-    document.getElementById('priceRange').textContent =
-      `Range: ${sym}${low} – ${sym}${high} · ${confidence} confidence · ${allSources.length} sources`;
-    document.getElementById('f-price').value = recommended.toFixed(2);
-
-    renderSources(allSources.map(s => ({
-      name: s.name,
-      price: s.price,
-      detail: s.detail,
-      url: s.url,
-      urlLabel: s.urlLabel,
-      tier: s.tier,
-      tag: s.tag
-    })));
-
-    if (claudeJson.notes) showAiInfoCard(claudeJson.notes);
-    fetchBookIntelligence(title, author);
-
-  } catch(err) {
-    showToast('Price fetch failed: ' + err.message, 'error');
-    showPriceUnavailable('Error fetching data — please try again.');
+  // Helper: check if MARKET_DB is loaded
+  if (typeof MARKET_DB === 'undefined') {
+    showToast('Market database not loaded', 'error');
+    btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
+    return;
   }
+
+  // ── TIER 1: Murphy's Magic in-print list ──
+  const priceEntry = lookupPriceDB(title);
+  if (priceEntry) {
+    const retailAUD = toAUD(priceEntry.msrp, 'USD');
+    const marketAUD = Math.round(retailAUD * 0.80);
+    allSources.push({
+      name: "Murphy's Magic (In Print)",
+      price: marketAUD,
+      detail: 'Retail USD $' + priceEntry.msrp + ' → ' + sym + retailAUD + ' × 0.80',
+      url: 'https://www.murphysmagicsupplies.com',
+      urlLabel: 'Murphy\'s Magic',
+      tier: 1, tag: 'listed', isRetail: true
+    });
+    // Offer product image
+    if (priceEntry.image && !S.coverUrl) {
+      const _sid = 'retailCover_' + Date.now();
+      const _card = document.getElementById('aiInfoCard');
+      const _ct   = document.getElementById('aiInfoContent');
+      if (_ct) {
+        const _wrap = document.createElement('div');
+        _wrap.id = _sid; _wrap.style.marginTop = '8px';
+        const _lbl = document.createElement('div');
+        _lbl.style.cssText = 'font-size:10px;font-weight:500;color:var(--tier2);margin-bottom:5px;';
+        _lbl.textContent = 'Retail product image — tap to use';
+        const _img = document.createElement('img');
+        _img.src = priceEntry.image;
+        _img.style.cssText = 'max-width:80px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;display:block;';
+        _img.title = 'Tap to use as cover';
+        _img.addEventListener('click', () => acceptConjuringSuggestion(priceEntry.image, _sid));
+        _wrap.appendChild(_lbl); _wrap.appendChild(_img); _ct.appendChild(_wrap);
+        if (_card) _card.style.display = 'block';
+      }
+    }
+  }
+
+  // ── TIER 2: QTTE ──
+  const qtteEntry = MARKET_DB.qtte[key];
+  if (qtteEntry) {
+    allSources.push({
+      name: 'Quicker Than The Eye',
+      price: toAUD(qtteEntry.price, 'USD'),
+      detail: 'Listed USD $' + qtteEntry.price + ' → ' + sym + toAUD(qtteEntry.price, 'USD'),
+      url: qtteEntry.url,
+      urlLabel: 'View listing',
+      tier: 1, tag: 'specialist'
+    });
+  }
+
+  // ── TIER 3: CMB (may have multiple editions) ──
+  const cmbEntries = MARKET_DB.cmb[key] || [];
+  for (const e of cmbEntries) {
+    allSources.push({
+      name: 'Collecting Magic Books',
+      price: toAUD(e.price, 'GBP'),
+      detail: e.raw + ' — GBP £' + e.price + ' → ' + sym + toAUD(e.price, 'GBP'),
+      url: e.url,
+      urlLabel: 'View listing',
+      tier: 1, tag: 'specialist'
+    });
+  }
+
+  // ── TIER 4: eBay sold ──
+  const ebayEntries = MARKET_DB.ebay[key] || [];
+  if (ebayEntries.length > 0) {
+    const prices = ebayEntries.map(e => e.price);
+    const avgUSD = prices.reduce((a,b) => a+b, 0) / prices.length;
+    const avgAUD = toAUD(avgUSD, 'USD');
+    const ebayUrl = 'https://www.ebay.com.au/sch/i.html?_nkw=' + encodeURIComponent(title + ' ' + author) + '&LH_Sold=1&LH_Complete=1';
+    allSources.push({
+      name: 'eBay Sold',
+      price: avgAUD,
+      detail: prices.length + ' sold listing' + (prices.length > 1 ? 's' : '') +
+              ' — avg USD $' + avgUSD.toFixed(0) + ' → ' + sym + avgAUD +
+              (prices.length > 1 ? ' (range $' + Math.min(...prices).toFixed(0) + '–$' + Math.max(...prices).toFixed(0) + ')' : ''),
+      url: ebayUrl,
+      urlLabel: 'eBay sold listings',
+      tier: 2, tag: 'sold'
+    });
+  }
+
+  // ── TIER 5: Magic Collectibles ──
+  const mcEntry = MARKET_DB.mc[key];
+  if (mcEntry) {
+    allSources.push({
+      name: 'Magic Collectibles',
+      price: toAUD(mcEntry.price, 'USD'),
+      detail: 'Listed USD $' + mcEntry.price + ' → ' + sym + toAUD(mcEntry.price, 'USD'),
+      url: mcEntry.url,
+      urlLabel: 'View listing',
+      tier: 1, tag: 'specialist'
+    });
+  }
+
+  // ── No results: check discontinued list ──
+  if (allSources.length === 0) {
+    const discEntry = MARKET_DB.disc[key];
+    if (discEntry) {
+      document.getElementById('priceDisplay').innerHTML =
+        '<span style="font-size:12px;color:var(--tier3);">⚠ Possibly Out of Print</span>';
+      document.getElementById('priceRange').textContent =
+        'Found on discontinued list. Not currently listed on any dealer site.';
+      document.getElementById('f-price').value = '';
+      showAiInfoCard(
+        '<span style="color:var(--tier3);font-weight:600;">⚠ Possibly Out of Print</span><br>' +
+        '<span style="font-size:11px;color:var(--ink-light);">Found on discontinued list. ' +
+        'Not currently listed on any dealer site.<br>Unable to calculate market value — check eBay sold listings manually.</span>'
+      );
+      const sb = document.getElementById('sourceBreakdown');
+      if (sb) sb.style.display = 'none';
+    } else {
+      document.getElementById('priceDisplay').innerHTML =
+        '<span style="font-size:12px;color:var(--ink-faint);">Unable to calculate</span>';
+      document.getElementById('priceRange').textContent =
+        'Not found in any price database. Use search buttons below.';
+      document.getElementById('f-price').value = '';
+      const sb = document.getElementById('sourceBreakdown');
+      if (sb) sb.style.display = 'none';
+    }
+    btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
+    return;
+  }
+
+  // ── Calculate recommended price ──
+  // If in-print (Murphy's): use retail formula
+  // Otherwise: median of all found prices
+  let recommended;
+  const prices = allSources.map(s => s.price).sort((a,b) => a-b);
+
+  if (allSources.some(s => s.isRetail)) {
+    recommended = allSources.find(s => s.isRetail).price;
+  } else {
+    recommended = prices[Math.floor(prices.length / 2)];
+  }
+
+  const low  = prices[0];
+  const high = prices[prices.length - 1];
+  const confidence = allSources.length >= 3 ? 'high' : allSources.length === 2 ? 'medium' : 'low';
+
+  // ── Display ──
+  document.getElementById('priceDisplay').innerHTML =
+    sym + recommended + ' <span>' + currency + '</span>';
+  document.getElementById('priceRange').textContent =
+    'Range: ' + sym + low + ' – ' + sym + high +
+    ' · ' + confidence + ' confidence · ' + allSources.length + ' source' + (allSources.length !== 1 ? 's' : '');
+  document.getElementById('f-price').value = recommended.toFixed(2);
+
+  renderSources(allSources.map(s => ({
+    name: s.name, price: s.price, detail: s.detail,
+    url: s.url, urlLabel: s.urlLabel, tier: s.tier, tag: s.tag
+  })));
+
+  // Trigger intelligence card
+  fetchBookIntelligence(title, author);
 
   btn.disabled = false; btn.textContent = 'Fetch Price Estimate';
 }
@@ -3070,7 +3101,7 @@ function debouncedConjuringCheck(title) {
     if (!title || title.length < 4) return;
     // Check local DBs immediately
     const priceEntry = lookupPriceDB(title);
-    const discEntry  = lookupDiscDB(title);
+    const discEntry  = (typeof MARKET_DB !== 'undefined' && MARKET_DB.disc) ? MARKET_DB.disc[normBookTitle(title)] : lookupDiscDB(title);
     if (priceEntry) {
       // Known retail title — show MSRP hint
       const aud = Math.round(priceEntry.msrp * 1.55 * 0.80);
