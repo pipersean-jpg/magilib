@@ -37,9 +37,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 .tab-btn{padding:7px 14px;border-radius:7px;border:0.5px solid transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--ink-light);}
 .tab-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
 .tab-btn:hover:not(.active){background:var(--paper-warm);border-color:var(--border);color:var(--ink);}
-.view{display:none;padding:16px 12px;max-width:1100px;margin:0 auto;}
+.view{display:none;padding:16px;max-width:680px;margin:0 auto;box-sizing:border-box;width:100%;}
 .view.active{display:block;}
-@media(min-width:480px){.view{padding:20px;}}
+
 .camera-hero{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;}
 .camera-hero-title{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px;color:var(--ink);}
 .camera-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -198,7 +198,7 @@ input[type=file].file-input{display:none;}
 .empty-state p{font-size:13px;line-height:1.6;}
 .empty-state button{margin-top:14px;padding:11px 22px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
 .modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
-@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;} #navLogo{height:46px;}}
+@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;} #navLogo{height:46px;} .view{padding:20px;}}
 .modal-overlay.hidden{display:none;}
 .modal{background:var(--paper-card);border-radius:20px 20px 0 0;max-width:680px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 @media(min-width:600px){.modal{border-radius:var(--radius-lg);}}
@@ -246,14 +246,10 @@ input[type=file].file-input{display:none;}
 <body>
 
 <!-- SPLASH SCREEN -->
-<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#2A1F6B;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
-    <img src="/logo.png" alt="MagiLib" id="splashLogo" style="height:80px;width:auto;opacity:0;transform:scale(0.92);transition:opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;"/>
-    <div id="splashWordmark" style="font-family:'DM Sans',sans-serif;font-size:32px;font-weight:500;letter-spacing:-0.01em;margin-top:14px;opacity:0;transition:opacity 0.5s ease 0.35s;">
-      <span style="color:#e8e4f5;">Magi</span><span style="color:#C9A84C;">Lib</span>
-    </div>
-  </div>
-  <div id="splashVersion" style="position:absolute;bottom:40px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.04em;border:0.5px solid rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;opacity:0;transition:opacity 0.4s ease 0.6s;">v1.0 beta</div>
+<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
+  <img src="/logo.png" alt="MagiLib" id="splashLogo" style="height:100px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;"/>
+  <div id="splashWordmark" style="display:none;"></div>
+  <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(42,31,107,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
 </div>
 
 <nav class="nav">
@@ -904,7 +900,7 @@ input[type=file].file-input{display:none;}
   <div class="settings-panel" style="margin-top:0;">
     <div class="section-title">Setup</div>
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
-    <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;display:flex;align-items:center;gap:8px;"><img src="/logo.png" alt="" style="height:18px;width:auto;display:block;opacity:0.9;">Run Setup Wizard</button>
+    <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">Run Setup Wizard</button>
   </div>
 
   <div class="settings-panel" style="margin-top:0;">
