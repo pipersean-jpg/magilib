@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#2A1F6B">
 <meta name="description" content="Catalog and price your second-hand magic and conjuring books">
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <script src="/conjuring_db.js" defer></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -196,7 +198,7 @@ input[type=file].file-input{display:none;}
 .empty-state p{font-size:13px;line-height:1.6;}
 .empty-state button{margin-top:14px;padding:11px 22px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
 .modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,0.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
-@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;}}
+@media(min-width:600px){.modal-overlay{align-items:center;padding:20px;} #navLogo{height:46px;}}
 .modal-overlay.hidden{display:none;}
 .modal{background:var(--paper-card);border-radius:20px 20px 0 0;max-width:680px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 @media(min-width:600px){.modal{border-radius:var(--radius-lg);}}
@@ -243,8 +245,19 @@ input[type=file].file-input{display:none;}
 </head>
 <body>
 
+<!-- SPLASH SCREEN -->
+<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#2A1F6B;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+    <img src="/logo.png" alt="MagiLib" id="splashLogo" style="height:80px;width:auto;opacity:0;transform:scale(0.92);transition:opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;"/>
+    <div id="splashWordmark" style="font-family:'DM Sans',sans-serif;font-size:32px;font-weight:500;letter-spacing:-0.01em;margin-top:14px;opacity:0;transition:opacity 0.5s ease 0.35s;">
+      <span style="color:#e8e4f5;">Magi</span><span style="color:#C9A84C;">Lib</span>
+    </div>
+  </div>
+  <div id="splashVersion" style="position:absolute;bottom:40px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.04em;border:0.5px solid rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;opacity:0;transition:opacity 0.4s ease 0.6s;">v1.0 beta</div>
+</div>
+
 <nav class="nav">
-  <div class="nav-brand" style="gap:0;"><img src="/logo.png" alt="MagiLib" style="height:36px;width:auto;display:block;"/></div>
+  <div class="nav-brand" style="gap:0;"><img src="/logo.png" alt="MagiLib" id="navLogo" style="height:36px;width:auto;display:block;"/></div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
     <button class="tab-btn" onclick="showView('catalog')">Catalog</button>
@@ -263,13 +276,13 @@ input[type=file].file-input{display:none;}
         <input type="file" class="file-input" accept="image/*" capture="environment" onchange="scanCover(event)">
       </label>
       <label class="camera-btn" style="cursor:pointer">
-        <span class="cam-icon">🖼</span>
+        <span class="cam-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;display:inline-block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
         <span class="cam-label">Choose Image</span>
         <span class="cam-sub">From library</span>
         <input type="file" class="file-input" accept="image/*" onchange="scanCover(event)">
       </label>
     <label class="camera-btn" style="cursor:pointer;background:var(--paper-warm);">
-        <span class="cam-icon">📚</span>
+        <span class="cam-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;display:inline-block;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg></span>
         <span class="cam-label">Batch Queue</span>
         <span class="cam-sub" id="queueCount">0 photos queued</span>
         <input type="file" class="file-input" accept="image/*" multiple onchange="addToQueue(event)">
@@ -279,7 +292,7 @@ input[type=file].file-input{display:none;}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <span style="font-size:12px;font-weight:500;color:var(--ink);">Photo queue</span>
         <div style="display:flex;gap:6px;">
-          <button onclick="quickAddFromQueue()" id="quickAddBtn" style="padding:6px 12px;background:var(--gold);color:#1A1630;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">⚡ Quick Add</button>
+          <button onclick="quickAddFromQueue()" id="quickAddBtn" style="padding:6px 12px;background:var(--gold);color:#1A1630;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">⚡ Quick Add All</button>
           <button onclick="processNextFromQueue()" id="processQueueBtn" style="padding:6px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Process next →</button>
         </div>
       </div>
@@ -888,27 +901,10 @@ input[type=file].file-input{display:none;}
       <div id="cloudinaryTestStatus" style="margin-top:8px;font-size:12px;display:none;padding:8px 12px;border-radius:var(--radius);"></div>
     </div>
   </div>
-  <div class="settings-panel">
-    <div class="section-title">Price source priority</div>
-    <div style="font-size:13px;color:var(--ink-light);line-height:1.8;">
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:var(--tier1-bg);border-radius:var(--radius);border:0.5px solid var(--tier1-border);">
-        <div style="width:7px;height:7px;border-radius:50%;background:var(--tier1);margin-top:5px;flex-shrink:0;"></div>
-        <div><span style="font-size:12px;font-weight:600;color:var(--tier1);">Tier 1 — Specialist magic dealers</span><br><span style="font-size:11px;">Magic Collectibles · Quicker Than The Eye · Collecting Magic Books · eBay magic books sold</span></div>
-      </div>
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;background:var(--tier2-bg);border-radius:var(--radius);border:0.5px solid var(--tier2-border);">
-        <div style="width:7px;height:7px;border-radius:50%;background:var(--tier2);margin-top:5px;flex-shrink:0;"></div>
-        <div><span style="font-size:12px;font-weight:600;color:var(--tier2);">Tier 2 — eBay sold listings (general)</span><br><span style="font-size:11px;">Actual completed sales across all eBay categories</span></div>
-      </div>
-      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--tier3-bg);border-radius:var(--radius);border:0.5px solid var(--tier3-border);">
-        <div style="width:7px;height:7px;border-radius:50%;background:var(--tier3);margin-top:5px;flex-shrink:0;"></div>
-        <div><span style="font-size:12px;font-weight:600;color:var(--tier3);">Tier 3 — Listed prices only (often inflated)</span><br><span style="font-size:11px;">AbeBooks · Amazon · Alibris — upper reference only</span></div>
-      </div>
-    </div>
-  </div>
   <div class="settings-panel" style="margin-top:0;">
     <div class="section-title">Setup</div>
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
-    <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">✦ Run Setup Wizard</button>
+    <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;display:flex;align-items:center;gap:8px;"><img src="/logo.png" alt="" style="height:18px;width:auto;display:block;opacity:0.9;">Run Setup Wizard</button>
   </div>
 
   <div class="settings-panel" style="margin-top:0;">
@@ -916,17 +912,17 @@ input[type=file].file-input{display:none;}
     <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Got a question, found a bug, or have a suggestion? We want to hear it.</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button onclick="openSupport('feedback')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
-        <span style="font-size:20px;flex-shrink:0;">💬</span>
+        <span style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
         <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Send Feedback</div><div style="font-size:11px;color:var(--ink-faint);">Suggestions, feature requests, general thoughts</div></div>
         <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
       </button>
       <button onclick="openSupport('bug')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
-        <span style="font-size:20px;flex-shrink:0;">🐛</span>
+        <span style="flex-shrink:0;color:var(--ink-light);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M9 2l1.5 1.5M15 2l-1.5 1.5M9 7.13v-1a3 3 0 1 1 6 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM12 20v-9M6.5 9C4.5 8.8 3 7.1 3 5M6 13H2M3 21c0-2 1.7-3.9 4-4M17.5 9c2-.2 3.5-1.9 3.5-4M18 13h4M21 21c0-2-1.7-3.9-4-4"/></svg></span>
         <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Report a Bug</div><div style="font-size:11px;color:var(--ink-faint);">Something not working as expected?</div></div>
         <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
       </button>
       <button onclick="openSupport('faq')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;width:100%;">
-        <span style="font-size:20px;flex-shrink:0;">❓</span>
+        <span style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg></span>
         <div><div style="font-size:13px;font-weight:500;color:var(--ink);">FAQ</div><div style="font-size:11px;color:var(--ink-faint);">Common questions answered</div></div>
         <span style="margin-left:auto;color:var(--ink-faint);font-size:14px;">→</span>
       </button>
@@ -937,7 +933,7 @@ input[type=file].file-input{display:none;}
   <div style="text-align:center;padding:28px 20px 36px;border-top:0.5px solid var(--border);margin-top:8px;">
     <div style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="openChangelog()">
       <span style="font-family:'Playfair Display',serif;font-size:13px;color:var(--ink-faint);">MagiLib</span>
-      <span id="versionBadge" style="font-size:11px;font-weight:600;padding:3px 8px;background:var(--accent-light);color:var(--accent);border-radius:20px;border:0.5px solid var(--accent);letter-spacing:0.04em;">v1.0 beta</span>
+      <span id="versionBadge"  style="font-size:11px;font-weight:600;padding:3px 8px;background:var(--accent-light);color:var(--accent);border-radius:20px;border:0.5px solid var(--accent);letter-spacing:0.04em;">v1.0 beta</span>
     </div>
     <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Tap to see what's new</div>
   </div>
@@ -977,7 +973,7 @@ input[type=file].file-input{display:none;}
       <pre id="appsScriptCode" style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;padding:14px;font-size:11px;line-height:1.6;overflow-x:auto;overflow-y:auto;max-height:45vh;white-space:pre;font-family:ui-monospace,monospace;color:var(--ink);margin:0;"></pre>
     </div>
     <div style="padding:12px 16px 20px;display:flex;gap:10px;">
-      <button onclick="copyAppsScript()" style="flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">📋 Copy to Clipboard</button>
+      <button onclick="copyAppsScript()" style="flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;"style="display:inline-flex;align-items:center;justify-content:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Copy to Clipboard</button>
       <button onclick="document.getElementById('appsScriptOverlay').classList.add('hidden')" style="padding:12px 18px;background:transparent;border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--ink-light);">Done</button>
     </div>
   </div>
@@ -996,13 +992,13 @@ input[type=file].file-input{display:none;}
     </div>
     <div id="changelogBody" style="padding:4px 20px 8px;max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
     <div style="padding:14px 20px 24px;border-top:0.5px solid var(--border);">
-      <button onclick="closeChangelog()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Got it ✦</button>
+      <button onclick="closeChangelog()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Got it</button>
     </div>
   </div>
 </div>
 
 <!-- SETUP WIZARD MODAL -->
-<div class="modal-overlay hidden" id="wizardOverlay" style="z-index:600;" onclick="if(event.target===this)closeWizard(true)">
+<div class="modal-overlay hidden" id="wizardOverlay" style="z-index:600;background:rgba(10,8,20,0.78);" onclick="if(event.target===this)closeWizard(true)">
   <div class="modal" style="max-width:540px;border-radius:20px;overflow:hidden;position:relative;">
     <div class="modal-handle"></div>
     <div style="height:3px;background:var(--border);position:relative;">
@@ -2218,7 +2214,7 @@ async function fetchBookIntelligence(title, author) {
   if (!title) return;
   try {
     const data = await callClaude([{role:'user', content:
-      `You are a magic and conjuring book expert. For the book "${title}"${author ? ' by " + author + "' : ''}, provide:
+      `You are a magic and conjuring book expert. For the book "${title}"${author ? ' by "' + author + '"' : ''}, provide:
 1. A brief intelligence summary: rarity/scarcity, historical significance, collector notes, typical condition issues. Under 60 words.
 2. Any known bibliographic facts you are confident about as JSON on the last line:
 {"year":"","publisher":"","edition":""}
@@ -2246,8 +2242,10 @@ Leave fields blank if uncertain. Do not guess.`
     }
     // Show summary text (everything before the JSON line)
     const summaryText = raw.replace(/\{[^}]*"year"[^}]*\}$/m, '').trim();
-    if (summaryText) showAiInfoCard(summaryText);
-  } catch(e) { /* silently fail — non-critical */ }
+    showAiInfoCard(summaryText || '<span style="color:var(--ink-faint);font-style:italic;">No intelligence found for this title.</span>');
+  } catch(e) {
+    showAiInfoCard('<span style="color:var(--ink-faint);font-style:italic;">No intelligence found for this title.</span>');
+  }
 }
 
 // ── SAVE BOOK: include artist, flags, update row array ──
@@ -2311,7 +2309,11 @@ async function saveBook() {
 
   showToast(wasDraft ? '✓ Draft completed and saved!' : '✓ Saved to Google Sheets!', 'success', 3000);
   clearForm();
-  renderCatalog();
+  if (wasDraft) {
+    showDraftsInCatalog();
+  } else {
+    renderCatalog();
+  }
   btn.disabled = false; btn.textContent = 'Save to Sheet';
 }
 
@@ -2517,8 +2519,7 @@ Reply ONLY with valid JSON, no markdown:
     document.getElementById('priceRange').textContent=`Range: ${sym}${json.low.toFixed(0)} – ${sym}${json.high.toFixed(0)} · ${json.confidence} confidence`;
     document.getElementById('f-price').value=json.recommended.toFixed(2);
     renderSources(json.sources);
-    if(json.notes)showToast(json.notes,'info',6000);
-    // Also show notes in AI card and fetch intelligence
+    // Show notes in intelligence card only (no toast popup)
     if(json.notes)showAiInfoCard(json.notes);
     fetchBookIntelligence(title,author);
   }catch(err){showToast('Price fetch failed: '+err.message,'error');}
@@ -2529,6 +2530,30 @@ Reply ONLY with valid JSON, no markdown:
 // ── RENDER CATALOG: sold awareness ──
 // Patch renderCatalog to handle sold status
 
+
+// ── CONJURING ARCHIVE COVER ACCEPT ──
+function acceptConjuringSuggestion(url, suggId) {
+  setCover(url);
+  // Replace the suggestion block with a brief confirmation, then fade it out
+  const sugg = document.getElementById(suggId);
+  if (sugg) {
+    sugg.innerHTML = '<div style="display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--success-bg);border-radius:7px;border:0.5px solid var(--tier1-border);margin-top:4px;">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tier1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '<span style="font-size:12px;font-weight:500;color:var(--success);">Cover applied</span>' +
+      '</div>';
+    setTimeout(() => {
+      sugg.style.transition = 'opacity 0.4s ease, max-height 0.4s ease';
+      sugg.style.overflow = 'hidden';
+      sugg.style.maxHeight = sugg.offsetHeight + 'px';
+      requestAnimationFrame(() => {
+        sugg.style.opacity = '0';
+        sugg.style.maxHeight = '0';
+        sugg.style.marginTop = '0';
+      });
+      setTimeout(() => sugg.remove(), 420);
+    }, 1200);
+  }
+}
 
 // ── CONJURING ARCHIVE LOCAL LOOKUP ──
 // 3,499 titles from conjuringarchive.com — instant local match, no network call needed
@@ -2557,12 +2582,16 @@ function checkConjuringDB(title) {
   if (url) {
     // Show it as a suggested cover in the AI info card
     const card = document.getElementById('aiInfoCard');
-    const content = document.getElementById('aiInfoContent');
-    const existing = content ? content.innerHTML : '';
-    const imgHtml = '<div style="margin-top:8px;"><div style="font-size:10px;font-weight:500;color:var(--tier1);margin-bottom:6px;">✓ Found in Conjuring Archive database</div>' +
-      '<img src="' + url + '" style="max-width:100%;border-radius:6px;cursor:pointer;" onclick="setCover(\'' + url + '\')" title="Tap to use this cover"/>' +
-      '<div style="font-size:9px;color:var(--ink-faint);margin-top:4px;">Tap image to use as cover</div></div>';
-    if (content) content.innerHTML = existing + imgHtml;
+    const contentEl = document.getElementById('aiInfoContent');
+    const existing = contentEl ? contentEl.innerHTML : '';
+    const suggId = 'conjuringSugg_' + Date.now();
+    const imgHtml = '<div id="' + suggId + '" style="margin-top:8px;">' +
+      '<div style="font-size:10px;font-weight:500;color:var(--tier1);margin-bottom:6px;">Cover found in Conjuring Archive — tap to use</div>' +
+      '<img src="' + url + '" style="max-width:80px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;display:block;" ' +
+        'onmouseover="this.style.borderColor=\'var(--tier1)\'" onmouseout="this.style.borderColor=\'transparent\'" ' +
+        'onclick="acceptConjuringSuggestion(\'' + url + '\',\'' + suggId + '\')" title="Tap to use this cover"/>' +
+      '</div>';
+    if (contentEl) contentEl.innerHTML = existing + imgHtml;
     if (card) card.style.display = 'block';
   }
 }
@@ -2589,6 +2618,21 @@ function toggleWishlist(btn) {
   document.getElementById('showDraftsChip').classList.remove('active');
   document.getElementById('showDraftsChip').style.background = 'transparent';
   document.getElementById('showDraftsChip').style.color = '#5f5e5a';
+  renderCatalog();
+}
+
+function showDraftsInCatalog() {
+  // Activate drafts filter and switch to catalog tab
+  S.showDrafts = true;
+  S.showSold = false;
+  S.showWishlist = false;
+  const draftsChip = document.getElementById('showDraftsChip');
+  const soldChip   = document.getElementById('showSoldChip');
+  const wishChip   = document.getElementById('showWishlistChip');
+  if (draftsChip) { draftsChip.classList.add('active'); draftsChip.style.background = '#5f5e5a'; draftsChip.style.color = 'white'; }
+  if (soldChip)   { soldChip.classList.remove('active'); soldChip.style.background = 'transparent'; soldChip.style.color = '#a32d2d'; }
+  if (wishChip)   { wishChip.classList.remove('active'); wishChip.style.background = 'transparent'; wishChip.style.color = '#185fa5'; }
+  showView('catalog');
   renderCatalog();
 }
 
@@ -2697,55 +2741,68 @@ async function quickAddFromQueue() {
   const scriptUrl = getScriptUrl();
   if (!scriptUrl) { showToast('Apps Script URL not set in Settings', 'error'); return; }
 
-  const item = photoQueue.shift();
-  updateQueueUI();
-
   const btn = document.getElementById('quickAddBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Scanning…'; }
+  const total = photoQueue.length;
+  let done = 0;
+  let failed = 0;
 
-  try {
-    // Compress for storage
-    const compressed = await compressImage(item.dataUrl, 300, 0.6);
-    // Compress for scan
-    const scanDataUrl = await compressImage(item.dataUrl, 800, 0.85);
-    const b64 = scanDataUrl.split(',')[1];
-    const mime = (scanDataUrl.match(/data:([^;]+);/) || [,'image/jpeg'])[1];
+  if (btn) { btn.disabled = true; }
 
-    // Quick scan — title + author only
-    const data = await callClaude([{role:'user', content:[
-      {type:'image', source:{type:'base64', media_type:mime, data:b64}},
-      {type:'text', text:'Extract the book title and author from this cover. Reply ONLY with valid JSON: {"title":"","author":""}'}
-    ]}], 150);
+  // Process every photo in the queue sequentially
+  while (photoQueue.length > 0) {
+    const item = photoQueue.shift();
+    updateQueueUI();
+    done++;
 
-    const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-    const title = toTitleCase((parsed.title||'').trim()) || 'Unknown Title';
-    const author = toTitleCase((parsed.author||'').trim()) || '';
+    if (btn) btn.innerHTML = '<span class="spinner"></span> ' + done + ' / ' + total + '…';
 
-    // Build minimal 19-column row
-    const row = [
-      title, author, '', '', '', '', '', '', '', '', '', compressed,
-      new Date().toLocaleDateString('en-AU'), '', '', '', '', '', 'Draft'
-    ];
+    try {
+      const compressed  = await compressImage(item.dataUrl, 300, 0.6);
+      const scanDataUrl = await compressImage(item.dataUrl, 800, 0.85);
+      const b64  = scanDataUrl.split(',')[1];
+      const mime = (scanDataUrl.match(/data:([^;]+);/) || [,'image/jpeg'])[1];
 
-    fetch(scriptUrl, { method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) }).catch(()=>{});
+      const data = await callClaude([{role:'user', content:[
+        {type:'image', source:{type:'base64', media_type:mime, data:b64}},
+        {type:'text', text:'Extract the book title and author from this cover. Reply ONLY with valid JSON: {"title":"","author":""}'}
+      ]}], 150);
 
-    showToast('✓ Quick added: ' + title, 'success', 3000);
+      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      const title  = toTitleCase((parsed.title||'').trim()) || 'Unknown Title';
+      const author = toTitleCase((parsed.author||'').trim()) || '';
 
-    // Add to local catalog immediately
-    S.books.unshift({
-      title, author, artist:'', edition:'', year:'', publisher:'', isbn:'',
-      condition:'', price:'', cost:'', notes:'', coverUrl:compressed, rawCover:compressed,
-      dateAdded:new Date().toLocaleDateString('en-AU'), flags:'', sold:'', star:'',
-      collectorNote:'', location:'', draft:'Draft', _rawRow:row
-    });
-    renderCatalog();
+      const row = [
+        title, author, '', '', '', '', '', '', '', '', '', compressed,
+        new Date().toLocaleDateString('en-AU'), '', '', '', '', '', 'Draft'
+      ];
 
-  } catch(e) {
-    showToast('Quick add failed: ' + e.message, 'error');
+      fetch(scriptUrl, { method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) }).catch(()=>{});
+
+      S.books.unshift({
+        title, author, artist:'', edition:'', year:'', publisher:'', isbn:'',
+        condition:'', price:'', cost:'', notes:'', coverUrl:compressed, rawCover:compressed,
+        dateAdded:new Date().toLocaleDateString('en-AU'), flags:'', sold:'', star:'',
+        collectorNote:'', location:'', draft:'Draft', _rawRow:row
+      });
+
+    } catch(e) {
+      failed++;
+      console.warn('Quick add failed for item ' + done + ':', e.message);
+    }
   }
 
-  if (btn) { btn.disabled = false; btn.textContent = '⚡ Quick Add'; }
+  // All done — re-render once at the end
+  renderCatalog();
+
+  if (btn) { btn.disabled = false; btn.textContent = '⚡ Quick Add All'; }
+
+  const added = total - failed;
+  if (failed === 0) {
+    showToast('✓ ' + added + ' draft' + (added !== 1 ? 's' : '') + ' added', 'success', 3500);
+  } else {
+    showToast(added + ' added, ' + failed + ' failed — check queue', 'info', 4000);
+  }
 }
 
 // ── OPEN DRAFT IN ADD FORM ──
@@ -2834,15 +2891,44 @@ function clearFilters() {
 
 document.addEventListener('DOMContentLoaded', function() {
   loadSettings();
-  // Show wizard automatically if no scriptUrl set and wizard hasn't been dismissed
+  showSplash();
+});
+
+function showSplash() {
+  const splash = document.getElementById('splashScreen');
+  const logo   = document.getElementById('splashLogo');
+  const word   = document.getElementById('splashWordmark');
+  const ver    = document.getElementById('splashVersion');
+  if (!splash) { afterSplash(); return; }
+
+  // Trigger logo + wordmark + version fade-in (CSS transitions kick in on next frame)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      logo.style.opacity = '1';
+      logo.style.transform = 'scale(1)';
+      word.style.opacity = '1';
+      ver.style.opacity  = '1';
+    });
+  });
+
+  // Hold for 1.8s then fade out
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    setTimeout(() => {
+      splash.style.display = 'none';
+      afterSplash();
+    }, 500); // match CSS transition duration
+  }, 1800);
+}
+
+function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!stored.scriptUrl && !stored.wizardSeen) {
-    setTimeout(() => openWizard(false), 600);
+    setTimeout(() => openWizard(false), 200);
   } else {
-    // Only show changelog if wizard isn't showing
     checkChangelog();
   }
-});
+}
 
 // ── SUPPORT / FEEDBACK / FAQ ──
 const FEEDBACK_FORM_URL = 'https://YOUR_GOOGLE_FORM_URL_HERE'; // TODO: replace with real URL
@@ -2919,7 +3005,7 @@ function openSupport(tab) {
     body.innerHTML = `
       <div style="padding:12px 0 20px;display:flex;flex-direction:column;gap:14px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--accent-light);border-radius:12px;border:0.5px solid var(--accent);">
-          <span style="font-size:24px;flex-shrink:0;">💬</span>
+          <span style="flex-shrink:0;color:var(--accent);display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
           <div style="font-size:13px;color:var(--ink);line-height:1.6;">We read every piece of feedback. Tell us what you love, what confuses you, or what you wish MagiLib could do.</div>
         </div>
         <button onclick="window.open('${FEEDBACK_FORM_URL}','_blank')" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Open Feedback Form ↗</button>
@@ -2934,7 +3020,7 @@ function openSupport(tab) {
     body.innerHTML = `
       <div style="padding:12px 0 20px;display:flex;flex-direction:column;gap:14px;">
         <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:#fdf0f0;border-radius:12px;border:0.5px solid #f5b7b5;">
-          <span style="font-size:24px;flex-shrink:0;">🐛</span>
+          <span style="flex-shrink:0;color:#a32d2d;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a32d2d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l1.5 1.5M15 2l-1.5 1.5M9 7.13v-1a3 3 0 1 1 6 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM12 20v-9M6.5 9C4.5 8.8 3 7.1 3 5M6 13H2M3 21c0-2 1.7-3.9 4-4M17.5 9c2-.2 3.5-1.9 3.5-4M18 13h4M21 21c0-2-1.7-3.9-4-4"/></svg></span>
           <div style="font-size:13px;color:var(--ink);line-height:1.6;">Please describe what you were doing, what you expected to happen, and what happened instead. Screenshots help a lot.</div>
         </div>
         <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:-6px;">Quick diagnostics</div>
@@ -3205,7 +3291,7 @@ function wizardNext() {
   } else {
     // Done
     closeWizard(true);
-    showToast('All set! Welcome to MagiLib ✦', 'success');
+    showToast('All set! Welcome to MagiLib', 'success');
     showView('entry');
   }
 }
@@ -3250,7 +3336,7 @@ function renderWizardStep() {
     nextBtn.textContent = 'Get started →';
     content.innerHTML = `
       <div style="text-align:center;padding:12px 0 20px;">
-        <div style="font-size:48px;margin-bottom:12px;">✦</div>
+        <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="" style="height:52px;width:auto;display:block;margin:0 auto 12px;"></div>
         <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--ink);margin-bottom:10px;">Welcome to MagiLib</div>
         <div style="font-size:14px;color:var(--ink-light);line-height:1.7;max-width:380px;margin:0 auto;">
           Your personal catalogue for magic and conjuring books.<br>
@@ -3259,15 +3345,15 @@ function renderWizardStep() {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">📋</div>
+          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>
           <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Connect your Google Sheet</div><div style="font-size:12px;color:var(--ink-light);">Your books live in a free Google Sheet you control</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">🖼</div>
+          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
           <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Set up cover storage <span style="font-size:11px;color:var(--ink-faint);font-weight:400;">(optional)</span></div><div style="font-size:12px;color:var(--ink-light);">Free Cloudinary account for high-res cover images</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="font-size:22px;flex-shrink:0;">🚀</div>
+          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
           <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Start cataloguing</div><div style="font-size:12px;color:var(--ink-light);">Add books with AI-powered lookup and pricing</div></div>
         </div>
       </div>
@@ -3351,14 +3437,14 @@ function renderWizardStep() {
 
   else if (wizardStep === 3) {
     // Done
-    nextBtn.textContent = 'Go to my library ✦';
+    nextBtn.textContent = 'Go to my library →';
     backBtn.style.visibility = 'hidden';
     const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
     const hasSheet = !!s.scriptUrl;
     const hasCloud = !!s.cloudName;
     content.innerHTML = `
       <div style="text-align:center;padding:16px 0 24px;">
-        <div style="font-size:52px;margin-bottom:14px;">${hasSheet ? '✦' : '🎩'}</div>
+        <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="" style="height:52px;width:auto;"/></div>
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;">${hasSheet ? "You're all set!" : 'Almost ready!'}</div>
         <div style="font-size:13px;color:var(--ink-light);line-height:1.7;max-width:360px;margin:0 auto;">
           ${hasSheet ? 'MagiLib is connected and ready to catalogue your collection.' : "You can start browsing, but you'll need to add your Apps Script URL in Settings before saving books."}
@@ -3413,9 +3499,9 @@ function renderWizardStep() {
     </div>
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
-        <button onclick="searchCoverSource('images')" class="btn-primary" style="font-size:12px;padding:8px 14px;" id="pickerGoogleBtn">🔍 Google Images</button>
+        <button onclick="searchCoverSource('images')" class="btn-primary" style="font-size:12px;padding:8px 14px;" id="pickerGoogleBtn" style="display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images</button>
         <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;">Conjuring Archive</button>
-        <label class="btn-secondary" style="font-size:12px;padding:8px 14px;cursor:pointer;">📁 Upload<input type="file" accept="image/*" style="display:none" onchange="pickerUploadCover(event)"></label>
+        <label class="btn-secondary" style="font-size:12px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" accept="image/*" style="display:none" onchange="pickerUploadCover(event)"></label>
       </div>
       <!-- Google Images instruction card — shown when Google Images is active -->
       <div id="googleImagesCard" style="display:none;margin-top:14px;background:var(--paper-warm);border-radius:10px;padding:16px 20px;border:1.5px dashed var(--border-med);cursor:pointer;" onclick="openGoogleImagesTab()">
@@ -3433,7 +3519,7 @@ function renderWizardStep() {
       <div id="pickerUrlArea" style="display:none;margin-top:10px;">
         <div class="url-input-row">
           <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…"/>
-          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;">📋 Paste</button>
+          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;"style="display:inline-flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
           <button onclick="applyPickerUrl()">Set</button>
         </div>
       </div>
