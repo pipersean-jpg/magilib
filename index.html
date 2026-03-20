@@ -81,7 +81,7 @@ input[type=file].file-input{display:none;}
 .cover-placeholder .book-icon{font-size:40px;margin-bottom:8px;opacity:0.25;}
 .cover-placeholder p{font-size:11px;color:var(--ink-faint);line-height:1.5;}
 .cover-actions-row{display:flex;gap:8px;}
-.cover-btn{flex:1;padding:7px 8px;border:0.5px solid var(--border-med);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-light);transition:all 0.15s;text-align:center;}
+.cover-btn{flex:1;padding:7px 8px;border:0.5px solid var(--border-med);border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-light);transition:all 0.15s;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
 .cover-btn:hover{background:var(--paper-warm);color:var(--ink);}
 .price-panel{margin-top:16px;border-top:0.5px solid var(--border);padding-top:16px;}
 .price-label{font-size:11px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
@@ -256,7 +256,7 @@ input[type=file].file-input{display:none;}
   <div class="nav-brand" style="gap:0;"><img src="/logo.png" alt="MagiLib" id="navLogo" style="height:36px;width:auto;display:block;"/></div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
-    <button class="tab-btn" onclick="showView('catalog')">Catalog</button>
+    <button class="tab-btn" onclick="showView('catalog')">Library</button>
     <button class="tab-btn" onclick="showView('settings')">Settings</button>
   </div>
 </nav>
@@ -313,8 +313,8 @@ input[type=file].file-input{display:none;}
         </div>
       </div>
       <div class="cover-actions-row">
-        <button class="cover-btn" onclick="openCoverPicker()">🖼 Sources</button>
-        <label class="cover-btn" style="cursor:pointer">📁 Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
+        <button class="cover-btn" onclick="openCoverPicker()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Sources</button>
+        <label class="cover-btn" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
         <button class="cover-btn" onclick="toggleUrlInput()">↗ URL</button>
       </div>
       <div id="urlInputArea" style="display:none;margin-top:8px;">
@@ -354,7 +354,7 @@ input[type=file].file-input{display:none;}
       <div class="form-section">
         <div class="section-title">Book Details</div>
         <div class="field-row">
-          <div class="field"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="if(this.value.length>4)checkConjuringDB(this.value)"/></div>
+          <div class="field"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="if(this.value.length>4)debouncedConjuringCheck(this.value)"/></div>
         </div>
         <div class="field-row">
           <div class="field"><label>Author *</label><input type="text" id="f-author" placeholder="e.g. S. W. Erdnase" onblur="applyTitleCase('f-author')" autocomplete="off"/></div>
@@ -504,6 +504,7 @@ input[type=file].file-input{display:none;}
 <option value="George Starke">
 <option value="Goldshadow Industries">
 <option value="GrupoKaps">
+<option value="Hermetic Press">
 <option value="Guy Bavli - Perfect Magic">
 <option value="I Saw That!">
 <option value="Illuma - Illusion Management">
@@ -798,7 +799,7 @@ input[type=file].file-input{display:none;}
 
 <div id="view-catalog" class="view">
   <div class="catalog-header">
-    <h2>Collection</h2>
+    <h2>Library</h2>
     <div class="search-bar">
       <input type="text" id="catalogSearch" placeholder="Search…" oninput="filterCatalog()"/>
       <span class="search-icon">⌕</span>
@@ -854,7 +855,7 @@ input[type=file].file-input{display:none;}
     <div class="section-title">Google Sheets</div>
     <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#e8f5ee;border-radius:10px;border:0.5px solid #a3d9b9;margin-bottom:12px;">
       <div style="width:8px;height:8px;border-radius:50%;background:#2d6a4f;flex-shrink:0;"></div>
-      <span style="font-size:12px;font-weight:500;color:#2d6a4f;">Catalog loads from sheet ID: 1KRGofstm2eOgic…</span>
+      <span style="font-size:12px;font-weight:500;color:#2d6a4f;">Library loads from sheet ID: 1KRGofstm2eOgic…</span>
     </div>
     <div class="settings-row">
       <label>Apps Script URL (for saving)</label>
@@ -1021,7 +1022,7 @@ input[type=file].file-input{display:none;}
     <div class="modal-actions" style="display:block;padding:12px 16px 16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
         <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-        <button class="btn-primary" onclick="openEbayModal()">eBay ↗</button>
+        <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> eBay</button>
         <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
@@ -1126,6 +1127,11 @@ function renderSources(sources){
 async function scanCover(event){
   const file=event.target.files[0];if(!file)return;
   event.target.value='';
+  // Clear intelligence card for new listing
+  const _ac=document.getElementById('aiInfoCard');
+  const _ai=document.getElementById('aiInfoContent');
+  if(_ac){_ac.style.display='none';}
+  if(_ai){_ai.innerHTML='';}
 
   // Step 1: read file as dataUrl
   const rawDataUrl = await new Promise((res,rej)=>{
@@ -1162,7 +1168,18 @@ async function scanCover(event){
     document.getElementById('scanIcon').textContent='✓';
     document.getElementById('scanTitle').innerHTML=`${populated} fields extracted <span class="confidence-badge ${confClass}">${json.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent=json.notes||'Please verify the details below before saving.';
-    if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(json.title,json.author),1500);setTimeout(()=>checkConjuringDB(json.title),400);}
+    if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(json.title,json.author),1500);}
+    if(json.title){
+      // Try fuzzy match against Conjuring Archive DB immediately after scan
+      setTimeout(async () => {
+        const match = conjuringFuzzyLookup(json.title);
+        if (match) {
+          await applyConjuringMatch(match, 'scan');
+        } else {
+          checkConjuringDB(json.title); // fall back to exact match display
+        }
+      }, 300);
+    }
   }catch(err){
     statusEl.className='scan-status error';
     document.getElementById('scanIcon').textContent='✕';
@@ -1482,7 +1499,7 @@ function openEbayModal(){
 }
 function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target)document.getElementById('modalOverlay').classList.add('hidden');}
 
-const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Éditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribner’s Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard Böttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones Marré", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag Zürich", "JustJoshinMagic", "Jörg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & Schüppel, Leipzig", "Lesclapart", "Levy & Müller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - œ", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "Páginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf Braunmüller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk Zürich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van Büren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & Söhne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale München", "Zentralhaus für Kulturarbeit", "Édition Ch. Eggimann, Genève"];
+const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Éditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribner’s Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard Böttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones Marré", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Hermetic Press", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag Zürich", "JustJoshinMagic", "Jörg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & Schüppel, Leipzig", "Lesclapart", "Levy & Müller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - œ", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "Páginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf Braunmüller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk Zürich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van Büren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & Söhne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale München", "Zentralhaus für Kulturarbeit", "Édition Ch. Eggimann, Genève"];
 
 // ── ERROR BANNER ──
 let saveErrorActive = false;
@@ -2020,12 +2037,31 @@ function openEditFromModal() {
 
   closeModal();
   document.getElementById('editModalOverlay').classList.remove('hidden');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  // Reset dirty flag and attach change listeners to all fields
+  _editDirty = false;
+  setTimeout(() => {
+    document.querySelectorAll('#editModalOverlay input, #editModalOverlay textarea, #editModalOverlay select').forEach(el => {
+      el.addEventListener('input', _markEditDirty);
+      el.addEventListener('change', _markEditDirty);
+    });
+  }, 100);
 }
 
+let _editDirty = false;
+
 function closeEditModal(e) {
-  if (!e || e.target === document.getElementById('editModalOverlay'))
-    document.getElementById('editModalOverlay').classList.add('hidden');
+  // If triggered by backdrop click or X button (not programmatic), check for unsaved changes
+  const fromBackdrop = e && e.target === document.getElementById('editModalOverlay');
+  const fromX = !e;
+  if ((fromBackdrop || fromX) && _editDirty) {
+    if (!confirm('Leave without saving? Your changes will be lost.')) return;
+  }
+  _editDirty = false;
+  document.getElementById('editModalOverlay').classList.add('hidden');
 }
+
+function _markEditDirty() { _editDirty = true; }
 
 async function saveEdit() {
   const scriptUrl = getScriptUrl();
@@ -2099,6 +2135,7 @@ async function saveEdit() {
       };
     }
     renderCatalog();
+    _editDirty = false;
     showToast('✓ Book updated', 'success', 3000);
     closeEditModal();
   } catch(e) {
@@ -2176,9 +2213,11 @@ function clearForm() {
   if (ss) ss.className = 'scan-status';
   // Clear flags
   clearFlags();
-  // Hide AI info card
+  // Hide and clear AI info card
   const ac = document.getElementById('aiInfoCard');
+  const ai = document.getElementById('aiInfoContent');
   if (ac) ac.style.display = 'none';
+  if (ai) ai.innerHTML = '';
   // Clear URL inputs
   const urlEl = document.getElementById('manualUrlInput');
   if (urlEl) urlEl.value = '';
@@ -2208,6 +2247,11 @@ function showAiInfoCard(html) {
 // Fetch AI book intelligence after scan
 async function fetchBookIntelligence(title, author) {
   if (!title) return;
+  // Clear card immediately so stale content never shows while waiting
+  const _preCard = document.getElementById('aiInfoCard');
+  const _preContent = document.getElementById('aiInfoContent');
+  if (_preCard) _preCard.style.display = 'none';
+  if (_preContent) _preContent.innerHTML = '';
   try {
     const data = await callClaude([{role:'user', content:
       `You are a magic and conjuring book expert. For the book "${title}"${author ? ' by "' + author + '"' : ''}, provide:
@@ -2527,6 +2571,168 @@ Reply ONLY with valid JSON, no markdown:
 // Patch renderCatalog to handle sold status
 
 
+// ── CONJURING ARCHIVE FUZZY MATCH + METADATA ──
+let _conjuringDebounce = null;
+function debouncedConjuringCheck(title) {
+  clearTimeout(_conjuringDebounce);
+  _conjuringDebounce = setTimeout(async () => {
+    if (!title || title.length < 4) return;
+    const match = conjuringFuzzyLookup(title);
+    if (match) {
+      await applyConjuringMatch(match, 'manual');
+    } else {
+      checkConjuringDB(title);
+    }
+  }, 600);
+}
+
+
+
+// Lightweight fuzzy scorer: normalised token overlap + bonus for prefix match
+function conjuringFuzzyScore(query, candidate) {
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const q = norm(query);
+  const c = norm(candidate);
+  if (q === c) return 1.0;
+  const qTokens = new Set(q.split(' ').filter(t => t.length > 1));
+  const cTokens = new Set(c.split(' ').filter(t => t.length > 1));
+  if (qTokens.size === 0) return 0;
+  let overlap = 0;
+  qTokens.forEach(t => { if (cTokens.has(t)) overlap++; });
+  const score = overlap / Math.max(qTokens.size, cTokens.size);
+  // Bonus: candidate starts with query (handles subtitle truncation)
+  const bonus = c.startsWith(q) || q.startsWith(c) ? 0.15 : 0;
+  return Math.min(1, score + bonus);
+}
+
+// Find best fuzzy match in CONJURING_DB for a given title
+function conjuringFuzzyLookup(title) {
+  if (typeof CONJURING_DB === 'undefined' || !title) return null;
+  const norm = s => s.toLowerCase()
+    .replace(/["""'']/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/^(the|a|an)\s+/i, '').trim();
+  const q = norm(title);
+  let best = null, bestScore = 0;
+  for (const key of Object.keys(CONJURING_DB)) {
+    const score = conjuringFuzzyScore(q, norm(key));
+    if (score > bestScore) { bestScore = score; best = { key, url: CONJURING_DB[key], score }; }
+  }
+  return bestScore >= 0.72 ? best : null;
+}
+
+// Extract book ID from a Conjuring Archive cover URL
+function conjuringBookId(coverUrl) {
+  const m = coverUrl && coverUrl.match(/\/covers\/(\d+)a\./);
+  return m ? m[1] : null;
+}
+
+// After a fuzzy match: correct the title field, load the cover, then scrape metadata
+async function applyConjuringMatch(match, scanSource) {
+  // 1. Correct title to the canonical DB key (title-cased)
+  const canonical = toTitleCase(match.key);
+  const titleEl = document.getElementById('f-title');
+  if (titleEl && titleEl.value && match.score < 0.98) {
+    // Only overwrite if scan gave us something different and score isn't perfect
+    titleEl.value = canonical;
+    titleEl.classList.add('field-populated');
+    setTimeout(() => titleEl.classList.remove('field-populated'), 3000);
+  }
+
+  // 2. Load cover
+  if (match.url && !S.coverUrl) {
+    setCover(match.url);
+    S.coverUrl = match.url;
+  }
+
+  // 3. Show status
+  const statusEl = document.getElementById('scanDetail');
+  if (statusEl && scanSource === 'scan') {
+    statusEl.textContent = 'Matched in Conjuring Archive — fetching metadata…';
+  }
+
+  // 4. Scrape metadata from the detail page
+  const bookId = conjuringBookId(match.url);
+  if (bookId) {
+    await scrapeConjuringMetadata(bookId);
+  }
+}
+
+// Scrape author, year, publisher from a Conjuring Archive book detail page
+async function scrapeConjuringMetadata(bookId) {
+  try {
+    const url = 'https://www.conjuringarchive.com/list/book/' + bookId;
+    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
+    const data = await resp.json();
+    if (!data.success || !data.html) return;
+    const html = data.html;
+
+    // Parse fields from the detail page HTML
+    // CA uses a definition list / table structure with labels
+    const extract = (patterns) => {
+      for (const pat of patterns) {
+        const m = html.match(pat);
+        if (m && m[1] && m[1].trim()) return m[1].replace(/<[^>]+>/g, '').trim();
+      }
+      return '';
+    };
+
+    // CA page format: "Written by John Derris Work of Various · 1998 ... published by L&L Publishing Illustrated..."
+    const rawText = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+    const matchFirst = (patterns, text) => {
+      for (const p of patterns) {
+        const m = text.match(p);
+        if (m && m[1] && m[1].trim()) return m[1].trim();
+      }
+      return '';
+    };
+
+    const author = matchFirst([
+      /Written by ([A-Z][a-zA-Z\s\.\-]+?)(?:\s+Work of|\s+·|\s*<)/i,
+      /by\s+<a[^>]+>([^<]+)<\/a>/i,
+      /"author"[^>]*>([^<]+)</i,
+    ], html) || matchFirst([
+      /Written by ([A-Z][a-zA-Z\s\.\-]+?)(?:\s+Work of|\s+·|\s{2,})/i,
+    ], rawText);
+
+    const year = matchFirst([
+      /(1[89]\d{2}|20[012]\d)/,
+    ], rawText);
+
+    const publisher = matchFirst([
+      /published by ([A-Z][a-zA-Z0-9\s&\.\-]+?)(?:\s+Illustrated|\s+Language|\s+\d|\s{2,}|$)/i,
+      /Publisher[^<]*<\/[^>]+>\s*<[^>]+>([^<]+)</i,
+    ], html) || matchFirst([
+      /published by ([A-Z][a-zA-Z0-9\s&\.\-]+?)(?:\s+Illustrated|\s+Language|\s{2,}|$)/i,
+    ], rawText);
+
+    // Fill fields that are currently empty
+    const fill = (id, val) => {
+      if (!val) return;
+      const el = document.getElementById(id);
+      if (el && !el.value.trim()) {
+        el.value = toTitleCase(val.trim());
+        el.classList.add('field-populated');
+        setTimeout(() => el.classList.remove('field-populated'), 3000);
+      }
+    };
+
+    fill('f-author', author);
+    fill('f-year', year.match(/\d{4}/) ? year.match(/\d{4}/)[0] : '');
+    fill('f-publisher', publisher);
+
+    const filled = [author, year, publisher].filter(Boolean).length;
+    if (filled > 0) {
+      const statusEl = document.getElementById('scanDetail');
+      if (statusEl) statusEl.textContent = 'Conjuring Archive: ' + filled + ' field' + (filled !== 1 ? 's' : '') + ' filled from database.';
+    }
+  } catch(e) {
+    // Silently fail — metadata scrape is non-critical
+  }
+}
+
 // ── CONJURING ARCHIVE COVER ACCEPT ──
 function acceptConjuringSuggestion(url, suggId) {
   setCover(url);
@@ -2618,7 +2824,7 @@ function toggleWishlist(btn) {
 }
 
 function showDraftsInCatalog() {
-  // Activate drafts filter and switch to catalog tab
+  // Activate drafts filter and switch to library tab
   S.showDrafts = true;
   S.showSold = false;
   S.showWishlist = false;
@@ -2702,10 +2908,10 @@ function checkDuplicate(title) {
   if (match) {
     const banner = document.getElementById('duplicateBanner');
     if (banner) {
-      banner.textContent = '⚠ "' + match.title + '" may already be in your catalog (' + match.condition + ')';
+      banner.textContent = '⚠ "' + match.title + '" may already be in your library (' + match.condition + ')';
       banner.style.display = 'block';
     } else {
-      showToast('⚠ Possible duplicate: "' + match.title + '" is already in your catalog', 'error', 6000);
+      showToast('⚠ Possible duplicate: "' + match.title + '" is already in your library', 'error', 6000);
     }
   } else {
     const banner = document.getElementById('duplicateBanner');
@@ -2936,16 +3142,16 @@ const FAQ_ITEMS = [
     a: "You need an Apps Script URL configured in Settings. Go to Settings → Setup → Run Setup Wizard and follow Step 1. Once your Apps Script is deployed and the URL is saved, all writes will work."
   },
   {
-    q: "Why does the catalog show someone else's books?",
-    a: "MagiLib reads from a fixed demo sheet by default. After running the Setup Wizard and connecting your own Google Sheet, the catalog will load your books instead."
+    q: "Why does the library show someone else's books?",
+    a: "MagiLib reads from a fixed demo sheet by default. After running the Setup Wizard and connecting your own Google Sheet, the library will load your books instead."
   },
   {
     q: "How do I add a book without a photo?",
-    a: "On the Add tab, skip the camera section and scroll down to fill in the title and author manually. You can always add a cover later by tapping the book in the catalog and choosing Edit → Update Cover."
+    a: "On the Add tab, skip the camera section and scroll down to fill in the title and author manually. You can always add a cover later by tapping the book in the library and choosing Edit → Update Cover."
   },
   {
     q: "What does 'Draft' mean?",
-    a: "A draft is a partially filled entry — usually created when the AI scan runs but you haven't confirmed all the details yet. Drafts appear with a badge in the catalog. Tap a draft to open the Add form pre-filled, then save to convert it to a real entry."
+    a: "A draft is a partially filled entry — usually created when the AI scan runs but you haven't confirmed all the details yet. Drafts appear with a badge in the library. Tap a draft to open the Add form pre-filled, then save to convert it to a real entry."
   },
   {
     q: "My cover image isn't showing — it shows a book icon instead.",
@@ -2953,7 +3159,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I mark a book as sold?",
-    a: "Open the book from the catalog and tap 'Mark Sold' in the action buttons. Sold books are hidden from the main catalog view but remain in your sheet. You can view them by tapping the Sold filter chip."
+    a: "Open the book from the catalog and tap 'Mark Sold' in the action buttons. Sold books are hidden from the main library view but remain in your sheet. You can view them by tapping the Sold filter chip."
   },
   {
     q: "Can I use MagiLib on desktop?",
@@ -2961,7 +3167,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is my data safe? What happens if I lose access?",
-    a: "Your books live entirely in your own Google Sheet — MagiLib never stores your data on its own servers. As long as you have access to your Google account, your catalog is safe."
+    a: "Your books live entirely in your own Google Sheet — MagiLib never stores your data on its own servers. As long as you have access to your Google account, your library is safe."
   },
   {
     q: "How do I install MagiLib as an app on my phone?",
@@ -3182,7 +3388,7 @@ const CHANGELOG = [
         bg: 'var(--tier3-bg)',
         border: 'var(--tier3-border)',
         items: [
-          "Drafts no longer appear in the main catalog view",
+          "Drafts no longer appear in the main library view",
           "Sort by title and author strips leading The / A / An correctly",
         ]
       }
@@ -3495,8 +3701,8 @@ function renderWizardStep() {
     </div>
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
-        <button onclick="searchCoverSource('images')" class="btn-primary" style="font-size:12px;padding:8px 14px;" id="pickerGoogleBtn" style="display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images</button>
-        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;">Conjuring Archive</button>
+        <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images</button>
+        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">Conjuring Archive</button>
         <label class="btn-secondary" style="font-size:12px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" accept="image/*" style="display:none" onchange="pickerUploadCover(event)"></label>
       </div>
       <!-- Google Images instruction card — shown when Google Images is active -->
@@ -3585,7 +3791,7 @@ function renderWizardStep() {
       <div class="field"><label>Collector's Note</label><textarea id="edit-collector-note" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;min-height:70px;resize:vertical;line-height:1.5;" placeholder="Personal significance, purchase story, research notes…"></textarea></div>
     </div>
     <div style="padding:14px 20px;border-top:0.5px solid var(--border);display:flex;gap:10px;justify-content:flex-end;padding-bottom:max(14px,env(safe-area-inset-bottom));">
-      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-secondary" onclick="_editDirty=false;closeEditModal()">Cancel</button>
       <button class="btn-primary" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
     </div>
   </div>
