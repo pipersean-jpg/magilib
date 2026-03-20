@@ -123,8 +123,8 @@ input[type=file].file-input{display:none;}
 .field textarea{resize:vertical;min-height:80px;line-height:1.5;}
 .field input::placeholder{color:var(--ink-faint);}
 @media(max-width:700px){.field input,.field select,.field textarea{padding:13px 12px;font-size:16px;}}
-.condition-select{display:flex;gap:8px;flex-wrap:wrap;}
-.condition-opt{padding:9px 14px;border:0.5px solid var(--border-med);border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;min-height:44px;display:flex;align-items:center;}
+.condition-select{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.condition-opt{padding:9px 14px;border:0.5px solid var(--border-med);border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;min-height:44px;display:flex;align-items:center;justify-content:center;}
 .condition-opt.selected{background:var(--ink);color:white;border-color:var(--ink);}
 .condition-opt:hover:not(.selected){background:var(--paper-warm);}
 .save-bar{display:flex;gap:12px;align-items:center;justify-content:flex-end;padding:16px 20px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);margin-top:4px;padding-bottom:max(16px,env(safe-area-inset-bottom));}
@@ -179,9 +179,10 @@ input[type=file].file-input{display:none;}
 .copy-thumb{width:36px;height:48px;border-radius:4px;background:var(--paper-warm);border:0.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
 .book-card.is-wishlist{border-color:#B5D4F4 !important;}
 .book-card.is-draft{opacity:0.7;border-style:dashed !important;}
-.flag-btn{padding:8px 14px;border:0.5px solid var(--border-med);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.flag-btn{padding:8px 14px;border:0.5px solid var(--border-med);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-light);background:transparent;transition:all 0.15s;white-space:nowrap;font-family:'DM Sans',sans-serif;text-align:center;}
 .flag-btn:hover{background:var(--paper-warm);color:var(--ink);}
 .flag-btn.active{background:var(--ink);color:white;border-color:var(--ink);}
+.flags-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;}
 .book-meta-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
 .book-condition-badge{font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;flex-shrink:0;}
 .cond-fine{background:#e8f5ee;color:#2d6a4f;}
@@ -747,7 +748,7 @@ input[type=file].file-input{display:none;}
             <button class="condition-opt" onclick="setCondition('Good')">Good</button>
             <button class="condition-opt" onclick="setCondition('Fair')">Fair</button>
           </div>
-          <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;" id="conditionFlags">
+          <div class="flags-grid" id="conditionFlags">
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Signed')">Signed</button>
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Inscribed to Owner')">Inscribed to Owner</button>
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Dustjacket Missing')">Dustjacket Missing</button>
@@ -2797,7 +2798,7 @@ document.addEventListener('DOMContentLoaded', function() { loadSettings(); });
           <button type="button" class="condition-opt" onclick="setEditCondition('Good')">Good</button>
           <button type="button" class="condition-opt" onclick="setEditCondition('Fair')">Fair</button>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;" id="editConditionFlags">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;" id="editConditionFlags">
           <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Signed')">Signed</button>
           <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Inscribed to Owner')">Inscribed to Owner</button>
           <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Dustjacket Missing')">Dustjacket Missing</button>
