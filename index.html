@@ -12,6 +12,10 @@
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <script src="/conjuring_db.js" defer></script>
+<script src="/magilib_price_db.js" defer></script>
+<script src="/magilib_disc_db.js" defer></script>
+<script src="/discontinued_db.js" defer></script>
+<script src="/price_db.js" defer></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -2265,8 +2269,27 @@ function showAiInfoCard(html) {
 }
 
 // Fetch AI book intelligence after scan
+function checkLocalDBBadges(title) {
+  if (!title) return;
+  const inPrice = lookupPriceDB(title);
+  const inDisc  = !inPrice && lookupDiscontinued(title);
+  const badge   = document.getElementById('localDBBadge');
+  if (!badge) return;
+  if (inPrice) {
+    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#e8f5ee;color:#2d6a4f;border:0.5px solid #a3d9b9;">✓ In Print — MSRP USD $' + inPrice.price_usd.toFixed(2) + '</span>';
+    badge.style.display = 'block';
+  } else if (inDisc) {
+    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#faeeda;color:#854f0b;border:0.5px solid #f5d59a;">⚠ Possibly Out of Print</span>';
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 async function fetchBookIntelligence(title, author) {
   if (!title) return;
+  // Show local DB badge immediately
+  checkLocalDBBadges(title);
   // Clear card immediately so stale content never shows while waiting
   const _preCard = document.getElementById('aiInfoCard');
   const _preContent = document.getElementById('aiInfoContent');
@@ -2569,12 +2592,13 @@ async function scrapeQTTEPrices(title, author) {
   // Strategy 1: search by author if we have one (QTTE author pages are well-indexed)
   // Strategy 2: fall back to title-only search
   const searchUrls = [];
+  const titleQ = encodeURIComponent(title.replace(/['"]/g,''));
+  // Primary: search by title (most direct)
+  searchUrls.push('https://quickerthantheeye.com/products/find/any/' + titleQ);
   if (author) {
     const authorQ = encodeURIComponent(author.replace(/['"]/g,''));
     searchUrls.push('https://quickerthantheeye.com/products/find/author/' + authorQ);
   }
-  const titleQ = encodeURIComponent(title.replace(/['"]/g,''));
-  searchUrls.push('https://quickerthantheeye.com/products/find/any/' + titleQ);
 
   for (const searchUrl of searchUrls) {
     try {
@@ -2583,38 +2607,52 @@ async function scrapeQTTEPrices(title, author) {
       if (!data.success) continue;
       const html = data.html;
 
-      // QTTE product pages embed price as plain "$XX.XX" near the title
-      // Extract all product links with their surrounding context
-      const linkBlocks = [...html.matchAll(/href="((?:https?:\/\/(?:www\.)?quickerthantheeye\.com)?\/p\/[^"]+)"[^>]*>([\s\S]{0,600}?)<\/a>/gi)];
-
-      for (const [, href, block] of linkBlocks.slice(0, 20)) {
-        const blockText = block.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
-        // Check if this block's title is close to what we're searching for
-        const blockTitle = blockText.slice(0, 100).trim();
-        if (!blockTitle) continue;
-        const similarity = normT(blockTitle).includes(normT(title).slice(0,8)) ||
-                           normT(title).includes(normT(blockTitle).slice(0,8));
-        const priceM = blockText.match(/\$([\d,]+(?:\.\d{2})?)/);
-        if (priceM && similarity) {
+      // Strategy A: check if this IS already a product page (h1 title match)
+      const h1M = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      const pageTitle = h1M ? h1M[1].trim() : '';
+      if (normT(pageTitle) && normT(title).includes(normT(pageTitle).slice(0,6)) ||
+          normT(pageTitle).includes(normT(title).slice(0,6))) {
+        const priceM = html.match(/\$([\d,]+(?:\.\d{2})?)/);
+        if (priceM) {
           const priceUSD = parseFloat(priceM[1].replace(',',''));
           if (priceUSD >= 5 && priceUSD <= 5000) {
-            const url = href.startsWith('http') ? href : 'https://quickerthantheeye.com' + href;
-            results.push({ name: 'Quicker Than The Eye', priceUSD, title: blockTitle.slice(0,80), url, status: 'listed' });
-            break;
+            results.push({ name: 'Quicker Than The Eye', priceUSD, title: pageTitle, url: searchUrl, status: 'listed' });
           }
         }
       }
 
-      // Fallback: if the page IS the product page (direct hit), grab price from it
+      // Strategy B: parse product links from a search results page
       if (results.length === 0) {
-        const h1M = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-        const pageTitle = h1M ? h1M[1].trim() : '';
-        if (normT(pageTitle).includes(normT(title).slice(0,8))) {
-          const priceM = html.match(/\$([\d,]+(?:\.\d{2})?)/);
+        const linkBlocks = [...html.matchAll(/href="((?:https?:\/\/(?:www\.)?quickerthantheeye\.com)?\/p\/[^"]+)"[^>]*>([\s\S]{0,800}?)<\/a>/gi)];
+        for (const [, href, block] of linkBlocks.slice(0, 30)) {
+          const blockText = block.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+          const blockTitle = blockText.slice(0, 120).trim();
+          if (!blockTitle) continue;
+          const similarity = normT(blockTitle).includes(normT(title).slice(0,6)) ||
+                             normT(title).includes(normT(blockTitle).slice(0,6));
+          const priceM = blockText.match(/\$([\d,]+(?:\.\d{2})?)/);
+          if (priceM && similarity) {
+            const priceUSD = parseFloat(priceM[1].replace(',',''));
+            if (priceUSD >= 5 && priceUSD <= 5000) {
+              const url = href.startsWith('http') ? href : 'https://quickerthantheeye.com' + href;
+              results.push({ name: 'Quicker Than The Eye', priceUSD, title: blockTitle.slice(0,80), url, status: 'listed' });
+              break;
+            }
+          }
+        }
+      }
+
+      // Strategy C: raw text fallback — find any $price near the title in stripped text
+      if (results.length === 0) {
+        const raw = html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+        const titleIdx = raw.toLowerCase().indexOf(normT(title).slice(0,10));
+        if (titleIdx > -1) {
+          const snippet = raw.slice(Math.max(0,titleIdx-50), titleIdx+200);
+          const priceM = snippet.match(/\$([\d,]+(?:\.\d{2})?)/);
           if (priceM) {
             const priceUSD = parseFloat(priceM[1].replace(',',''));
             if (priceUSD >= 5 && priceUSD <= 5000) {
-              results.push({ name: 'Quicker Than The Eye', priceUSD, title: pageTitle, url: searchUrl, status: 'listed' });
+              results.push({ name: 'Quicker Than The Eye', priceUSD, title, url: searchUrl, status: 'listed' });
             }
           }
         }
@@ -2646,6 +2684,70 @@ async function scrapeCollectingMagicBooks(title, author) {
   return results;
 }
 
+// ── LOCAL DATABASE LOOKUPS ──
+function normForDB(s) {
+  if (!s) return '';
+  return s.toLowerCase()
+    .replace(/\s+by\s+.*/i, '')       // strip "by Author"
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+    .replace(/^(the|a|an)\s+/, '');
+}
+
+function lookupPriceDB(title) {
+  if (typeof PRICE_DB === 'undefined' || !title) return null;
+  const key = normForDB(title);
+  if (PRICE_DB[key]) return PRICE_DB[key];
+  // Try without volume/edition suffix (e.g. "card college volume 1" -> "card college")
+  const shortKey = key.replace(/\s+(volume|vol|book|part|no|number)\s+\d+.*$/, '').trim();
+  if (shortKey !== key && PRICE_DB[shortKey]) return PRICE_DB[shortKey];
+  return null;
+}
+
+function lookupDiscontinued(title) {
+  if (typeof DISCONTINUED_DB === 'undefined' || !title) return false;
+  const key = normForDB(title);
+  if (DISCONTINUED_DB[key]) return true;
+  const shortKey = key.replace(/\s+(volume|vol|book|part|no|number)\s+\d+.*$/, '').trim();
+  return shortKey !== key && !!DISCONTINUED_DB[shortKey];
+}
+
+// ── LOCAL BOOK DATABASE LOOKUPS ──
+
+function normBookTitle(s) {
+  if (!s) return '';
+  return s.toLowerCase()
+    .replace(/\s+by\s+.*$/i, '')   // strip " by Author"
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Look up a title in the master price list. Returns {title, msrp, image} or null.
+function lookupPriceDB(title) {
+  if (typeof MAGILIB_PRICE_DB === 'undefined' || !title) return null;
+  const key = normBookTitle(title);
+  if (!key) return null;
+  // Exact match first
+  if (MAGILIB_PRICE_DB[key]) return MAGILIB_PRICE_DB[key];
+  // Partial match — key starts with query or vice versa (handles "Volume 1" suffixes)
+  for (const [k, v] of Object.entries(MAGILIB_PRICE_DB)) {
+    if (k.startsWith(key) || key.startsWith(k)) return v;
+  }
+  return null;
+}
+
+// Look up a title in the discontinued list. Returns the original description string or null.
+function lookupDiscDB(title) {
+  if (typeof MAGILIB_DISC_DB === 'undefined' || !title) return null;
+  const key = normBookTitle(title);
+  if (!key) return null;
+  if (MAGILIB_DISC_DB[key]) return MAGILIB_DISC_DB[key];
+  for (const [k, v] of Object.entries(MAGILIB_DISC_DB)) {
+    if (k.startsWith(key) || key.startsWith(k)) return v;
+  }
+  return null;
+}
+
 // ── PRICING CONSTANTS ──
 const RETAIL_DISCOUNT = 0.80;   // -20% from retail for in-stock titles
 const USD_RATES = { AUD: 1.55, GBP: 0.79, EUR: 0.92, USD: 1.0 };
@@ -2655,47 +2757,20 @@ function usdToLocal(usd, currency) {
   return Math.round(usd * (USD_RATES[currency] || 1.55) * 100) / 100;
 }
 
-// Scrape Vanishing Inc for in-stock status and retail price
-async function scrapeVanishingInc(title, author) {
+// Check retail availability via Claude (Vanishing Inc + Penguin Magic both block scraping with 403)
+async function checkRetailAvailability(title, author) {
   try {
-    const q = encodeURIComponent((title + (author ? ' ' + author : '')).replace(/['"]/g, ''));
-    const url = 'https://www.vanishingincmagic.com/search/' + q + '/';
-    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
-    const data = await resp.json();
-    if (!data.success) return null;
-    const raw = data.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    const normT = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const normTitle = normT(title);
-    // Look for price patterns near title match
-    const priceMatch = raw.match(/\$([\d,]+(?:\.\d{2})?)/);
-    // Check for "in stock" / "add to cart" signal
-    const inStock = /add to cart|in stock/i.test(raw);
-    if (priceMatch && inStock) {
-      const priceUSD = parseFloat(priceMatch[1].replace(',', ''));
-      if (priceUSD >= 5 && priceUSD <= 500) {
-        return { name: 'Vanishing Inc', priceUSD, url, inStock: true, source: 'retail' };
-      }
-    }
-  } catch(e) {}
-  return null;
-}
+    const data = await callClaude([{role:'user', content:
+      `Is "${title}"${author ? ' by ' + author : ''} currently available as a NEW retail product from Vanishing Inc (vanishingincmagic.com) or Penguin Magic (penguinmagic.com)?
 
-// Scrape Penguin Magic for in-stock status and retail price
-async function scrapePenguinMagic(title, author) {
-  try {
-    const q = encodeURIComponent(title + (author ? ' ' + author : ''));
-    const url = 'https://www.penguinmagic.com/magicsearch?q=' + q;
-    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
-    const data = await resp.json();
-    if (!data.success) return null;
-    const raw = data.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    const inStock = /add to cart|in stock/i.test(raw);
-    const priceMatch = raw.match(/\$([\d,]+(?:\.\d{2})?)/);
-    if (priceMatch && inStock) {
-      const priceUSD = parseFloat(priceMatch[1].replace(',', ''));
-      if (priceUSD >= 5 && priceUSD <= 500) {
-        return { name: 'Penguin Magic', priceUSD, url, inStock: true, source: 'retail' };
-      }
+Reply ONLY with valid JSON, no markdown:
+{"in_stock": true|false, "retailer": "Vanishing Inc"|"Penguin Magic"|null, "price_usd": number|null, "url": "string"|null}
+
+Only return in_stock:true if you are confident this is a currently published, in-print title available new from these retailers. If uncertain, return in_stock:false.`
+    }], 200);
+    const json = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    if (json.in_stock && json.price_usd && json.price_usd >= 5) {
+      return { name: json.retailer || 'Retail', priceUSD: json.price_usd, url: json.url || '', inStock: true, source: 'retail' };
     }
   } catch(e) {}
   return null;
@@ -2723,21 +2798,61 @@ async function fetchPrice(){
   const sym = currSym();
 
   try {
-    // ── STEP 1: Check retail sources (Vanishing Inc + Penguin Magic) in parallel ──
-    btn.innerHTML = '<span class="spinner"></span> Checking retail stock…';
-    const [viResult, pmResult, qtteResults, cmbResults] = await Promise.all([
-      scrapeVanishingInc(title, author),
-      scrapePenguinMagic(title, author),
-      scrapeQTTEPrices(title, author),
-      scrapeCollectingMagicBooks(title, author)
-    ]);
+    // ── STEP 1: Check local DBs first (instant, no API call) ──
+    const localPriceEntry = lookupPriceDB(title);
+    const discEntry        = lookupDiscDB(title);
+    const isDiscontinued   = !!discEntry;
 
     const allSources = [];
+    let retailSource = null;
 
-    // ── STEP 2: Apply retail formula if in stock ──
-    // If Vanishing Inc or Penguin Magic shows in-stock, title is current production.
-    // Use retail price × USD rate × 0.80 — do not treat as rare/scarce.
-    const retailSource = viResult || pmResult;
+    if (localPriceEntry) {
+      // Title is in our master price list — currently in print, use MSRP formula
+      retailSource = {
+        name: "Murphy's Magic (MSRP)",
+        priceUSD: localPriceEntry.msrp,
+        url: 'https://www.murphysmagicsupplies.com',
+        inStock: true,
+        source: 'retail'
+      };
+      // Offer cover image via intelligence card (tap to use, not auto-load)
+      if (localPriceEntry.image && !S.coverUrl) {
+        const _sid = 'retailCover_' + Date.now();
+        const _imgUrl = localPriceEntry.image;
+        const _card = document.getElementById('aiInfoCard');
+        const _ct = document.getElementById('aiInfoContent');
+        if (_ct) {
+          const _wrap = document.createElement('div');
+          _wrap.id = _sid;
+          _wrap.style.marginTop = '8px';
+          const _lbl = document.createElement('div');
+          _lbl.style.cssText = 'font-size:10px;font-weight:500;color:var(--tier2);margin-bottom:5px;';
+          _lbl.textContent = 'Retail product image available — tap to use';
+          const _img = document.createElement('img');
+          _img.src = _imgUrl;
+          _img.style.cssText = 'max-width:80px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s;display:block;';
+          _img.title = 'Tap to use as cover';
+          _img.addEventListener('click', () => acceptConjuringSuggestion(_imgUrl, _sid));
+          _wrap.appendChild(_lbl);
+          _wrap.appendChild(_img);
+          _ct.appendChild(_wrap);
+          if (_card) _card.style.display = 'block';
+        }
+      }
+    } else if (isDiscontinued) {
+      // Show out-of-print warning in intelligence card immediately
+      showAiInfoCard('<span style="color:var(--tier3);font-weight:600;">⚠ Possibly Out of Print</span><br>' +
+        '<span style="font-size:11px;color:var(--ink-light);">Found on discontinued list. Pricing from secondary market only.</span>');
+    }
+
+    // ── STEP 2: Live scrape specialist dealers + (if no local price) Claude retail check ──
+    btn.innerHTML = '<span class="spinner"></span> Checking live listings…';
+    const scrapePromises = [scrapeQTTEPrices(title, author), scrapeCollectingMagicBooks(title, author)];
+    if (!localPriceEntry && !isDiscontinued) scrapePromises.push(checkRetailAvailability(title, author));
+    else scrapePromises.push(Promise.resolve(null));
+
+    const [qtteResults, cmbResults, claudeRetail] = await Promise.all(scrapePromises);
+    if (!retailSource && claudeRetail) retailSource = claudeRetail;
     if (retailSource) {
       const retailAUD = usdToLocal(retailSource.priceUSD, currency);
       const marketAUD = Math.round(retailAUD * RETAIL_DISCOUNT);
@@ -2752,22 +2867,7 @@ async function fetchPrice(){
         tag: 'listed',
         isRetail: true
       });
-      // Also add second retail source if found
-      if (viResult && pmResult) {
-        const r2AUD = usdToLocal(pmResult.priceUSD, currency);
-        const m2AUD = Math.round(r2AUD * RETAIL_DISCOUNT);
-        allSources.push({
-          name: pmResult.name,
-          price: m2AUD,
-          priceUSD: pmResult.priceUSD,
-          detail: 'In stock — retail ' + sym + r2AUD.toFixed(0) + ' × 0.80 = market ' + sym + m2AUD,
-          url: pmResult.url,
-          urlLabel: 'View listing',
-          tier: 1,
-          tag: 'listed',
-          isRetail: true
-        });
-      }
+      // Single retail source — Claude doesn't distinguish two retailers separately
     }
 
     // ── STEP 3: Add specialist dealer live listings (QTTE, CMB) ──
@@ -2896,6 +2996,26 @@ function debouncedConjuringCheck(title) {
   clearTimeout(_conjuringDebounce);
   _conjuringDebounce = setTimeout(async () => {
     if (!title || title.length < 4) return;
+    // Check local DBs immediately
+    const priceEntry = lookupPriceDB(title);
+    const discEntry  = lookupDiscDB(title);
+    if (priceEntry) {
+      // Known retail title — show MSRP hint
+      const aud = Math.round(priceEntry.msrp * 1.55 * 0.80);
+      const note = '<span style="color:var(--tier2);font-size:11px;">Currently in print — retail ~A$' + aud + '</span>';
+      const card = document.getElementById('aiInfoCard');
+      const ct   = document.getElementById('aiInfoContent');
+      if (ct && !ct.innerHTML) { ct.innerHTML = note; if (card) card.style.display = 'block'; }
+    } else if (discEntry && !lookupPriceDB(title)) {
+      // On discontinued list — show warning
+      const card = document.getElementById('aiInfoCard');
+      const ct   = document.getElementById('aiInfoContent');
+      if (ct && !ct.innerHTML) {
+        ct.innerHTML = '<span style="color:var(--tier3);font-weight:600;">⚠ Possibly Out of Print</span>';
+        if (card) card.style.display = 'block';
+      }
+    }
+    // Still run conjuring DB match for cover/metadata
     const match = conjuringFuzzyLookup(title);
     if (match) {
       await applyConjuringMatch(match, 'manual');
@@ -2949,11 +3069,14 @@ function conjuringBookId(coverUrl) {
 
 // After a fuzzy match: correct the title field, load the cover, then scrape metadata
 async function applyConjuringMatch(match, scanSource) {
-  // 1. Correct title to the canonical DB key (title-cased)
+  // 1. Title correction rules:
+  //    - Manual typing ('manual'): NEVER overwrite — user typed what they meant
+  //    - Scan ('scan'): only overwrite if title field was empty, or score is perfect (1.0)
   const canonical = toTitleCase(match.key);
   const titleEl = document.getElementById('f-title');
-  if (titleEl && titleEl.value && match.score < 0.98) {
-    // Only overwrite if scan gave us something different and score isn't perfect
+  const currentTitle = titleEl ? titleEl.value.trim() : '';
+  const shouldCorrectTitle = scanSource === 'scan' && (!currentTitle || match.score === 1.0);
+  if (shouldCorrectTitle && titleEl) {
     titleEl.value = canonical;
     titleEl.classList.add('field-populated');
     setTimeout(() => titleEl.classList.remove('field-populated'), 3000);
