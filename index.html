@@ -921,6 +921,28 @@ input[type=file].file-input{display:none;}
   </div>
 </div>
 
+<!-- APPS SCRIPT VIEWER MODAL -->
+<div class="modal-overlay hidden" id="appsScriptOverlay" onclick="if(event.target===this)document.getElementById('appsScriptOverlay').classList.add('hidden')" style="z-index:700;">
+  <div class="modal" style="max-width:600px;border-radius:20px;overflow:hidden;">
+    <div class="modal-handle"></div>
+    <div class="modal-header" style="padding:18px 20px 14px;">
+      <div>
+        <div class="modal-title">MagiLib Apps Script</div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-top:2px;">Copy all, paste into Apps Script editor</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('appsScriptOverlay').classList.add('hidden')">✕</button>
+    </div>
+    <div style="padding:0 16px 8px;">
+      <div id="appsScriptCopyStatus" style="display:none;font-size:12px;font-weight:500;padding:6px 12px;border-radius:7px;margin-bottom:8px;text-align:center;background:var(--success-bg);color:var(--success);border:0.5px solid var(--tier1-border);">✓ Copied to clipboard!</div>
+      <pre id="appsScriptCode" style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;padding:14px;font-size:11px;line-height:1.6;overflow-x:auto;overflow-y:auto;max-height:45vh;white-space:pre;font-family:ui-monospace,monospace;color:var(--ink);margin:0;"></pre>
+    </div>
+    <div style="padding:12px 16px 20px;display:flex;gap:10px;">
+      <button onclick="copyAppsScript()" style="flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">📋 Copy to Clipboard</button>
+      <button onclick="document.getElementById('appsScriptOverlay').classList.add('hidden')" style="padding:12px 18px;background:transparent;border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--ink-light);">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHANGELOG MODAL -->
 <div class="modal-overlay hidden" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()" style="z-index:600;">
   <div class="modal" style="max-width:520px;border-radius:20px;overflow:hidden;">
@@ -2782,6 +2804,91 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ── APPS SCRIPT EMBED ──
+const MAGILIB_APPS_SCRIPT = `// MagiLib Apps Script v1.0
+// Paste this entire file into Extensions > Apps Script, then Deploy > New deployment > Web app
+// Set "Who has access" to Anyone, then copy the deployment URL into MagiLib Settings.
+
+const SHEET_NAME = 'Sheet1'; // Change if your sheet tab has a different name
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME) || ss.getActiveSheet();
+
+    // Append a new row
+    if (data.row && !data.updateRow) {
+      sheet.appendRow(data.row);
+      return ok('Row appended');
+    }
+
+    // Overwrite an existing row (edit)
+    if (data.row && data.updateRow) {
+      const rowNum = parseInt(data.updateRow);
+      const range = sheet.getRange(rowNum, 1, 1, data.row.length);
+      range.setValues([data.row]);
+      return ok('Row updated');
+    }
+
+    // Delete a row
+    if (data.deleteRow) {
+      sheet.deleteRow(parseInt(data.deleteRow));
+      return ok('Row deleted');
+    }
+
+    // Update a single cell
+    if (data.updateCell) {
+      const { row, col, value } = data.updateCell;
+      sheet.getRange(parseInt(row), parseInt(col) + 1).setValue(value);
+      return ok('Cell updated');
+    }
+
+    return ok('No operation matched');
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function ok(msg) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, msg: msg }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput('MagiLib Apps Script is running.')
+    .setMimeType(ContentService.MimeType.TEXT);
+}`;
+
+function showWizardScript() {
+  const el = document.getElementById('appsScriptCode');
+  if (el) el.textContent = MAGILIB_APPS_SCRIPT;
+  document.getElementById('appsScriptCopyStatus').style.display = 'none';
+  document.getElementById('appsScriptOverlay').classList.remove('hidden');
+}
+
+async function copyAppsScript() {
+  try {
+    await navigator.clipboard.writeText(MAGILIB_APPS_SCRIPT);
+    const status = document.getElementById('appsScriptCopyStatus');
+    status.style.display = 'block';
+    setTimeout(() => { status.style.display = 'none'; }, 2500);
+  } catch(e) {
+    // Fallback: select the pre element text
+    const el = document.getElementById('appsScriptCode');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    showToast('Text selected — use Copy to copy it', 'info');
+  }
+}
+
 // ── VERSION + CHANGELOG ──
 const APP_VERSION = 'v1.0 beta';
 
@@ -3011,7 +3118,7 @@ function renderWizardStep() {
         <ol style="font-size:12px;color:var(--ink);line-height:2;margin:0;padding-left:18px;">
           <li>Open <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);font-weight:500;">sheets.google.com</a> and create a new spreadsheet</li>
           <li>Go to <strong>Extensions → Apps Script</strong></li>
-          <li>Replace all code with the <a href="https://github.com/pipersean-jpg/magilib" target="_blank" style="color:var(--accent);font-weight:500;">MagiLib Apps Script</a></li>
+          <li>Replace all code with the MagiLib Apps Script — <button onclick="showWizardScript()" style="display:inline;background:none;border:none;padding:0;color:var(--accent);font-weight:500;cursor:pointer;font-family:inherit;font-size:inherit;text-decoration:underline;">tap to view it</button></li>
           <li>Click <strong>Deploy → New deployment → Web app</strong></li>
           <li>Set "Who has access" to <strong>Anyone</strong>, then Deploy</li>
           <li>Copy the deployment URL and paste it below</li>
