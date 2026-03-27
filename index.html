@@ -15,8 +15,6 @@
 <script src="/magilib_price_db.js" defer></script>
 <script src="/magilib_disc_db.js" defer></script>
 <script src="/magilib_market_db.js" defer></script>
-<script src="/discontinued_db.js" defer></script>
-<script src="/price_db.js" defer></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -880,14 +878,23 @@ input[type=file].file-input{display:none;}
 <div id="view-settings" class="view">
   <div class="settings-panel">
     <div class="section-title">Google Sheets</div>
-    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#e8f5ee;border-radius:10px;border:0.5px solid #a3d9b9;margin-bottom:12px;">
+    <div id="sheetStatusBadge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#e8f5ee;border-radius:10px;border:0.5px solid #a3d9b9;margin-bottom:12px;">
       <div style="width:8px;height:8px;border-radius:50%;background:#2d6a4f;flex-shrink:0;"></div>
-      <span style="font-size:12px;font-weight:500;color:#2d6a4f;">Library loads from sheet ID: 1KRGofstm2eOgic…</span>
+      <span id="sheetStatusText" style="font-size:12px;font-weight:500;color:#2d6a4f;"></span>
+    </div>
+    <div id="sheetMissingBadge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#fdecea;border-radius:10px;border:0.5px solid #f5b7b5;margin-bottom:12px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:#a32d2d;flex-shrink:0;"></div>
+      <span style="font-size:12px;font-weight:500;color:#a32d2d;">No sheet connected — Library will be empty until you add your Sheet ID below.</span>
+    </div>
+    <div class="settings-row">
+      <label>Google Sheet ID</label>
+      <input type="text" id="s-sheetId" placeholder="Paste your Google Sheet ID here" oninput="saveSettings();updateSheetBadge()" autocomplete="off"/>
+      <div class="settings-hint">Open your Google Sheet — the ID is the long string in the URL between /d/ and /edit. The sheet must be shared as "Anyone with the link can view".</div>
     </div>
     <div class="settings-row">
       <label>Apps Script URL (for saving)</label>
       <input type="text" id="s-scriptUrl" placeholder="https://script.google.com/macros/s/…/exec" oninput="saveSettings()" autocomplete="off"/>
-      <div class="settings-hint">Deploy the Apps Script on your NEW sheet and paste the URL here. Required for saving new books.</div>
+      <div class="settings-hint">Deploy the Apps Script on your sheet and paste the deployment URL here. Required for saving new books.</div>
     </div>
   </div>
   <div class="settings-panel">
@@ -1125,7 +1132,8 @@ function loadSettings(){
     S.settings=s;
     // Note: s-ebay field removed — no longer referenced
     const setField = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-    setField('s-scriptUrl', s.scriptUrl);
+    setField('s-sheetId',   s.sheetId);
+  setField('s-scriptUrl', s.scriptUrl);
     setField('s-cloudName', s.cloudName);
     setField('s-cloudPreset', s.cloudPreset);
     if(s.currency){document.getElementById('s-currency').value=s.currency;document.getElementById('currencyLabel').textContent=s.currency;}
@@ -1139,6 +1147,7 @@ function saveSettings(){
   const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
   const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
   const s = {
+    sheetId:   getVal('s-sheetId')   || existing.sheetId   || '',
     scriptUrl: getVal('s-scriptUrl') || existing.scriptUrl || '',
     cloudName: getVal('s-cloudName') || existing.cloudName || '',
     cloudPreset: getVal('s-cloudPreset') || existing.cloudPreset || '',
@@ -1337,11 +1346,23 @@ async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
   grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading…</div>';
   try{
-    const sheetId='1KRGofstm2eOgic-acTNKgUXTsaaSf3SCqFf0AddXOnk';
+    // Read Sheet ID from user settings — never hardcoded
+    const sheetId = (S.settings && S.settings.sheetId) ? S.settings.sheetId.trim() : '';
+    if (!sheetId) {
+      grid.innerHTML = '<div style="padding:40px 20px;text-align:center;">' +
+        '<div style="font-size:32px;margin-bottom:12px;">📋</div>' +
+        '<div style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;">No Google Sheet connected</div>' +
+        '<div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.6;">Add your Google Sheet ID in Settings to load your collection.</div>' +
+        '<button onclick="toggleView(\'settings\')" style="padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">Go to Settings \u2192</button>' +
+        '</div>';
+      S.books = [];
+      renderCatalog();
+      return;
+    }
     // Use gviz endpoint — works for any sheet shared as "Anyone can view", no API key needed
     const gvizUrl='https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json';
     const resp=await fetch(gvizUrl);
-    if(!resp.ok) throw new Error('Could not reach Google Sheets (HTTP '+resp.status+'). Check the sheet is shared as Anyone can view.');
+    if(!resp.ok) throw new Error('Could not reach Google Sheets (HTTP '+resp.status+'). Check the sheet is shared as "Anyone with the link can view".');
     const text=await resp.text();
     // gviz wraps JSON in a callback — strip it
     const jsonStr=text.replace(/^[\s\S]*?\(/, '').replace(/\);?\s*$/, '');
@@ -4034,6 +4055,23 @@ function clearFilters() {
   S.filterCondition = 'all';
   S.sortBy = 'dateAdded';
   S.sortDir = 'desc';
+function updateSheetBadge() {
+  const sheetId = (S.settings && S.settings.sheetId) ? S.settings.sheetId.trim() : '';
+  const connected = document.getElementById('sheetStatusBadge');
+  const missing   = document.getElementById('sheetMissingBadge');
+  const statusTxt = document.getElementById('sheetStatusText');
+  if (!connected || !missing) return;
+  if (sheetId) {
+    connected.style.display = 'flex';
+    missing.style.display   = 'none';
+    if (statusTxt) statusTxt.textContent = 'Connected — Sheet ID: ' + sheetId.slice(0,20) + '…';
+  } else {
+    connected.style.display = 'none';
+    missing.style.display   = 'flex';
+  }
+}
+
+  updateSheetBadge();
   // Restore stat toggle checkboxes from settings
   ['total','value','avg','top'].forEach(k => {
     const el = document.getElementById('s-stat-' + k);
@@ -4094,8 +4132,8 @@ function afterSplash() {
 }
 
 // ── SUPPORT / FEEDBACK / FAQ ──
-const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/1XK5vshgaOiqt6fW1ldtmDtqJUlOwnDLVpwVV2WUiGcw/prefill';
-const BUG_REPORT_URL   = 'https://docs.google.com/forms/d/1dX5hOuhjPBw4MEoCqk0yuLaMn0lbt8v-ZWZeNZjobWc/prefill';
+const FEEDBACK_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScaXUfzbBGcvD6XDMTmb28n28cweQ7qNao_KWvqAHF2S7EM7A/viewform';
+const BUG_REPORT_URL   = 'https://docs.google.com/forms/d/e/1FAIpQLSf1MLdRF0pjPUDQh7q_fszPpYDikAcRlZb0KUgekXkyTl_CdA/viewform';
 
 const FAQ_ITEMS = [
   {
@@ -4415,6 +4453,17 @@ function closeWizard(markSeen) {
 
 function wizardNext() {
   if (wizardStep === 1) {
+    // Save Sheet ID
+    const sid = (document.getElementById('wiz-sheetId') || {}).value?.trim() || '';
+    if (sid) {
+      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+      s.sheetId = sid;
+      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+      S.settings.sheetId = sid;
+      const elSid = document.getElementById('s-sheetId');
+      if (elSid) elSid.value = sid;
+      updateSheetBadge();
+    }
     // Validate Apps Script URL before proceeding
     const url = document.getElementById('wiz-scriptUrl').value.trim();
     if (url && !url.startsWith('https://script.google.com')) {
@@ -4544,13 +4593,19 @@ function renderWizardStep() {
           <li>Copy the deployment URL and paste it below</li>
         </ol>
       </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Google Sheet ID <span style="color:#a32d2d;">*</span></label>
+        <input type="text" id="wiz-sheetId" value="${stored.sheetId||''}" placeholder="e.g. 1KRGofstm2eOgic-acTNKgUXTsaaSf3SCqFf0AddXOnk"
+          style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Found in your sheet URL: docs.google.com/spreadsheets/d/<b style="color:var(--accent);">[SHEET-ID]</b>/edit</div>
+      </div>
       <div style="margin-bottom:6px;">
         <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Apps Script URL</label>
         <input type="text" id="wiz-scriptUrl" value="${hasUrl}" placeholder="https://script.google.com/macros/s/…/exec"
           style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
           oninput="document.getElementById('wizardNextBtn').textContent=this.value.trim()?'Next →':'Skip for now →'"/>
         <div id="wizardError" style="display:none;font-size:12px;color:#a32d2d;margin-top:6px;padding:6px 10px;background:#fdf0f0;border-radius:6px;"></div>
-        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">You can add this later in Settings if you're not ready yet.</div>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">You can add both later in Settings if you are not ready yet.</div>
       </div>
     `;
     // Clear error on input
