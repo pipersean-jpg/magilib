@@ -1385,37 +1385,108 @@ async function importFromCSV(event) {
   if (!_supaUser) { showToast('Please sign in first', 'error'); return; }
   const btn = document.getElementById('csvImportBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Importing…'; }
+
   const text = await file.text();
-  const lines = text.split('\n').filter(l => l.trim());
-  if (lines.length < 2) { showToast('CSV appears empty', 'error'); if(btn){btn.disabled=false;btn.textContent='Import CSV';} return; }
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
-  const ci = k => headers.findIndex(h => h.includes(k));
-  const colMap = { title:ci('title'), author:ci('author'), artist_subject:ci('artist'), edition:ci('edition'), year:headers.findIndex(h=>h==='year'), publisher:ci('publisher'), isbn:ci('isbn'), condition:headers.findIndex(h=>h.includes('condition')&&!h.includes('flag')), market_price:ci('market'), purchase_price:headers.findIndex(h=>h.includes('purchase')||h.includes('cost')), notes:ci('notes'), cover_url:ci('cover'), condition_flags:ci('flag'), sold_status:ci('sold'), star_rating:ci('star'), collectors_note:ci('collector'), where_acquired:headers.findIndex(h=>h.includes('acquired')||h.includes('location')), draft_status:ci('draft') };
-  const getC = (row, key) => { const idx=colMap[key]; if(idx==null||idx<0)return''; return(row[idx]||'').trim().replace(/^"|"$/g,''); };
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',');
-    const title = getC(cols,'title');
-    if (!title) continue;
-    // Parse date — handle DD/MM/YYYY (Google Sheets AU) and YYYY-MM-DD (ISO)
-    const rawDate = getC(cols,'date_added');
-    let parsedDate = null;
-    if (rawDate) {
-      const auMatch = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      const isoMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (auMatch) parsedDate = auMatch[3] + '-' + auMatch[2].padStart(2,'0') + '-' + auMatch[1].padStart(2,'0');
-      else if (isoMatch) parsedDate = rawDate;
+
+  // Proper CSV parser — handles quoted fields with commas inside
+  function parseCSV(str) {
+    const rows = []; let row = []; let field = ''; let inQuote = false;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i], next = str[i+1];
+      if (inQuote) {
+        if (ch === '"' && next === '"') { field += '"'; i++; }
+        else if (ch === '"') { inQuote = false; }
+        else { field += ch; }
+      } else {
+        if (ch === '"') { inQuote = true; }
+        else if (ch === ',') { row.push(field.trim()); field = ''; }
+        else if (ch === '\n' || (ch === '\r' && next === '\n')) {
+          if (ch === '\r') i++;
+          row.push(field.trim()); rows.push(row); row = []; field = '';
+        } else { field += ch; }
+      }
     }
-    rows.push({ user_id:_supaUser.id, title, author:getC(cols,'author'), artist_subject:getC(cols,'artist_subject'), edition:getC(cols,'edition'), year:getC(cols,'year'), publisher:getC(cols,'publisher'), isbn:getC(cols,'isbn'), condition:getC(cols,'condition'), market_price:parseFloat(getC(cols,'market_price'))||null, purchase_price:parseFloat(getC(cols,'purchase_price'))||null, notes:getC(cols,'notes'), cover_url:getC(cols,'cover_url'), date_added:parsedDate, condition_flags:getC(cols,'condition_flags'), sold_status:getC(cols,'sold_status'), star_rating:parseInt(getC(cols,'star_rating'))||null, collectors_note:getC(cols,'collectors_note'), where_acquired:getC(cols,'where_acquired'), draft_status:getC(cols,'draft_status') });
+    if (field || row.length) { row.push(field.trim()); rows.push(row); }
+    return rows;
   }
+
+  const allRows = parseCSV(text).filter(r => r.some(c => c));
+  if (allRows.length < 2) { showToast('CSV appears empty', 'error'); if(btn){btn.disabled=false;btn.textContent='Import CSV';} return; }
+
+  const headers = allRows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g,' ').trim());
+  const ci = k => headers.findIndex(h => h.includes(k));
+  const colMap = {
+    title: ci('title'),
+    author: ci('author'),
+    artist_subject: ci('artist'),
+    edition: ci('edition'),
+    year: headers.findIndex(h => h === 'year'),
+    publisher: ci('publisher'),
+    isbn: ci('isbn'),
+    condition: headers.findIndex(h => h.includes('condition') && !h.includes('flag')),
+    market_price: ci('market'),
+    purchase_price: headers.findIndex(h => h.includes('purchase') && !h.includes('location')),
+    notes: ci('notes'),
+    cover_url: ci('cover'),
+    date_added: ci('date'),
+    condition_flags: ci('flag'),
+    sold_status: ci('sold'),
+    star_rating: ci('star'),
+    collectors_note: ci('collector'),
+    where_acquired: headers.findIndex(h => h.includes('location') || h.includes('acquired')),
+    draft_status: ci('draft'),
+  };
+  const getC = (row, key) => { const idx = colMap[key]; if (idx == null || idx < 0) return ''; return (row[idx] || '').trim(); };
+  const parsePrice = v => { const n = parseFloat(v.replace(/[^0-9.-]/g,'')); return isNaN(n) ? null : n; };
+  const parseDate = v => {
+    if (!v) return null;
+    const au = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (au) return au[3] + '-' + au[2].padStart(2,'0') + '-' + au[1].padStart(2,'0');
+    const iso = v.match(/^\d{4}-\d{2}-\d{2}$/);
+    if (iso) return v;
+    return null;
+  };
+
+  const rows = [];
+  for (let i = 1; i < allRows.length; i++) {
+    const cols = allRows[i];
+    const title = getC(cols, 'title');
+    if (!title) continue;
+    rows.push({
+      user_id: _supaUser.id,
+      title,
+      author: getC(cols,'author'),
+      artist_subject: getC(cols,'artist_subject'),
+      edition: getC(cols,'edition'),
+      year: getC(cols,'year'),
+      publisher: getC(cols,'publisher'),
+      isbn: getC(cols,'isbn'),
+      condition: getC(cols,'condition'),
+      market_price: parsePrice(getC(cols,'market_price')),
+      purchase_price: parsePrice(getC(cols,'purchase_price')),
+      notes: getC(cols,'notes'),
+      cover_url: getC(cols,'cover_url'),
+      date_added: parseDate(getC(cols,'date_added')),
+      condition_flags: getC(cols,'condition_flags'),
+      sold_status: getC(cols,'sold_status'),
+      star_rating: parseInt(getC(cols,'star_rating')) || null,
+      collectors_note: getC(cols,'collectors_note'),
+      where_acquired: getC(cols,'where_acquired'),
+      draft_status: getC(cols,'draft_status'),
+    });
+  }
+
   let imported = 0;
+  let failed = 0;
   for (let i = 0; i < rows.length; i += 100) {
     const { error } = await _supa.from('books').insert(rows.slice(i, i+100));
     if (!error) imported += Math.min(100, rows.length - i);
+    else { console.error('Import chunk error:', error); failed += Math.min(100, rows.length - i); }
   }
   if (btn) { btn.disabled=false; btn.textContent='Import CSV'; }
   event.target.value='';
-  showToast('Imported ' + imported + ' books ✓', 'success', 3000);
+  const msg = failed > 0 ? 'Imported ' + imported + ', ' + failed + ' failed' : 'Imported ' + imported + ' books ✓';
+  showToast(msg, failed > 0 ? 'error' : 'success', 3500);
   loadCatalog();
 }
 
