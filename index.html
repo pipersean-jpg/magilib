@@ -1170,6 +1170,7 @@ function showView(v){
   const tabs={entry:0,catalog:1,settings:2};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
   if(v==='catalog')loadCatalog();
+  if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
