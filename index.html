@@ -11,6 +11,7 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/conjuring_db.js" defer></script>
 <script src="/magilib_price_db.js" defer></script>
 <script src="/magilib_disc_db.js" defer></script>
@@ -258,6 +259,52 @@ input[type=file].file-input{display:none;}
 .conf-med{background:#faeeda;color:#854f0b;}
 .conf-low{background:#fdecea;color:#a32d2d;}
 .field-populated{border-color:#2d6a4f !important;background:#f6fbf8 !important;transition:all 0.3s;}
+
+/* ── AUTH SCREEN ── */
+#authScreen{position:fixed;inset:0;z-index:9998;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+#authScreen.hidden{display:none;}
+.auth-card{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:32px 28px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(42,31,107,0.08);}
+.auth-logo{display:flex;justify-content:center;margin-bottom:24px;}
+.auth-logo img{height:56px;width:auto;}
+.auth-title{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);text-align:center;margin-bottom:4px;}
+.auth-sub{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:24px;}
+.auth-field{margin-bottom:14px;}
+.auth-field label{display:block;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--ink-light);margin-bottom:5px;letter-spacing:0.03em;text-transform:uppercase;}
+.auth-field input{width:100%;padding:11px 13px;border:0.5px solid var(--border-med);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--paper-warm);outline:none;transition:border-color 0.15s;}
+.auth-field input:focus{border-color:var(--accent);background:#fff;}
+.auth-field input::placeholder{color:var(--ink-faint);}
+.auth-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.15s;margin-top:4px;}
+.auth-btn:hover{opacity:0.88;}
+.auth-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.auth-toggle{text-align:center;margin-top:16px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-light);}
+.auth-toggle a{color:var(--accent);font-weight:500;cursor:pointer;text-decoration:none;}
+.auth-toggle a:hover{text-decoration:underline;}
+.auth-error{background:#fef2f2;border:0.5px solid #fca5a5;border-radius:var(--radius);padding:10px 13px;font-family:'DM Sans',sans-serif;font-size:13px;color:#b91c1c;margin-bottom:14px;display:none;}
+.auth-error.show{display:block;}
+.auth-optional{font-size:11px;color:var(--ink-faint);font-weight:400;margin-left:4px;}
+
+/* ── ONBOARDING WELCOME ── */
+#welcomeScreen{position:fixed;inset:0;z-index:9997;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+#welcomeScreen.hidden{display:none;}
+.welcome-card{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:36px 28px;width:100%;max-width:440px;text-align:center;box-shadow:0 4px 24px rgba(42,31,107,0.08);}
+.welcome-emoji{font-size:48px;margin-bottom:16px;}
+.welcome-title{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.welcome-name{color:var(--accent);}
+.welcome-sub{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink-light);line-height:1.6;margin-bottom:28px;}
+.welcome-actions{display:flex;flex-direction:column;gap:10px;}
+.welcome-btn-primary{padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.welcome-btn-primary:hover{opacity:0.88;}
+.welcome-btn-secondary{padding:12px;background:transparent;color:var(--accent);border:0.5px solid var(--accent);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.welcome-btn-secondary:hover{background:var(--accent-light);}
+
+/* ── USER MENU ── */
+.user-menu-btn{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.user-dropdown{position:absolute;top:58px;right:16px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.1);padding:6px;min-width:160px;z-index:200;display:none;}
+.user-dropdown.open{display:block;}
+.user-dropdown-item{padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px;}
+.user-dropdown-item:hover{background:var(--paper-warm);}
+.user-dropdown-item.danger{color:#b91c1c;}
+.user-dropdown-divider{height:0.5px;background:var(--border);margin:4px 0;}
 </style>
 </head>
 <body>
@@ -269,12 +316,67 @@ input[type=file].file-input{display:none;}
   <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(42,31,107,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
 </div>
 
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="/logo.png" alt="MagiLib" onerror="this.src='/logo.png'"/></div>
+    <div class="auth-title" id="authTitle">Welcome back</div>
+    <div class="auth-sub" id="authSub">Sign in to your MagiLib collection</div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field" id="authUsernameField" style="display:none;">
+      <label>Display Name <span class="auth-optional">(optional)</span></label>
+      <input type="text" id="authUsername" placeholder="e.g. MagicMike" autocomplete="nickname"/>
+    </div>
+    <div class="auth-field">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="auth-field">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">Sign In</button>
+    <div class="auth-toggle" id="authToggle">
+      Don't have an account? <a onclick="authSwitchMode()">Create one</a>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME / ONBOARDING SCREEN -->
+<div id="welcomeScreen" class="hidden">
+  <div class="welcome-card">
+    <div class="welcome-emoji">🎩</div>
+    <div class="welcome-title">Welcome to MagiLib, <span class="welcome-name" id="welcomeName">Collector</span>!</div>
+    <div class="welcome-sub">Your magic book collection lives here. Start by adding your first book, or import an existing collection from a CSV export.</div>
+    <div class="welcome-actions">
+      <button class="welcome-btn-primary" onclick="dismissWelcome('add')">Add my first book →</button>
+      <button class="welcome-btn-secondary" onclick="dismissWelcome('import')">Import from CSV</button>
+    </div>
+  </div>
+</div>
+
 <nav class="nav">
   <div class="nav-brand" style="gap:0;"><img src="/logo.png" alt="MagiLib" id="navLogo" style="height:36px;width:auto;display:block;"/></div>
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
     <button class="tab-btn" onclick="showView('catalog')">Library</button>
     <button class="tab-btn" onclick="showView('settings')">Settings</button>
+  </div>
+  <div style="position:relative;">
+    <button class="user-menu-btn" id="userMenuBtn" onclick="toggleUserMenu()" style="display:none;">?</button>
+    <div class="user-dropdown" id="userDropdown">
+      <div class="user-dropdown-item" id="userMenuName" style="font-weight:600;cursor:default;color:var(--ink-light);font-size:12px;"></div>
+      <div class="user-dropdown-divider"></div>
+      <div class="user-dropdown-item" onclick="showView('settings');closeUserMenu();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+      <div class="user-dropdown-divider"></div>
+      <div class="user-dropdown-item danger" onclick="signOut()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -823,7 +925,7 @@ input[type=file].file-input{display:none;}
       <div class="save-bar">
         <div class="save-note">Title, author, condition and price required.</div>
         <button class="btn-secondary" onclick="clearForm()">Clear</button>
-        <button class="btn-primary" id="saveBtn" onclick="saveBook()">Save to Sheet</button>
+        <button class="btn-primary" id="saveBtn" onclick="saveBook()">Save to Library</button>
       </div>
     </div>
   </div>
@@ -877,24 +979,21 @@ input[type=file].file-input{display:none;}
 
 <div id="view-settings" class="view">
   <div class="settings-panel">
-    <div class="section-title">Google Sheets</div>
-    <div id="sheetStatusBadge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#e8f5ee;border-radius:10px;border:0.5px solid #a3d9b9;margin-bottom:12px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:#2d6a4f;flex-shrink:0;"></div>
-      <span id="sheetStatusText" style="font-size:12px;font-weight:500;color:#2d6a4f;"></span>
-    </div>
-    <div id="sheetMissingBadge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#fdecea;border-radius:10px;border:0.5px solid #f5b7b5;margin-bottom:12px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:#a32d2d;flex-shrink:0;"></div>
-      <span style="font-size:12px;font-weight:500;color:#a32d2d;">No sheet connected — Library will be empty until you add your Sheet ID below.</span>
-    </div>
-    <div class="settings-row">
-      <label>Google Sheet ID</label>
-      <input type="text" id="s-sheetId" placeholder="Paste your Google Sheet ID here" oninput="saveSettings();updateSheetBadge()" autocomplete="off"/>
-      <div class="settings-hint">Open your Google Sheet — the ID is the long string in the URL between /d/ and /edit. The sheet must be shared as "Anyone with the link can view".</div>
+    <div class="section-title">Account</div>
+    <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--accent-light);border-radius:var(--radius);margin-bottom:14px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;flex-shrink:0;" id="settingsAvatar">?</div>
+      <div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--ink);" id="settingsDisplayName">—</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-light);" id="settingsEmail">—</div>
+      </div>
     </div>
     <div class="settings-row">
-      <label>Apps Script URL (for saving)</label>
-      <input type="text" id="s-scriptUrl" placeholder="https://script.google.com/macros/s/…/exec" oninput="saveSettings()" autocomplete="off"/>
-      <div class="settings-hint">Deploy the Apps Script on your sheet and paste the deployment URL here. Required for saving new books.</div>
+      <label>Display Name</label>
+      <input type="text" id="s-username" placeholder="e.g. MagicMike" autocomplete="nickname" oninput="saveUsernameDebounced()"/>
+      <div class="settings-hint">This name appears on cover images you contribute to the shared library.</div>
+    </div>
+    <div class="settings-row" style="margin-top:4px;">
+      <button class="btn-secondary" style="width:100%;text-align:center;color:#b91c1c;border-color:#fca5a5;" onclick="confirmSignOut()">Sign Out</button>
     </div>
   </div>
   <div class="settings-panel">
@@ -962,6 +1061,15 @@ input[type=file].file-input{display:none;}
     <div style="border-top:0.5px solid var(--border);padding-top:14px;">
       <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Export your full collection as a CSV file.</div>
       <button onclick="exportCSV()" class="btn-secondary" style="font-size:13px;padding:9px 18px;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download CSV</button>
+    </div>
+    <div id="csvImportSection" style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Import from CSV</div>
+      <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Import books from a MagiLib CSV export or a Google Sheets export. Column headers are matched automatically.</div>
+      <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="csvImportBtn">Import CSV</span>
+        <input type="file" accept=".csv" style="display:none;" onchange="importFromCSV(event)"/>
+      </label>
     </div>
   </div>
 
@@ -1126,29 +1234,206 @@ async function callClaude(messages, maxTokens=800){
   return resp.json();
 }
 
+// ── SUPABASE CLIENT ──
+const SUPABASE_URL = 'https://acuehbwbwsbbxuqcmnrp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dOa7ljuInF06MvN5fWV9ZQ_HIBVuQZa';
+const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _supaUser = null;
+
+// ── AUTH FUNCTIONS ──
+let _authMode = 'signin';
+
+function authSwitchMode() {
+  _authMode = _authMode === 'signin' ? 'signup' : 'signin';
+  const isSignup = _authMode === 'signup';
+  document.getElementById('authTitle').textContent = isSignup ? 'Create your account' : 'Welcome back';
+  document.getElementById('authSub').textContent = isSignup ? 'Start cataloguing your magic collection' : 'Sign in to your MagiLib collection';
+  document.getElementById('authUsernameField').style.display = isSignup ? '' : 'none';
+  document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
+  document.getElementById('authToggle').innerHTML = isSignup
+    ? 'Already have an account? <a onclick="authSwitchMode()">Sign in</a>'
+    : "Don't have an account? <a onclick='authSwitchMode()'>Create one</a>";
+  document.getElementById('authError').classList.remove('show');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function authSubmit() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const usernameEl = document.getElementById('authUsername');
+  const username = usernameEl ? usernameEl.value.trim() : '';
+  const btn = document.getElementById('authSubmitBtn');
+  if (!email || !password) { showAuthError('Email and password are required.'); return; }
+  if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  btn.disabled = true;
+  btn.textContent = _authMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  document.getElementById('authError').classList.remove('show');
+  try {
+    if (_authMode === 'signup') {
+      const { data, error } = await _supa.auth.signUp({ email, password, options: { data: { username: username || null } } });
+      if (error) throw error;
+      if (data.user && !data.session) {
+        btn.disabled = false; btn.textContent = 'Create Account';
+        showAuthError('Check your email to confirm your account, then sign in.');
+        return;
+      }
+      _supaUser = data.user;
+    } else {
+      const { data, error } = await _supa.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      _supaUser = data.user;
+    }
+    await onAuthSuccess();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = _authMode === 'signup' ? 'Create Account' : 'Sign In';
+    showAuthError(e.message || 'Authentication failed. Please try again.');
+  }
+}
+
+async function onAuthSuccess() {
+  const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+  S.profile = profile || {};
+  updateUserMenu();
+  document.getElementById('authScreen').classList.add('hidden');
+  loadSettings();
+  showSplash();
+}
+
+function updateUserMenu() {
+  const btn = document.getElementById('userMenuBtn');
+  const nameEl = document.getElementById('userMenuName');
+  const settingsAvatar = document.getElementById('settingsAvatar');
+  const settingsDisplayName = document.getElementById('settingsDisplayName');
+  const settingsEmail = document.getElementById('settingsEmail');
+  const welcomeNameEl = document.getElementById('welcomeName');
+  const usernameInput = document.getElementById('s-username');
+  const displayName = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0] : 'Collector');
+  const email = (_supaUser && _supaUser.email) || '';
+  const initials = displayName.slice(0,2).toUpperCase();
+  if (btn) { btn.style.display = 'flex'; btn.textContent = initials; }
+  if (nameEl) nameEl.textContent = displayName;
+  if (settingsAvatar) settingsAvatar.textContent = initials;
+  if (settingsDisplayName) settingsDisplayName.textContent = displayName;
+  if (settingsEmail) settingsEmail.textContent = email;
+  if (welcomeNameEl) welcomeNameEl.textContent = displayName;
+  if (usernameInput && S.profile && S.profile.username) usernameInput.value = S.profile.username;
+}
+
+function toggleUserMenu() { document.getElementById('userDropdown').classList.toggle('open'); }
+function closeUserMenu() { document.getElementById('userDropdown').classList.remove('open'); }
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#userMenuBtn') && !e.target.closest('#userDropdown')) closeUserMenu();
+});
+
+async function signOut() {
+  await _supa.auth.signOut();
+  _supaUser = null; S.books = []; S.profile = {};
+  document.getElementById('userMenuBtn').style.display = 'none';
+  document.getElementById('authScreen').classList.remove('hidden');
+  _authMode = 'signin';
+  document.getElementById('authTitle').textContent = 'Welcome back';
+  document.getElementById('authSub').textContent = 'Sign in to your MagiLib collection';
+  document.getElementById('authUsernameField').style.display = 'none';
+  document.getElementById('authSubmitBtn').textContent = 'Sign In';
+  document.getElementById('authToggle').innerHTML = "Don't have an account? <a onclick='authSwitchMode()'>Create one</a>";
+  closeUserMenu();
+}
+function confirmSignOut() { if (confirm('Sign out of MagiLib?')) signOut(); }
+
+let _usernameSaveTimer = null;
+function saveUsernameDebounced() {
+  clearTimeout(_usernameSaveTimer);
+  _usernameSaveTimer = setTimeout(async () => {
+    const username = document.getElementById('s-username').value.trim();
+    if (!_supaUser || !username) return;
+    await _supa.from('profiles').update({ username }).eq('id', _supaUser.id);
+    if (!S.profile) S.profile = {};
+    S.profile.username = username;
+    updateUserMenu();
+    showToast('Display name updated ✓', 'success', 2000);
+  }, 800);
+}
+
+// ── WELCOME SCREEN ──
+function dismissWelcome(action) {
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  try {
+    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+    s.welcomeSeen = true;
+    localStorage.setItem('arcana_books_v2', JSON.stringify(s));
+  } catch(e) {}
+  if (action === 'import') {
+    showView('settings');
+    setTimeout(() => { const el = document.getElementById('csvImportSection'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 200);
+  } else {
+    showView('entry');
+  }
+}
+
+// ── CSV IMPORT ──
+async function importFromCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!_supaUser) { showToast('Please sign in first', 'error'); return; }
+  const btn = document.getElementById('csvImportBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Importing…'; }
+  const text = await file.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('CSV appears empty', 'error'); if(btn){btn.disabled=false;btn.textContent='Import CSV';} return; }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const ci = k => headers.findIndex(h => h.includes(k));
+  const colMap = { title:ci('title'), author:ci('author'), artist_subject:ci('artist'), edition:ci('edition'), year:headers.findIndex(h=>h==='year'), publisher:ci('publisher'), isbn:ci('isbn'), condition:headers.findIndex(h=>h.includes('condition')&&!h.includes('flag')), market_price:ci('market'), purchase_price:headers.findIndex(h=>h.includes('purchase')||h.includes('cost')), notes:ci('notes'), cover_url:ci('cover'), condition_flags:ci('flag'), sold_status:ci('sold'), star_rating:ci('star'), collectors_note:ci('collector'), where_acquired:headers.findIndex(h=>h.includes('acquired')||h.includes('location')), draft_status:ci('draft') };
+  const getC = (row, key) => { const idx=colMap[key]; if(idx==null||idx<0)return''; return(row[idx]||'').trim().replace(/^"|"$/g,''); };
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',');
+    const title = getC(cols,'title');
+    if (!title) continue;
+    // Parse date — handle DD/MM/YYYY (Google Sheets AU) and YYYY-MM-DD (ISO)
+    const rawDate = getC(cols,'date_added');
+    let parsedDate = null;
+    if (rawDate) {
+      const auMatch = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const isoMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (auMatch) parsedDate = auMatch[3] + '-' + auMatch[2].padStart(2,'0') + '-' + auMatch[1].padStart(2,'0');
+      else if (isoMatch) parsedDate = rawDate;
+    }
+    rows.push({ user_id:_supaUser.id, title, author:getC(cols,'author'), artist_subject:getC(cols,'artist_subject'), edition:getC(cols,'edition'), year:getC(cols,'year'), publisher:getC(cols,'publisher'), isbn:getC(cols,'isbn'), condition:getC(cols,'condition'), market_price:parseFloat(getC(cols,'market_price'))||null, purchase_price:parseFloat(getC(cols,'purchase_price'))||null, notes:getC(cols,'notes'), cover_url:getC(cols,'cover_url'), date_added:parsedDate, condition_flags:getC(cols,'condition_flags'), sold_status:getC(cols,'sold_status'), star_rating:parseInt(getC(cols,'star_rating'))||null, collectors_note:getC(cols,'collectors_note'), where_acquired:getC(cols,'where_acquired'), draft_status:getC(cols,'draft_status') });
+  }
+  let imported = 0;
+  for (let i = 0; i < rows.length; i += 100) {
+    const { error } = await _supa.from('books').insert(rows.slice(i, i+100));
+    if (!error) imported += Math.min(100, rows.length - i);
+  }
+  if (btn) { btn.disabled=false; btn.textContent='Import CSV'; }
+  event.target.value='';
+  showToast('Imported ' + imported + ' books ✓', 'success', 3000);
+  loadCatalog();
+}
+
 function loadSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
     S.settings=s;
-    // Note: s-ebay field removed — no longer referenced
     const setField = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-    setField('s-sheetId',   s.sheetId);
-  setField('s-scriptUrl', s.scriptUrl);
     setField('s-cloudName', s.cloudName);
     setField('s-cloudPreset', s.cloudPreset);
-    if(s.currency){document.getElementById('s-currency').value=s.currency;document.getElementById('currencyLabel').textContent=s.currency;}
+    if(s.currency){const el=document.getElementById('s-currency');if(el)el.value=s.currency;const cl=document.getElementById('currencyLabel');if(cl)cl.textContent=s.currency;}
     if(s.marketplace){ const el=document.getElementById('s-marketplace'); if(el) el.value=s.marketplace; }
   }catch(e){ console.warn('loadSettings error:', e); }
 }
 function saveSettings(){
-  // Load existing saved settings first so we never overwrite with empty values
   let existing = {};
   try { existing = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}'); } catch(e){}
   const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
   const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
   const s = {
-    sheetId:   getVal('s-sheetId')   || existing.sheetId   || '',
-    scriptUrl: getVal('s-scriptUrl') || existing.scriptUrl || '',
     cloudName: getVal('s-cloudName') || existing.cloudName || '',
     cloudPreset: getVal('s-cloudPreset') || existing.cloudPreset || '',
     currency: getVal('s-currency') || existing.currency || 'AUD',
@@ -1157,6 +1442,7 @@ function saveSettings(){
     statValue: getCheck('s-stat-value'),
     statAvg:   getCheck('s-stat-avg'),
     statTop:   getCheck('s-stat-top'),
+    welcomeSeen: existing.welcomeSeen || false,
   };
   S.settings = s;
   try { localStorage.setItem('arcana_books_v2', JSON.stringify(s)); } catch(e){}
@@ -1170,7 +1456,6 @@ function showView(v){
   const tabs={entry:0,catalog:1,settings:2};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
   if(v==='catalog')loadCatalog();
-  if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
@@ -1332,53 +1617,38 @@ function openEbay(e){
 
 
 // Apps Script URL is now configurable in Settings
-function getScriptUrl(){
-  // Read from S.settings first, then fall back to localStorage directly
-  if(S.settings && S.settings.scriptUrl) return S.settings.scriptUrl;
-  try {
-    const s = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
-    return s.scriptUrl || '';
-  } catch(e) { return ''; }
-}
-
-
+function getScriptUrl(){ return ''; } // Legacy stub — no longer used
 
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
   grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading…</div>';
+  if (!_supaUser) { grid.innerHTML=''; return; }
   try{
-    // Read Sheet ID from user settings — never hardcoded
-    const sheetId = (S.settings && S.settings.sheetId) ? S.settings.sheetId.trim() : '';
-    if (!sheetId) {
-      grid.innerHTML = '<div style="padding:40px 20px;text-align:center;">' +
-        '<div style="font-size:32px;margin-bottom:12px;">📋</div>' +
-        '<div style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;">No Google Sheet connected</div>' +
-        '<div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.6;">Add your Google Sheet ID in Settings to load your collection.</div>' +
-        '<button onclick="toggleView(\'settings\')" style="padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:500;cursor:pointer;">Go to Settings \u2192</button>' +
-        '</div>';
-      S.books = [];
-      renderCatalog();
-      return;
-    }
-    // Use gviz endpoint — works for any sheet shared as "Anyone can view", no API key needed
-    const gvizUrl='https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json';
-    const resp=await fetch(gvizUrl);
-    if(!resp.ok) throw new Error('Could not reach Google Sheets (HTTP '+resp.status+'). Check the sheet is shared as "Anyone with the link can view".');
-    const text=await resp.text();
-    // gviz wraps JSON in a callback — strip it
-    const jsonStr=text.replace(/^[\s\S]*?\(/, '').replace(/\);?\s*$/, '');
-    const data=JSON.parse(jsonStr);
-    if(!data.table) throw new Error('Unexpected response from Google Sheets');
-    S.books=(data.table.rows||[]).map(row=>{
-      const c=row.c||[];
-      const v=i=>(c[i]&&c[i].v!=null)?String(c[i].v):'';
-      const rawCover=v(11);
-      // Keep small base64 thumbnails (compressed covers ~15KB = ~20000 chars) for catalog display
-      // Only hide truly oversized images (>45000 chars) which are uncompressed originals
-      const coverUrl=rawCover.startsWith('http')?rawCover:(rawCover.length>45000?'__local__':rawCover);
-      const rawRow = (row.c||[]).map(c=>(c&&c.v!=null)?String(c.v):'');
-      return {title:v(0),author:v(1),artist:v(2),edition:v(3),year:v(4),publisher:v(5),isbn:v(6),condition:v(7),price:v(8),cost:v(9),notes:v(10),coverUrl,rawCover,dateAdded:v(12),flags:v(13),sold:v(14),star:v(15),collectorNote:v(16),location:v(17),draft:v(18),_rawRow:rawRow};
-    }).filter(b=>b.title);
+    const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
+    if (error) throw error;
+    S.books = (data || []).map(row => ({
+      _id: row.id,
+      title: row.title || '',
+      author: row.author || '',
+      artist: row.artist_subject || '',
+      edition: row.edition || '',
+      year: row.year || '',
+      publisher: row.publisher || '',
+      isbn: row.isbn || '',
+      condition: row.condition || '',
+      price: row.market_price != null ? String(row.market_price) : '',
+      cost: row.purchase_price != null ? String(row.purchase_price) : '',
+      notes: row.notes || '',
+      coverUrl: row.cover_url || '',
+      rawCover: row.cover_url || '',
+      dateAdded: row.date_added || '',
+      flags: row.condition_flags || '',
+      sold: row.sold_status || '',
+      star: row.star_rating != null ? String(row.star_rating) : '',
+      collectorNote: row.collectors_note || '',
+      location: row.where_acquired || '',
+      draft: row.draft_status || '',
+    }));
     renderCatalog();
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
@@ -2203,83 +2473,42 @@ function closeEditModal(e) {
 function _markEditDirty() { _editDirty = true; }
 
 async function saveEdit() {
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showToast('Apps Script URL not set in Settings', 'error'); return; }
-
-  const rowNum = S.editRowNum;
-  if (rowNum < 2) { showToast('Could not determine row to update', 'error'); return; }
+  const idx = S.currentModalIdx;
+  const b = S.books[idx];
+  if (!b || !b._id) { showToast('Could not determine book to update', 'error'); return; }
+  if (!_supaUser) { showToast('Not signed in', 'error'); return; }
 
   const btn = document.getElementById('editSaveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
 
-  const idx = S.editRowNum - 2;
-  const b = S.books[idx] || {};
-  // Use _rawRow as fallback for columns not exposed in the edit form.
-  // This is the fix for pre-v9 books: their newer columns (P–S) may be
-  // empty in _rawRow, but we must not overwrite existing values with blanks.
-  const origRow = b._rawRow || [];
-  const getOrig = (i) => (origRow[i] !== undefined ? origRow[i] : '');
+  const updatedFields = {
+    title:          document.getElementById('edit-title').value.trim(),
+    author:         document.getElementById('edit-author').value.trim(),
+    artist_subject: document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
+    edition:        document.getElementById('edit-edition').value.trim(),
+    year:           document.getElementById('edit-year').value.trim(),
+    publisher:      document.getElementById('edit-publisher').value.trim(),
+    isbn:           document.getElementById('edit-isbn').value.trim(),
+    condition:      S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
+    market_price:   parseFloat(document.getElementById('edit-price').value) || null,
+    purchase_price: parseFloat(document.getElementById('edit-cost').value) || null,
+    notes:          document.getElementById('edit-notes').value.trim(),
+    cover_url:      S.editCoverUrl || b.coverUrl || '',
+    condition_flags:(S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
+    collectors_note:(document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
+    where_acquired: (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
+    updated_at:     new Date().toISOString(),
+  };
 
-  const updatedRow = [
-    document.getElementById('edit-title').value.trim(),                                       // A(0): Title
-    document.getElementById('edit-author').value.trim(),                                      // B(1): Author
-    (document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : '') || getOrig(2), // C(2): Artist/Subject
-    document.getElementById('edit-edition').value.trim(),                                     // D(3): Edition
-    document.getElementById('edit-year').value.trim(),                                        // E(4): Year
-    document.getElementById('edit-publisher').value.trim(),                                   // F(5): Publisher
-    document.getElementById('edit-isbn').value.trim(),                                        // G(6): ISBN
-    S.editCondition || document.getElementById('edit-condition').value || b.condition || '',  // H(7): Condition
-    document.getElementById('edit-price').value,                                              // I(8): Market Price
-    document.getElementById('edit-cost').value,                                               // J(9): Purchase Price
-    document.getElementById('edit-notes').value.trim(),                                       // K(10): Notes
-    S.editCoverUrl || b.coverUrl || '',                                                       // L(11): Cover URL
-    b.dateAdded || getOrig(12) || new Date().toLocaleDateString('en-AU'),                     // M(12): Date Added
-    (S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || getOrig(13) || '', // N(13): Condition Flags
-    b.sold || getOrig(14) || '',                                                              // O(14): Sold Status — never touched by edit form
-    b.star || getOrig(15) || '',                                                              // P(15): Star Rating — preserve
-    (document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || getOrig(16) || '', // Q(16): Collector's Note
-    (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || getOrig(17) || '',            // R(17): Where Acquired
-    b.draft || getOrig(18) || '',                                                             // S(18): Draft Status — preserve
-  ];
+  const { error } = await _supa.from('books').update(updatedFields).eq('id', b._id);
+  if (error) { showToast('Update failed: ' + error.message, 'error'); btn.disabled=false; btn.textContent='Save Changes'; return; }
 
-  fetch(scriptUrl, { method:'POST', mode:'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ row: updatedRow, updateRow: rowNum }) }).catch(()=>{});
-
-  try {
-    // Update local cache — indices must exactly match the updatedRow above
-    if (S.books[idx]) {
-      S.books[idx] = {
-        ...S.books[idx],           // preserve any fields not in updatedRow (e.g. _rawRow)
-        title:         updatedRow[0],
-        author:        updatedRow[1],
-        artist:        updatedRow[2],
-        edition:       updatedRow[3],
-        year:          updatedRow[4],
-        publisher:     updatedRow[5],
-        isbn:          updatedRow[6],
-        condition:     updatedRow[7],
-        price:         updatedRow[8],
-        cost:          updatedRow[9],
-        notes:         updatedRow[10],
-        coverUrl:      updatedRow[11],
-        rawCover:      updatedRow[11],
-        dateAdded:     updatedRow[12],
-        flags:         updatedRow[13],
-        sold:          updatedRow[14],
-        star:          updatedRow[15],
-        collectorNote: updatedRow[16],
-        location:      updatedRow[17],        draft:         updatedRow[18],
-        _rawRow:       updatedRow,   // update _rawRow so subsequent edits have correct baseline
-      };
-    }
-    renderCatalog();
-    _editDirty = false;
-    showToast('✓ Book updated', 'success', 3000);
-    closeEditModal();
-  } catch(e) {
-    showToast('Update failed: ' + e.message, 'error');
-  }
+  // Update local cache
+  S.books[idx] = { ...b, title:updatedFields.title, author:updatedFields.author, artist:updatedFields.artist_subject, edition:updatedFields.edition, year:updatedFields.year, publisher:updatedFields.publisher, isbn:updatedFields.isbn, condition:updatedFields.condition, price:updatedFields.market_price!=null?String(updatedFields.market_price):'', cost:updatedFields.purchase_price!=null?String(updatedFields.purchase_price):'', notes:updatedFields.notes, coverUrl:updatedFields.cover_url, rawCover:updatedFields.cover_url, flags:updatedFields.condition_flags, collectorNote:updatedFields.collectors_note, location:updatedFields.where_acquired };
+  renderCatalog();
+  _editDirty = false;
+  showToast('✓ Book updated', 'success', 3000);
+  closeEditModal();
   btn.disabled = false; btn.textContent = 'Save Changes';
 }
 
@@ -2469,68 +2698,58 @@ Leave fields blank if uncertain. Do not guess.`
 // We patch this by updating the row construction
 const _origSaveBook = saveBook;
 async function saveBook() {
-  // Validate same as before
   const title = document.getElementById('f-title').value.trim();
   const author = document.getElementById('f-author').value.trim();
   const price = document.getElementById('f-price').value;
   if (!title || !author) { showToast('Title and Author are required', 'error'); return; }
   if (!S.condition) { showToast('Please select a condition', 'error'); return; }
   if (!price) { showToast('Please enter or fetch a market price', 'error'); return; }
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showErrorBanner('Apps Script URL not set', 'Go to Settings and add your Apps Script URL.'); return; }
+  if (!_supaUser) { showToast('Not signed in', 'error'); return; }
 
   const artist = document.getElementById('f-artist') ? document.getElementById('f-artist').value.trim() : '';
   const flags = S.conditionFlags.join(', ');
-  const row = [
-    title,                                                    // A: Title
-    author,                                                   // B: Author
-    artist,                                                   // C: Artist/Subject
-    document.getElementById('f-edition').value.trim(),        // D: Edition
-    document.getElementById('f-year').value.trim(),           // E: Year
-    document.getElementById('f-publisher').value.trim(),      // F: Publisher
-    document.getElementById('f-isbn').value.trim(),           // G: ISBN
-    S.condition,                                              // H: Condition
-    price,                                                    // I: Market Price
-    document.getElementById('f-cost').value.trim(),           // J: Purchase Price
-    document.getElementById('f-notes').value.trim(),          // K: Notes
-    S.coverUrl,                                               // L: Cover URL
-    new Date().toLocaleDateString('en-AU'),                   // M: Date Added
-    flags,                                                    // N: Condition Flags
-    '',                                                       // O: Sold Status
-    '',                                                       // P: Star Rating
-    (document.getElementById('f-collector-note')||{value:''}).value.trim(), // Q: Collector's Note
-    (document.getElementById('f-location')||{value:''}).value.trim(),       // R: Where Acquired
-    '',                                                       // S: Draft Status
-  ];
+  const bookRow = {
+    user_id: _supaUser.id,
+    title,
+    author,
+    artist_subject: artist,
+    edition: document.getElementById('f-edition').value.trim(),
+    year: document.getElementById('f-year').value.trim(),
+    publisher: document.getElementById('f-publisher').value.trim(),
+    isbn: document.getElementById('f-isbn').value.trim(),
+    condition: S.condition,
+    market_price: parseFloat(price) || null,
+    purchase_price: parseFloat(document.getElementById('f-cost').value) || null,
+    notes: document.getElementById('f-notes').value.trim(),
+    cover_url: S.coverUrl || null,
+    date_added: new Date().toISOString().slice(0,10),
+    condition_flags: flags,
+    sold_status: '',
+    star_rating: null,
+    collectors_note: (document.getElementById('f-collector-note')||{value:''}).value.trim(),
+    where_acquired: (document.getElementById('f-location')||{value:''}).value.trim(),
+    draft_status: '',
+  };
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
-  if (saveErrorActive) { showToast('Please fix the save error before continuing', 'error', 4000); btn.disabled=false; btn.textContent='Save to Sheet'; return; }
-  // no-cors fetch — fire and forget, response is always opaque/unreadable
-  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) })
-    .catch(() => {}); // silently ignore network errors — no-cors always throws
 
-  // If this save completed a Draft, delete the original draft row from the sheet
-  // and remove it from local state so the catalog doesn't show a ghost entry
+  // If completing a draft, delete it first
   const wasDraft = !!S.draftRowNum;
-  if (S.draftRowNum) {
-    fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ deleteRow: S.draftRowNum }) }).catch(() => {});
-    if (S.draftRowIdx !== undefined) {
-      S.books.splice(S.draftRowIdx, 1);
-    }
+  if (S.draftRowNum && S.draftRowIdx !== undefined && S.books[S.draftRowIdx] && S.books[S.draftRowIdx]._id) {
+    await _supa.from('books').delete().eq('id', S.books[S.draftRowIdx]._id);
+    S.books.splice(S.draftRowIdx, 1);
     S.draftRowNum = null;
     S.draftRowIdx = null;
   }
 
-  showToast(wasDraft ? '✓ Draft completed and saved!' : '✓ Saved to Google Sheets!', 'success', 3000);
+  const { error } = await _supa.from('books').insert(bookRow);
+  if (error) { showToast('Save failed: ' + error.message, 'error', 5000); btn.disabled=false; btn.textContent='Save to Library'; return; }
+
+  showToast(wasDraft ? '✓ Draft completed and saved!' : '✓ Saved to Library!', 'success', 3000);
   clearForm();
-  if (wasDraft) {
-    showDraftsInCatalog();
-  } else {
-    renderCatalog();
-  }
-  btn.disabled = false; btn.textContent = 'Save to Sheet';
+  if (wasDraft) { showDraftsInCatalog(); } else { renderCatalog(); }
+  btn.disabled = false; btn.textContent = 'Save to Library';
 }
 
 // ── SOLD / RETURN TO LIBRARY ──
@@ -2544,11 +2763,8 @@ async function toggleSold() {
   const label = isSold ? 'Return to Library' : 'Sold';
   const rowNum = idx + 2; // +1 header +1 for 0-index
 
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showToast('Apps Script URL not configured', 'error'); return; }
-
-  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ updateCell: { row: rowNum, col: 15, value: newStatus } }) }).catch(()=>{});
+  if (!b._id) { showToast('Could not update sold status', 'error'); return; }
+  await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
   b.sold = newStatus;
   const btn = document.getElementById('modalSoldBtn');
   if (btn) btn.textContent = isSold ? 'Mark Sold' : 'Return to Library';
@@ -2574,12 +2790,9 @@ async function confirmDelete() {
   const confirmed = window.confirm(`Delete "${b.title}"?\n\nThis will permanently remove it from your Google Sheet. This cannot be undone.`);
   if (!confirmed) return;
 
-  const rowNum = idx + 2;
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showToast('Apps Script URL not configured', 'error'); return; }
-
-  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ deleteRow: rowNum }) }).catch(()=>{});
+  if (b._id) {
+    await _supa.from('books').delete().eq('id', b._id);
+  }
   S.books.splice(idx, 1);
   closeModal();
   renderCatalog();
@@ -3488,11 +3701,8 @@ async function toggleWishlistStatus() {
   if (!b) return;
   const isWishlist = b.sold === 'Wishlist';
   const newStatus = isWishlist ? '' : 'Wishlist';
-  const rowNum = idx + 2;
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showToast('Apps Script URL not configured', 'error'); return; }
-  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ updateCell: { row: rowNum, col: 15, value: newStatus } }) }).catch(()=>{});
+  if (!b._id) { showToast('Could not update wishlist status', 'error'); return; }
+  await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
   b.sold = newStatus;
   const btn = document.getElementById('modalWishlistBtn');
   if (btn) btn.textContent = isWishlist ? '+ Wishlist' : 'In Wishlist ✓';
@@ -3516,14 +3726,10 @@ async function setStarRating(n) {
   const b = S.books[idx];
   if (!b) return;
   const newRating = parseInt(b.star) === n ? 0 : n; // tap same star to clear
-  const rowNum = idx + 2;
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) return;
   b.star = String(newRating);
   renderModalStars(b);
   renderCatalog();
-  fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ updateCell: { row: rowNum, col: 16, value: newRating || '' } }) }).catch(()=>{});
+  if (b._id) await _supa.from('books').update({ star_rating: newRating || null }).eq('id', b._id);
 }
 
 // ── DUPLICATE DETECTION ──
@@ -3567,9 +3773,6 @@ function exportCSV() {
 // ── QUICK ADD FROM BATCH QUEUE ──
 async function quickAddFromQueue() {
   if (!photoQueue.length) { showToast('Queue is empty', 'info'); return; }
-  const scriptUrl = getScriptUrl();
-  if (!scriptUrl) { showToast('Apps Script URL not set in Settings', 'error'); return; }
-
   const btn = document.getElementById('quickAddBtn');
   const total = photoQueue.length;
   let done = 0;
@@ -3600,19 +3803,20 @@ async function quickAddFromQueue() {
       const title  = toTitleCase((parsed.title||'').trim()) || 'Unknown Title';
       const author = toTitleCase((parsed.author||'').trim()) || '';
 
-      const row = [
-        title, author, '', '', '', '', '', '', '', '', '', compressed,
-        new Date().toLocaleDateString('en-AU'), '', '', '', '', '', 'Draft'
-      ];
-
-      fetch(scriptUrl, { method:'POST', mode:'no-cors',
-        headers:{'Content-Type':'application/json'}, body: JSON.stringify({row}) }).catch(()=>{});
-
+      const draftRow = {
+        user_id: _supaUser.id, title, author, artist_subject:'', edition:'', year:'',
+        publisher:'', isbn:'', condition:'', market_price:null, purchase_price:null,
+        notes:'', cover_url:compressed, date_added:new Date().toISOString().slice(0,10),
+        condition_flags:'', sold_status:'', star_rating:null, collectors_note:'',
+        where_acquired:'', draft_status:'Draft'
+      };
+      const { data: inserted } = await _supa.from('books').insert(draftRow).select().single();
       S.books.unshift({
+        _id: inserted ? inserted.id : null,
         title, author, artist:'', edition:'', year:'', publisher:'', isbn:'',
         condition:'', price:'', cost:'', notes:'', coverUrl:compressed, rawCover:compressed,
-        dateAdded:new Date().toLocaleDateString('en-AU'), flags:'', sold:'', star:'',
-        collectorNote:'', location:'', draft:'Draft', _rawRow:row
+        dateAdded:new Date().toISOString().slice(0,10), flags:'', sold:'', star:'',
+        collectorNote:'', location:'', draft:'Draft'
       });
 
     } catch(e) {
@@ -3866,14 +4070,9 @@ function priceReviewApprove() {
     : newPrice;
   const oldPrice = b.price;
   b.price = finalPrice.toFixed(2);
-  // Write to sheet
-  const rowNum = bookIdx + 2;
-  const scriptUrl = getScriptUrl();
-  if (scriptUrl) {
-    fetch(scriptUrl, { method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ updateCell: { row: rowNum, col: 9, value: b.price } })
-    }).catch(()=>{});
+  // Write to Supabase
+  if (b._id) {
+    _supa.from('books').update({ market_price: parseFloat(b.price) }).eq('id', b._id).then(()=>{});
   }
   _bulkUpdated++;
   _bulkPending = null;
@@ -3974,13 +4173,9 @@ function draftActionDelete() {
   const rowNum = idx + 2;
   closeDraftActions();
 
-  const scriptUrl = getScriptUrl();
-  if (scriptUrl) {
-    fetch(scriptUrl, { method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deleteRow: rowNum }) }).catch(() => {});
+  if (b._id) {
+    _supa.from('books').delete().eq('id', b._id).then(()=>{});
   }
-
   S.books.splice(idx, 1);
   renderCatalog();
   showToast('Draft deleted', 'success', 2500);
@@ -4056,21 +4251,7 @@ function clearFilters() {
   S.filterCondition = 'all';
   S.sortBy = 'dateAdded';
   S.sortDir = 'desc';
-function updateSheetBadge() {
-  const sheetId = (S.settings && S.settings.sheetId) ? S.settings.sheetId.trim() : '';
-  const connected = document.getElementById('sheetStatusBadge');
-  const missing   = document.getElementById('sheetMissingBadge');
-  const statusTxt = document.getElementById('sheetStatusText');
-  if (!connected || !missing) return;
-  if (sheetId) {
-    connected.style.display = 'flex';
-    missing.style.display   = 'none';
-    if (statusTxt) statusTxt.textContent = 'Connected — Sheet ID: ' + sheetId.slice(0,20) + '…';
-  } else {
-    connected.style.display = 'none';
-    missing.style.display   = 'flex';
-  }
-}
+function updateSheetBadge() { /* Legacy stub — Google Sheets removed */ }
 
   updateSheetBadge();
   // Restore stat toggle checkboxes from settings
@@ -4091,9 +4272,19 @@ function updateSheetBadge() {
   showToast('Filters cleared', 'info', 1500);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   loadSettings();
-  showSplash();
+  // Check for existing Supabase session (e.g. returning user, tab reopen)
+  const { data: { session } } = await _supa.auth.getSession();
+  if (session && session.user) {
+    _supaUser = session.user;
+    const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+    S.profile = profile || {};
+    updateUserMenu();
+    document.getElementById('authScreen').classList.add('hidden');
+    showSplash();
+  }
+  // If no session, authScreen stays visible (already shown by default)
 });
 
 function showSplash() {
@@ -4125,8 +4316,10 @@ function showSplash() {
 
 function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-  if (!stored.scriptUrl && !stored.wizardSeen) {
-    setTimeout(() => openWizard(false), 200);
+  if (!stored.welcomeSeen) {
+    // New user — show welcome screen
+    document.getElementById('welcomeScreen').classList.remove('hidden');
+    updateUserMenu();
   } else {
     checkChangelog();
   }
@@ -4139,7 +4332,7 @@ const BUG_REPORT_URL   = 'https://docs.google.com/forms/d/e/1FAIpQLSf1MLdRF0pjPU
 const FAQ_ITEMS = [
   {
     q: "My books aren't saving — what's wrong?",
-    a: "You need an Apps Script URL configured in Settings. Go to Settings → Setup → Run Setup Wizard and follow Step 1. Once your Apps Script is deployed and the URL is saved, all writes will work."
+    a: "Make sure you're signed in to your MagiLib account. If you are signed in and saves are still failing, check your internet connection and try again. If the problem persists, use the bug report button below."
   },
   {
     q: "Why does the library show someone else's books?",
