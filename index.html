@@ -1315,7 +1315,9 @@ function updateUserMenu() {
   const usernameInput = document.getElementById('s-username');
   const displayName = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0] : 'Collector');
   const email = (_supaUser && _supaUser.email) || '';
-  const initials = displayName.slice(0,2).toUpperCase();
+  const initials = displayName.split(/\s+/).filter(Boolean).length > 1
+    ? displayName.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()
+    : displayName.slice(0,2).toUpperCase();
   if (btn) { btn.style.display = 'flex'; btn.textContent = initials; }
   if (nameEl) nameEl.textContent = displayName;
   if (settingsAvatar) settingsAvatar.textContent = initials;
@@ -1456,6 +1458,7 @@ function showView(v){
   const tabs={entry:0,catalog:1,settings:2};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
   if(v==='catalog')loadCatalog();
+  if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
