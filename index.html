@@ -4275,16 +4275,20 @@ function updateSheetBadge() { /* Legacy stub — Google Sheets removed */ }
 document.addEventListener('DOMContentLoaded', async function() {
   loadSettings();
   // Check for existing Supabase session (e.g. returning user, tab reopen)
-  const { data: { session } } = await _supa.auth.getSession();
-  if (session && session.user) {
-    _supaUser = session.user;
-    const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
-    S.profile = profile || {};
-    updateUserMenu();
-    document.getElementById('authScreen').classList.add('hidden');
-    showSplash();
+  try {
+    const { data: { session } } = await _supa.auth.getSession();
+    if (session && session.user) {
+      _supaUser = session.user;
+      const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+      S.profile = profile || {};
+      updateUserMenu();
+      document.getElementById('authScreen').classList.add('hidden');
+    }
+  } catch(e) {
+    console.warn('Session check failed:', e.message);
   }
-  // If no session, authScreen stays visible (already shown by default)
+  // Always show splash — auth screen or app will be underneath
+  showSplash();
 });
 
 function showSplash() {
