@@ -1237,7 +1237,7 @@ async function callClaude(messages, maxTokens=800){
 // ── SUPABASE CLIENT ──
 const SUPABASE_URL = 'https://acuehbwbwsbbxuqcmnrp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_dOa7ljuInF06MvN5fWV9ZQ_HIBVuQZa';
-const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _supa = null; // initialised in DOMContentLoaded after supabase.min.js is guaranteed loaded
 let _supaUser = null;
 
 // ── AUTH FUNCTIONS ──
@@ -4273,6 +4273,8 @@ function updateSheetBadge() { /* Legacy stub — Google Sheets removed */ }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
+  // Initialise Supabase client now that supabase.min.js is guaranteed loaded
+  _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   loadSettings();
   // Check for existing Supabase session (e.g. returning user, tab reopen)
   try {
@@ -4292,30 +4294,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function showSplash() {
+  // Splash bypassed for debugging
   const splash = document.getElementById('splashScreen');
-  const logo   = document.getElementById('splashLogo');
-  const word   = document.getElementById('splashWordmark');
-  const ver    = document.getElementById('splashVersion');
-  if (!splash) { afterSplash(); return; }
-
-  // Trigger logo + wordmark + version fade-in (CSS transitions kick in on next frame)
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      logo.style.opacity = '1';
-      logo.style.transform = 'scale(1)';
-      word.style.opacity = '1';
-      ver.style.opacity  = '1';
-    });
-  });
-
-  // Hold for 1.8s then fade out
-  setTimeout(() => {
-    splash.style.opacity = '0';
-    setTimeout(() => {
-      splash.style.display = 'none';
-      afterSplash();
-    }, 500); // match CSS transition duration
-  }, 1800);
+  if (splash) splash.style.display = 'none';
+  afterSplash();
 }
 
 function afterSplash() {
