@@ -314,6 +314,7 @@ function getScriptUrl(){ return ''; } // Legacy stub — no longer used
 
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
+  initScrollTopBtn();
   grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading…</div>';
   if (!_supaUser) { grid.innerHTML=''; return; }
   try{
@@ -1090,3 +1091,66 @@ function selectPickedCover(url, el) {
 }
 
 // ── EDIT BOOK ──
+
+// ── SCROLL-TO-TOP BUTTON ──
+// Injected once into the catalog view. Appears after 300px scroll, fades out at top.
+let _scrollTopBtn = null;
+
+function initScrollTopBtn() {
+  if (_scrollTopBtn) return;
+
+  const btn = document.createElement('button');
+  btn.id = '_scrollTopBtn';
+  btn.setAttribute('aria-label', 'Scroll to top');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 9.5L7 4.5L12 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+  btn.style.cssText = `
+    position: fixed;
+    bottom: 72px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 90;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+  `;
+
+  document.body.appendChild(btn);
+  _scrollTopBtn = btn;
+
+  btn.addEventListener('mouseenter', () => { if (btn.style.pointerEvents !== 'none') btn.style.opacity = '1'; });
+  btn.addEventListener('mouseleave', () => { if (btn.style.pointerEvents !== 'none') btn.style.opacity = '0.4'; });
+
+  btn.addEventListener('click', () => {
+    const vc = document.getElementById('view-catalog');
+    if (vc) vc.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  const vc = document.getElementById('view-catalog');
+  const scrollTarget = vc || window;
+
+  const onScroll = () => {
+    const scrollY = vc ? vc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    if (scrollY > 300) {
+      btn.style.opacity = '0.4';
+      btn.style.pointerEvents = 'auto';
+    } else {
+      btn.style.opacity = '0';
+      btn.style.pointerEvents = 'none';
+    }
+  };
+
+  scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+}
