@@ -1528,8 +1528,10 @@ function showView(v){
   document.getElementById('view-'+v).classList.add('active');
   const tabs={entry:0,catalog:1,settings:2};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  const vEl=document.getElementById('view-'+v);
+  if(vEl)vEl.scrollTo({top:0,behavior:'instant'});
   if(v==='catalog')loadCatalog();
-  if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
@@ -2683,14 +2685,14 @@ function clearForm() {
   if (urlArea) urlArea.style.display = 'none';
   // Scroll to top
   const ve = document.getElementById('view-entry');
-  if (ve) ve.scrollTo({top: 0, behavior: 'smooth'});
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  if (ve) ve.scrollTo({top: 0, behavior: 'instant'});
+  window.scrollTo({top: 0, behavior: 'instant'});
   // Clear any draft context so a future save doesn't accidentally delete a row
   S.draftRowIdx = null;
   S.draftRowNum = null;
   // Reset save button back to normal state
   const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) { saveBtn.textContent = 'Save to Sheet'; saveBtn.style.background = ''; saveBtn.style.color = ''; }
+  if (saveBtn) { saveBtn.textContent = 'Save Book'; saveBtn.style.background = ''; saveBtn.style.color = ''; }
 }
 
 // ── AI INFO CARD ──
