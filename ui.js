@@ -656,10 +656,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function showSplash() {
-  // Splash bypassed for debugging
   const splash = document.getElementById('splashScreen');
-  if (splash) splash.style.display = 'none';
-  afterSplash();
+  if (!splash) { afterSplash(); return; }
+  splash.style.display = '';
+  splash.style.opacity = '1';
+  splash.style.transition = 'opacity 0.5s ease';
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    setTimeout(() => {
+      splash.style.display = 'none';
+      afterSplash();
+    }, 500);
+  }, 2000);
 }
 
 function afterSplash() {
