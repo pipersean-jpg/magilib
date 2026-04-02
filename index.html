@@ -481,7 +481,7 @@ input[type=file].file-input{display:none;}
       <div class="form-section">
         <div class="section-title">Book Details</div>
         <div class="field-row">
-          <div class="field" style="position:relative;"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="debouncedConjuringCheck(this.value)" onkeydown="handleTitleKey(event)"/><div id="titleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:220px;overflow-y:auto;margin-top:2px;"></div></div>
+          <div class="field" style="position:relative;"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="debouncedConjuringCheck(this.value)" onkeydown="handleTitleKey(event)"/><div id="titleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:350px;overflow-y:auto;margin-top:2px;"></div></div>
         </div>
         <div class="field-row">
           <div class="field"><label>Author *</label><input type="text" id="f-author" placeholder="e.g. S. W. Erdnase" onblur="applyTitleCase('f-author')" autocomplete="off"/></div>
@@ -3516,20 +3516,40 @@ function conjuringTopMatches(title, n) {
 function showTitleDropdown(title) {
   const dd = document.getElementById('titleDropdown');
   if (!dd) return;
-  const matches = conjuringTopMatches(title, 6);
+  const matches = conjuringTopMatches(title, 7);
   if (matches.length === 0) { hideTitleDropdown(); return; }
   dd.innerHTML = '';
   matches.forEach((match) => {
     const item = document.createElement('div');
-    item.style.cssText = 'padding:9px 12px;cursor:pointer;font-size:13px;font-family:inherit;color:var(--ink);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;';
-    const label = document.createElement('span');
-    label.textContent = toTitleCase(match.key);
-    label.style.flex = '1';
-    const badge = document.createElement('span');
-    badge.textContent = Math.round(match.score * 100) + '%';
-    badge.style.cssText = 'font-size:10px;color:var(--ink-faint);flex-shrink:0;';
-    item.appendChild(label);
-    item.appendChild(badge);
+    item.style.cssText = 'padding:7px 10px;cursor:pointer;font-size:13px;font-family:inherit;color:var(--ink);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;';
+
+    // Thumbnail
+    const thumb = document.createElement('img');
+    thumb.src = match.url;
+    thumb.alt = '';
+    thumb.style.cssText = 'width:30px;height:40px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--paper-warm);border:0.5px solid var(--border);';
+    thumb.onerror = function() { this.style.visibility='hidden'; };
+
+    // Text block
+    const textWrap = document.createElement('div');
+    textWrap.style.cssText = 'flex:1;min-width:0;';
+    const titleSpan = document.createElement('div');
+    titleSpan.textContent = toTitleCase(match.key);
+    titleSpan.style.cssText = 'font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    textWrap.appendChild(titleSpan);
+
+    // Try to show author from price DB if available
+    const priceEntry = (typeof MAGILIB_PRICE_DB !== 'undefined') ? MAGILIB_PRICE_DB[match.key] : null;
+    if (priceEntry && priceEntry.author) {
+      const authorSpan = document.createElement('div');
+      authorSpan.textContent = priceEntry.author;
+      authorSpan.style.cssText = 'font-size:11px;color:var(--ink-light);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      textWrap.appendChild(authorSpan);
+    }
+
+    item.appendChild(thumb);
+    item.appendChild(textWrap);
+
     item.addEventListener('mousedown', async (e) => {
       e.preventDefault();
       hideTitleDropdown();
