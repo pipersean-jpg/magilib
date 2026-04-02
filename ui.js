@@ -663,7 +663,8 @@ function showSplash() {
   overlay.id = '_splashOverlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#2A1F6B;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:1;transition:opacity 0.5s ease;';
 
-  overlay.innerHTML = '<div style="width:72px;height:72px;background:#C9A84C;border-radius:18px;display:flex;align-items:center;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2A1F6B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div style="font-family:\'Playfair Display\',Georgia,serif;font-size:28px;font-weight:700;color:#FAF9F6;letter-spacing:0.02em;">MagiLib</div><div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;">v1.0 beta</div>';
+overlay.innerHTML = '<img src="/logo@3x.png" style="width:180px;max-width:70vw;object-fit:contain;" onerror="this.style.display=\'none\'">'
+    + '<div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">v1.0 beta</div>';
 
   document.body.appendChild(overlay);
 
@@ -679,10 +680,10 @@ function showSplash() {
 function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!stored.welcomeSeen) {
-    // New user — show welcome screen
     document.getElementById('welcomeScreen').classList.remove('hidden');
     updateUserMenu();
   } else {
+    showView('entry');
     checkChangelog();
   }
 }
