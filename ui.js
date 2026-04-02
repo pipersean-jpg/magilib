@@ -658,9 +658,34 @@ document.addEventListener('DOMContentLoaded', async function() {
 function showSplash() {
   const splash = document.getElementById('splashScreen');
   if (!splash) { afterSplash(); return; }
-  splash.style.display = '';
-  splash.style.opacity = '1';
-  splash.style.transition = 'opacity 0.5s ease';
+
+  // Build splash content if empty
+  if (!splash.innerHTML.trim()) {
+    splash.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+        <div style="width:72px;height:72px;background:var(--gold);border-radius:18px;display:flex;align-items:center;justify-content:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--paper);letter-spacing:0.02em;">MagiLib</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(250,249,246,0.55);letter-spacing:0.08em;text-transform:uppercase;">${APP_VERSION}</div>
+      </div>`;
+  }
+
+  // Style the splash container itself
+  Object.assign(splash.style, {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'fixed',
+    inset: '0',
+    background: 'var(--accent)',
+    zIndex: '9999',
+    opacity: '1',
+    transition: 'opacity 0.5s ease'
+  });
+
   setTimeout(() => {
     splash.style.opacity = '0';
     setTimeout(() => {
