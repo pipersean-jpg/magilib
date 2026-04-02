@@ -667,6 +667,8 @@ overlay.innerHTML = '<img src="/logo@3x.png" style="width:180px;max-width:70vw;o
     + '<div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">v1.0 beta</div>';
 
   document.body.appendChild(overlay);
+  var htmlSplash = document.getElementById('splashScreen');
+if (htmlSplash) htmlSplash.style.display = 'none';
 
   setTimeout(function() {
     overlay.style.opacity = '0';
