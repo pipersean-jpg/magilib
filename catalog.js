@@ -16,6 +16,14 @@ function downloadCSVTemplate() {
   a.click();
 }
 
+function normaliseAuthor(v) {
+  if (!v) return '';
+  // Detect "Last, First" format and convert to "First Last"
+  const m = v.match(/^([^,]+),\s*(.+)$/);
+  if (m) return toTitleCase(m[2].trim() + ' ' + m[1].trim());
+  return toTitleCase(v);
+}
+
 async function importFromCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -113,7 +121,7 @@ async function importFromCSV(event) {
     dataRows.push({
       user_id: _supaUser.id,
       title,
-      author: getC(cols,'author'),
+      author: normaliseAuthor(getC(cols,'author')),
       artist_subject: getC(cols,'artist_subject'),
       edition: getC(cols,'edition'),
       year: getC(cols,'year'),
