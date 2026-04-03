@@ -1321,3 +1321,305 @@ const scrollY = window.scrollY || document.documentElement.scrollTop;
 
  window.addEventListener('scroll', onScroll, { passive: true });
 }
+
+// ══ BULK EDIT ══════════════════════════════════════════════════
+//  Injected by deploy tool
+// ═══════════════════════════════════════════════════════════════
+(function(){
+
+// ── State ─────────────────────────────────────────────────────
+var _on = false;
+var _sel = new Set();
+
+// ── CSS ───────────────────────────────────────────────────────
+var _CSS = [
+  '.bk-bar{position:fixed;bottom:62px;left:50%;',
+  'transform:translateX(-50%) translateY(130%);',
+  'background:#2A1F6B;color:#fff;border-radius:14px;',
+  'padding:10px 14px;display:flex;align-items:center;gap:8px;',
+  'z-index:210;transition:transform .28s cubic-bezier(.4,0,.2,1);',
+  'box-shadow:0 8px 32px rgba(42,31,107,.4);min-width:min(340px,92vw);}',
+  '.bk-bar.on{transform:translateX(-50%) translateY(0);}',
+  '.bk-cnt{font-size:13px;font-weight:700;flex:1;white-space:nowrap;}',
+  '.bk-b{background:rgba(255,255,255,.15);border:none;color:#fff;',
+  'border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;',
+  'cursor:pointer;white-space:nowrap;transition:background .15s;}',
+  '.bk-b:hover{background:rgba(255,255,255,.28);}',
+  '.bk-b.red{background:rgba(255,80,80,.22);}',
+  '.bk-b.red:hover{background:rgba(255,80,80,.45);}',
+  '.bk-b.gold{background:rgba(201,168,76,.28);}',
+  '.bk-b.gold:hover{background:rgba(201,168,76,.48);}',
+  '.bk-banner{display:none;background:#2A1F6B;color:#fff;',
+  'font-size:12px;font-weight:600;padding:6px 14px;',
+  'border-radius:8px;align-items:center;gap:10px;margin:4px 0 2px;}',
+  '.bk-banner.on{display:flex;}',
+  '.bk-all{font-size:11px;background:rgba(255,255,255,.18);border:none;',
+  'color:#fff;padding:3px 8px;border-radius:5px;cursor:pointer;}',
+  '.book-card.bk-mode{cursor:default!important;}',
+  '.book-card.bk-sel{outline:2.5px solid #C9A84C;outline-offset:2px;}',
+  '.bk-cbw{position:absolute;top:6px;left:6px;z-index:5;}',
+  '.bk-cb{width:21px;height:21px;border-radius:6px;',
+  'border:2px solid #C9A84C;background:rgba(255,255,255,.9);',
+  'cursor:pointer;appearance:none;-webkit-appearance:none;',
+  'transition:background .15s,border-color .15s;',
+  'display:grid;place-items:center;}',
+  '.bk-cb:checked{background:#2A1F6B;border-color:#2A1F6B;}',
+  '.bk-cb:checked::after{content:"\\2713";color:#fff;font-size:13px;font-weight:700;}'
+].join('');
+
+function _css(){
+  if(document.getElementById('_bkCSS'))return;
+  var s=document.createElement('style');
+  s.id='_bkCSS';s.textContent=_CSS;
+  document.head.appendChild(s);
+}
+
+// ── DOM helpers ───────────────────────────────────────────────
+var _bar, _banner, _togBtn;
+
+function _buildDOM(){
+  if(_bar)return;
+  _bar=document.createElement('div');
+  _bar.className='bk-bar';
+  _bar.innerHTML=
+    '<span class="bk-cnt" id="_bkCount">0 selected</span>'+
+    '<button class="bk-b gold" onclick="_bkFill()">\u2736 Auto-fill</button>'+
+    '<button class="bk-b gold" onclick="_bkPrice()">\uD83D\uDCB0 Prices</button>'+
+    '<button class="bk-b red"  onclick="_bkDel()">\uD83D\uDDD1 Delete</button>'+
+    '<button class="bk-b" style="padding:6px 9px" onclick="_bkExit()" title="Cancel">\u2715</button>';
+  document.body.appendChild(_bar);
+
+  _banner=document.createElement('div');
+  _banner.className='bk-banner';
+  _banner.id='_bkBanner';
+  _banner.innerHTML=
+    '<span id="_bkBTxt">Tap books to select</span>'+
+    '<button class="bk-all" id="_bkAllBtn" onclick="_bkAll()">Select All</button>';
+  document.body.appendChild(_banner);
+}
+
+function _tb(){
+  return document.querySelector(
+    '#catalogActions,.catalog-actions,.filter-bar,.catalog-toolbar,'+
+    '[class*="cat-toolbar"],[id*="catalogToolbar"]'
+  );
+}
+
+// ── Sync UI ───────────────────────────────────────────────────
+function _sync(){
+  if(!_bar)return;
+  var n=_sel.size;
+  _bar.classList.toggle('on',_on&&n>0);
+  document.getElementById('_bkCount').textContent=n+' selected';
+  var bt=document.getElementById('_bkBTxt');
+  if(bt)bt.textContent=n===0?'Tap books to select':n+' selected';
+  document.querySelectorAll('.book-card[data-bkid]').forEach(function(c){
+    var bid=c.dataset.bkid;
+    c.classList.toggle('bk-sel',_sel.has(bid));
+    var cb=c.querySelector('.bk-cb');
+    if(cb)cb.checked=_sel.has(bid);
+  });
+}
+
+// ── Stamp cards ───────────────────────────────────────────────
+function _stamp(){
+  document.querySelectorAll('.book-card').forEach(function(card,i){
+    var b=S.books[i];
+    if(!b)return;
+    var bid=b._id||('i'+i);
+    card.dataset.bkid=bid;
+    card.style.position=card.style.position||'relative';
+    if(_on){
+      card.classList.add('bk-mode');
+      if(!card.querySelector('.bk-cbw')){
+        var w=document.createElement('div');
+        w.className='bk-cbw';
+        var cb=document.createElement('input');
+        cb.type='checkbox';cb.className='bk-cb';
+        cb.checked=_sel.has(bid);
+        cb.addEventListener('click',function(e){e.stopPropagation();_tog(bid);});
+        w.appendChild(cb);
+        card.insertAdjacentElement('afterbegin',w);
+      }
+      card.onclick=function(){_tog(card.dataset.bkid);};
+    }else{
+      card.classList.remove('bk-mode','bk-sel');
+      var w2=card.querySelector('.bk-cbw');
+      if(w2)w2.remove();
+      card.onclick=null;
+    }
+  });
+}
+
+function _tog(bid){
+  _sel.has(bid)?_sel.delete(bid):_sel.add(bid);
+  _sync();
+}
+
+// ── Enter / Exit ──────────────────────────────────────────────
+function _bkEnter(){
+  _css();_buildDOM();
+  _on=true;_sel.clear();
+  _stamp();
+  var tb=_tb();
+  if(tb&&_banner){tb.after(_banner);_banner.classList.add('on');}
+  if(_togBtn){_togBtn.textContent='\u2715 Exit Select';_togBtn.style.color='#a33';}
+  _sync();
+}
+function _bkExit(){
+  _on=false;_sel.clear();
+  if(_bar)_bar.classList.remove('on');
+  if(_banner)_banner.classList.remove('on');
+  if(_togBtn){_togBtn.textContent='\u2611 Select';_togBtn.style.color='';}
+  _stamp();_sync();
+}
+window._bkExit=_bkExit;
+
+function _bkAll(){
+  var all=S.books.map(function(b,i){return b._id||('i'+i);});
+  var allIn=all.every(function(id){return _sel.has(id);});
+  if(allIn){_sel.clear();}else{all.forEach(function(id){_sel.add(id);});}
+  var ab=document.getElementById('_bkAllBtn');
+  if(ab)ab.textContent=allIn?'Select All':'Deselect All';
+  _stamp();_sync();
+}
+window._bkAll=_bkAll;
+
+// ── Delete selected ────────────────────────────────────────────
+async function _bkDel(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Delete '+n+' book'+(n!==1?'s':'')+' from your library?\n\nThis cannot be undone.'))return;
+  if(!confirm('\u26A0\uFE0F Final warning: permanently delete '+n+' book'+(n!==1?'s':'')+'.\n\nPress OK to confirm.'))return;
+  var done=0;
+  var ids=[..._sel];
+  for(var j=0;j<ids.length;j++){
+    var bid=ids[j];
+    if(String(bid).startsWith('i'))continue;
+    var res=await _supa.from('books').delete().eq('id',bid);
+    if(!res.error)done++;
+  }
+  S.books=S.books.filter(function(b){return !_sel.has(b._id);});
+  _bkExit();renderCatalog();
+  showToast('Deleted '+done+' book'+(done!==1?'s':'')+' \u2713','success',3000);
+}
+window._bkDel=_bkDel;
+
+// ── Bulk price refresh ─────────────────────────────────────────
+async function _bkPrice(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Refresh prices for '+n+' selected book'+(n!==1?'s':'')+'\nfrom local price database?'))return;
+  var done=0,skip=0;
+  var list=S.books.filter(function(b,i){return _sel.has(b._id||('i'+i));});
+  for(var j=0;j<list.length;j++){
+    var b=list[j];
+    if(!b.title||!b._id||String(b._id).startsWith('i')){skip++;continue;}
+    var result=typeof localPriceLookup==='function'?localPriceLookup(b.title):null;
+    if(!result){skip++;continue;}
+    var r=await _supa.from('books').update({market_price:result.recommended,updated_at:new Date().toISOString()}).eq('id',b._id);
+    if(!r.error){b.price=String(result.recommended);done++;}else skip++;
+  }
+  _bkExit();renderCatalog();
+  showToast('Prices: '+done+' updated, '+skip+' skipped \u2713','success',3500);
+}
+window._bkPrice=_bkPrice;
+
+// ── Auto-fill from Conjuring DB ────────────────────────────────
+async function _bkFill(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Auto-fill missing fields for '+n+' book'+(n!==1?'s':'')+
+    '?\n\nFills year, publisher, cover image — 100% title match only.'+
+    '\nExisting values will NOT be overwritten.'))return;
+  var done=0,skip=0;
+  var list=S.books.filter(function(b,i){return _sel.has(b._id||('i'+i));});
+  for(var j=0;j<list.length;j++){
+    var b=list[j];
+    if(!b.title||!b._id||String(b._id).startsWith('i')){skip++;continue;}
+    var hit=typeof lookupConjuringEntry==='function'?lookupConjuringEntry(b.title):null;
+    if(!hit||!hit.entry){skip++;continue;}
+    var e=hit.entry,upd={};
+    if(!b.year&&e.y){upd.year=e.y;b.year=e.y;}
+    if(!b.publisher&&e.p){upd.publisher=e.p;b.publisher=e.p;}
+    if(!b.coverUrl&&typeof dbCoverUrl==='function'){
+      var cu=dbCoverUrl(e);
+      if(cu){upd.cover_url=cu;b.coverUrl=cu;b.rawCover=cu;}
+    }
+    if(!Object.keys(upd).length){skip++;continue;}
+    upd.updated_at=new Date().toISOString();
+    var r=await _supa.from('books').update(upd).eq('id',b._id);
+    if(!r.error)done++;else skip++;
+  }
+  _bkExit();renderCatalog();
+  showToast('Auto-fill: '+done+' updated, '+skip+' skipped \u2713','success',4000);
+}
+window._bkFill=_bkFill;
+
+// ── Delete entire library ──────────────────────────────────────
+async function _bkDelAll(){
+  var total=S.books.length;
+  if(!total)return showToast('Library is already empty','info');
+  if(!confirm('\u26A0\uFE0F DELETE ENTIRE LIBRARY\n\nPermanently delete ALL '+total+' books?\n\nThis CANNOT be undone.'))return;
+  if(!confirm('\uD83D\uDEA8 FINAL WARNING\n\nErase ALL '+total+' books permanently.\n\nPress OK only if 100% certain.'))return;
+  var typed=window.prompt('Type  DELETE  to confirm erasing your entire library of '+total+' books:');
+  if(!typed||typed.trim().toUpperCase()!=='DELETE'){
+    showToast('Cancelled \u2014 library safe \u2713','success');return;
+  }
+  showToast('Deleting\u2026','info');
+  var done=0;
+  for(var j=0;j<S.books.length;j++){
+    var b=S.books[j];
+    if(!b._id||String(b._id).startsWith('i'))continue;
+    var r=await _supa.from('books').delete().eq('id',b._id);
+    if(!r.error)done++;
+  }
+  S.books=[];renderCatalog();
+  showToast('Library cleared \u2014 '+done+' books deleted \u2713','success',5000);
+}
+window._bkDelAll=_bkDelAll;
+
+// ── Inject toolbar buttons ─────────────────────────────────────
+function _injectBtns(){
+  if(document.getElementById('_bkTogBtn'))return;
+  var tb=_tb();
+  if(!tb)return;
+  _togBtn=document.createElement('button');
+  _togBtn.id='_bkTogBtn';
+  _togBtn.textContent='\u2611 Select';
+  _togBtn.title='Select multiple books for bulk actions';
+  _togBtn.style.cssText=
+    'font-size:12px;padding:5px 11px;border-radius:7px;'+
+    'border:1.5px solid var(--border,#D8D4CE);background:transparent;'+
+    'cursor:pointer;color:var(--ink,#1A1814);font-weight:600;transition:all .15s;white-space:nowrap;';
+  _togBtn.onclick=function(){_on?_bkExit():_bkEnter();};
+
+  var db=document.createElement('button');
+  db.id='_bkDelAll';
+  db.textContent='\uD83D\uDDD1 All';
+  db.title='Delete entire library (3 confirmations)';
+  db.style.cssText=
+    'font-size:12px;padding:5px 11px;border-radius:7px;'+
+    'border:1.5px solid rgba(200,60,60,.35);background:transparent;'+
+    'cursor:pointer;color:rgba(200,60,60,.8);font-weight:600;transition:all .15s;white-space:nowrap;';
+  db.onclick=_bkDelAll;
+  tb.appendChild(_togBtn);
+  tb.appendChild(db);
+}
+
+// ── Wrap renderCatalog (deferred 120ms so file has fully parsed) ──
+setTimeout(function(){
+  if(typeof renderCatalog!=='function')return;
+  var _orig=renderCatalog;
+  window.renderCatalog=function(){
+    _orig.apply(this,arguments);
+    setTimeout(function(){
+      _css();_buildDOM();_injectBtns();
+      if(_on)_stamp();
+      _sync();
+    },0);
+  };
+},120);
+
+})();
+// ══ END BULK EDIT ══════════════════════════════════════════════
