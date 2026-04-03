@@ -1061,14 +1061,61 @@ input[type=file].file-input{display:none;}
       <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Export your full collection as a CSV file.</div>
       <button onclick="exportCSV()" class="btn-secondary" style="font-size:13px;padding:9px 18px;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download CSV</button>
     </div>
-    <div id="csvImportSection" style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
+<div id="csvImportSection" style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
       <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Import from CSV</div>
-      <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Import books from a MagiLib CSV export or a Google Sheets export. Column headers are matched automatically.</div>
-      <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span id="csvImportBtn">Import CSV</span>
-        <input type="file" accept=".csv" style="display:none;" onchange="importFromCSV(event)"/>
-      </label>
+      <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">Add books to your library in bulk by filling in a spreadsheet and uploading it here.</div>
+
+      <!-- Step 1: Download template -->
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Step 1 — Get the template</div>
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;line-height:1.5;">Download the template, open it in Excel or Google Sheets, and fill in your books — one per row.</div>
+        <button onclick="downloadCSVTemplate()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Template
+        </button>
+      </div>
+
+      <!-- Step 2: Fill it in (collapsible guide) -->
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;margin-bottom:10px;overflow:hidden;">
+        <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.guide-arrow').style.transform=this.nextElementSibling.style.display==='none'?'rotate(0deg)':'rotate(180deg)'" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Step 2 — Fill in your books</div>
+            <div style="font-size:12px;color:var(--ink-light);">Column guide — tap to expand</div>
+          </div>
+          <svg class="guide-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div style="display:none;padding:0 16px 14px;">
+          <div style="font-size:12px;color:var(--ink-light);line-height:1.6;">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11px;">
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Title</span><span style="color:var(--ink-light);">Required. Everything else is optional.</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Author</span><span style="color:var(--ink-light);">First name then last — e.g. Harry Houdini</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Artist/Subject</span><span style="color:var(--ink-light);">For biographies — the subject's name</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Edition</span><span style="color:var(--ink-light);">e.g. First Edition, Revised, Third</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Year</span><span style="color:var(--ink-light);">4-digit year only — e.g. 1946</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Condition</span><span style="color:var(--ink-light);">Poor / Fair / Good / Very Good / Fine / As New</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Market Price</span><span style="color:var(--ink-light);">Numbers only — e.g. 95.00 (no $ sign)</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Purchase Price</span><span style="color:var(--ink-light);">What you paid for it</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Date Added</span><span style="color:var(--ink-light);">Format: YYYY-MM-DD or leave blank</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Star Rating</span><span style="color:var(--ink-light);">1–5 or leave blank</span>
+              <span style="font-weight:600;color:var(--ink);white-space:nowrap;">Sold Status</span><span style="color:var(--ink-light);">Active or Sold — leave blank for Active</span>
+            </div>
+            <div style="margin-top:10px;padding:8px 10px;background:#fffbe6;border:0.5px solid #f0d878;border-radius:7px;font-size:11px;color:#7a6500;">
+              💡 Delete the 3 example rows before importing. Only the header row and your books should remain.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Upload -->
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Step 3 — Upload your file</div>
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;line-height:1.5;">Save your spreadsheet as a <strong>.csv</strong> file, then upload it here. Books are added to your existing library — nothing is deleted.</div>
+        <label style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="csvImportBtn">Upload CSV</span>
+          <input type="file" accept=".csv" style="display:none;" onchange="importFromCSV(event)"/>
+        </label>
+      </div>
     </div>
   </div>
 
