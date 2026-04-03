@@ -1002,147 +1002,116 @@ async function searchCoverSource(source) {
 
   if (source === 'conjuring') {
     try {
+      statusEl.textContent = 'Searching local database...';
+      resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;"><span class="spinner dark"></span></div>';
+
       // Helper: expand compressed DB cover codes to full URLs
-      function _expandCover(u) {
+      function _xpandUrl(u) {
         if (!u) return '';
         if (u.startsWith('C:')) return 'https://www.conjuringarchive.com/images/covers/' + u.slice(2) + 'a.jpg';
         if (u.startsWith('M:')) return 'https://www.magicref.net/images/books/' + u.slice(2);
+        if (u.startsWith('P:')) return 'https://www.magicref.net/magicbooks/' + u.slice(2);
         return u;
       }
-      // Helper: get all cover URLs from a DB entry (handles both old string format and new object format)
-      function _entryCovers(entry) {
-        if (!entry) return [];
-        if (typeof entry === 'string') return [entry];
-        var urls = [];
-        if (entry.c) urls.push(_expandCover(entry.c));
-        if (Array.isArray(entry.i)) entry.i.forEach(function(u) { var x = _expandCover(u); if (x) urls.push(x); });
-        return urls.filter(Boolean);
-      }
-      // Helper: get MagicRef page URL from entry
-      function _entryMagicRefUrl(entry) {
-        if (!entry || typeof entry !== 'object' || !entry.m) return '';
-        var m = entry.m;
-        if (m.startsWith('P:')) return 'https://www.magicref.net/magicbooks/' + m.slice(2);
-        return m;
-      }
 
-      // 1. User's own previously saved covers for this title
-      if (typeof _supa !== 'undefined' && _supa && typeof _supaUser !== 'undefined' && _supaUser) {
-        try {
-          var normT = title.toLowerCase().trim();
-          var ubRes = await _supa.from('books').select('cover_url, title').eq('user_id', _supaUser.id).not('cover_url', 'is', null).neq('cover_url', '');
-          if (ubRes.data) {
-            ubRes.data.forEach(function(b) {
-              var t = (b.title || '').toLowerCase().trim();
-              if (t === normT && b.cover_url && b.cover_url.length > 10) {
-                if (!images.find(function(i) { return i.url === b.cover_url; })) {
-                  images.push({ url: b.cover_url, label: 'Your photo', source: 'My Library' });
-                }
-              }
-            });
-          }
-        } catch(e3) { /* non-critical */ }
-      }
+      var caUrl = '';   // Conjuring Archive cover URL
+      var mrUrl = '';   // MagicRef cover URL (as base64 data URL after proxy fetch)
+      var caLabel = 'Conjuring Archive';
+      var mrLabel = 'MagicRef';
 
-      // 2. Local DB: Conjuring Archive cover + alt images
+      // 1. Look up entry in CONJURING_DB
       if (typeof CONJURING_DB !== 'undefined') {
-        var normKey = normTitle ? normTitle(title) : title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
-        var dbEntry = CONJURING_DB[normKey];
-        if (!dbEntry) {
-          var shortKey = normKey.split(/[:]/)[0].trim();
-          if (shortKey !== normKey) dbEntry = CONJURING_DB[shortKey];
+        var nk = title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+        var entry = CONJURING_DB[nk];
+        if (!entry) {
+          var sk = nk.split(':')[0].trim();
+          if (sk !== nk) entry = CONJURING_DB[sk];
         }
-        if (!dbEntry && typeof conjuringFuzzyLookup === 'function') {
+        if (!entry && typeof conjuringFuzzyLookup === 'function') {
           var fuzz = conjuringFuzzyLookup(title);
-          if (fuzz) dbEntry = CONJURING_DB[fuzz.key];
+          if (fuzz) entry = CONJURING_DB[fuzz.key];
         }
-        if (dbEntry) {
-          var caCovers = _entryCovers(dbEntry);
-          caCovers.forEach(function(url, idx) {
-            if (!images.find(function(i) { return i.url === url; })) {
-              images.push({ url: url, label: idx === 0 ? 'Conjuring Archive' : 'Conjuring Archive (alt ' + idx + ')', source: 'Local Database' });
-            }
-          });
-          // 3. MagicRef cover - fetch image from MagicRef page URL stored in entry
-          var mrPageUrl = _entryMagicRefUrl(dbEntry);
-          if (mrPageUrl) {
-            try {
-              statusEl.textContent = (images.length > 0 ? images.length + ' found - ' : '') + 'fetching MagicRef cover...';
-              var mrResp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(mrPageUrl));
-              var mrData = await mrResp.json();
-              if (mrData.success && mrData.html) {
-                var imgMatches = [...mrData.html.matchAll(/<img[^>]+src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*>/gi)];
-                for (var mi = 0; mi < imgMatches.length; mi++) {
-                  var rawSrc = imgMatches[mi][1];
-                  // Skip navigation/UI images
-                  if (rawSrc.includes('but-') || rawSrc.includes('logo') || rawSrc.includes('icon') || rawSrc.includes('banner') || rawSrc.includes('avatar')) continue;
-                  // Resolve relative paths: ../../images/books/foo.jpg -> https://www.magicref.net/images/books/foo.jpg
-                  var src;
-                  if (rawSrc.startsWith('http')) {
-                    src = rawSrc;
-                  } else if (rawSrc.startsWith('/')) {
-                    src = 'https://www.magicref.net' + rawSrc;
-                  } else {
-                    // Resolve relative to page URL base (strip filename from mrPageUrl)
-                    var base = mrPageUrl.replace(/\/[^\/]*$/, '/');
-                    var parts = rawSrc.split('/');
-                    var baseParts = base.split('/');
-                    for (var pi = 0; pi < parts.length; pi++) {
-                      if (parts[pi] === '..') { baseParts.pop(); }
-                      else if (parts[pi] !== '.') { baseParts.push(parts[pi]); }
+        if (entry) {
+          // Get Conjuring Archive cover URL
+          if (typeof entry === 'string') {
+            // Old plain-string format
+            caUrl = entry;
+          } else {
+            // New sparse object format
+            if (entry.c) caUrl = _xpandUrl(entry.c);
+            else if (entry.i && entry.i[0]) caUrl = _xpandUrl(entry.i[0]);
+            // Get MagicRef page URL
+            if (entry.m) {
+              var mrPageUrl = _xpandUrl(entry.m);
+              if (mrPageUrl.includes('magicref.net/magicbooks/')) {
+                statusEl.textContent = 'Fetching MagicRef cover...';
+                try {
+                  var mrResp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(mrPageUrl));
+                  var mrData = await mrResp.json();
+                  if (mrData.success && mrData.html) {
+                    // Find first book-cover image - skip navigation/button images
+                    var allImgs = [...mrData.html.matchAll(/<img[^>]+src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*>/gi)];
+                    for (var ii = 0; ii < allImgs.length; ii++) {
+                      var rawSrc = allImgs[ii][1];
+                      if (rawSrc.includes('but-') || rawSrc.includes('logo') || rawSrc.includes('icon') || rawSrc.includes('banner')) continue;
+                      // Resolve relative path against page URL
+                      var absUrl;
+                      if (rawSrc.startsWith('http')) {
+                        absUrl = rawSrc;
+                      } else {
+                        // Walk relative path (e.g. ../../images/books/foo.jpg)
+                        var pageParts = mrPageUrl.split('/');
+                        pageParts.pop(); // remove filename
+                        var relParts = rawSrc.split('/');
+                        for (var rp = 0; rp < relParts.length; rp++) {
+                          if (relParts[rp] === '..') pageParts.pop();
+                          else if (relParts[rp] !== '.') pageParts.push(relParts[rp]);
+                        }
+                        absUrl = pageParts.join('/');
+                      }
+                      // Fetch the image via proxy (bypasses CORS)
+                      var imgResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(absUrl));
+                      var imgData = await imgResp.json();
+                      if (imgData.success && imgData.dataUrl) {
+                        mrUrl = imgData.dataUrl;
+                      }
+                      break;
                     }
-                    src = baseParts.join('/');
                   }
-                  if (!images.find(function(i) { return i.url === src; })) {
-                    // Fetch image via proxy to bypass CORS
-                    try {
-                      var imgProxyResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(src));
-                      var imgProxyData = await imgProxyResp.json();
-                      var finalUrl = (imgProxyData.success && imgProxyData.dataUrl) ? imgProxyData.dataUrl : src;
-                      images.push({ url: finalUrl, label: 'MagicRef', source: 'MagicRef' });
-                    } catch(imgEx) {
-                      images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
-                    }
-                    break;
-                  }
-                }
+                } catch(mrErr) { /* MagicRef fetch failed silently */ }
               }
-            } catch(mrErr) { /* MagicRef fetch failed - non-critical */ }
+            }
           }
         }
       }
 
-      // 4. Online search fallback (Conjuring Archive website) if nothing found yet
-      if (!images.length) {
-        statusEl.textContent = 'Searching online...';
-        var q = encodeURIComponent(title);
-        var searchUrl = 'https://www.conjuringarchive.com/list/search?q=' + q;
-        var resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
-        var data = await resp.json();
-        if (data.success) {
-          var linkMatches = [...data.html.matchAll(/href="(\/list\/medium\/\d+)"/gi)];
-          var uniqueLinks = [...new Set(linkMatches.map(function(m) { return m[1]; }))].slice(0, 4);
-          for (var li = 0; li < uniqueLinks.length; li++) {
-            try {
-              var dr = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent('https://www.conjuringarchive.com' + uniqueLinks[li]));
-              var dd = await dr.json();
-              if (dd.success) {
-                var pat1 = /src="([^"]*\/media\/image\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i;
-                var pat2 = /src="([^"]*\/images\/[^"]+\.(?:jpg|jpeg|png))"[^>]*(?:class|alt)="[^"]*(?:cover|book)[^"]*"/i;
-                var pm = dd.html.match(pat1) || dd.html.match(pat2);
-                if (pm) {
-                  var src = pm[1].startsWith('http') ? pm[1] : 'https://www.conjuringarchive.com' + pm[1];
-                  if (!images.find(function(i) { return i.url === src; })) {
-                    var titleM = dd.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-                    images.push({ url: src, label: titleM ? titleM[1].trim() : 'Conjuring Archive', source: 'Local Database' });
-                  }
-                }
-              }
-            } catch(e2) {}
-          }
-        }
+      // 2. Render exactly two cards: Conjuring Archive + MagicRef
+      var cardHtml = '';
+      var count = (caUrl ? 1 : 0) + (mrUrl ? 1 : 0);
+
+      function makeCard(url, sourceLabel, titleLabel) {
+        var esc = url.startsWith('data:') ? url : url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        return '<div onclick="selectPickedCover(\'' + esc + '\',this)" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color 0.15s;background:var(--paper-warm);">' +
+          '<div style="width:100%;aspect-ratio:2/3;position:relative;background:var(--paper-warm);">' +
+          '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.18;">&#128218;</div>' +
+          '<img src="' + url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy"/>' +
+          '</div>' +
+          '<div style="padding:4px 6px;font-size:9px;color:var(--ink-faint);text-align:center;line-height:1.3;">' + sourceLabel + '<br><span style="color:var(--ink);font-size:8px;">' + titleLabel.substring(0,35) + '</span></div>' +
+          '</div>';
       }
-    } catch(e) { statusEl.textContent = 'Search error: ' + e.message; }
+
+      if (caUrl) cardHtml += makeCard(caUrl, 'Local Database', caLabel);
+      if (mrUrl) cardHtml += makeCard(mrUrl, 'MagicRef', mrLabel);
+
+      if (!cardHtml) {
+        statusEl.textContent = 'Not found in local database.';
+        resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">No covers found for "' + title + '" in local database.</div>';
+      } else {
+        statusEl.textContent = count + ' cover(s) found — tap to select';
+        resultsEl.innerHTML = cardHtml;
+      }
+      return;
+    } catch(e) { statusEl.textContent = 'Local database error: ' + e.message; }
   }
 
   if (source === 'magicref') {
