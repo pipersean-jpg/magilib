@@ -406,7 +406,13 @@ function renderStatsRow() {
   const row = document.getElementById('statsRow');
   if (row) row.innerHTML = cards;
 }
-
+// Exclude sold books from value totals
+  const activeBooks = books.filter(b => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft');
+  const prices=activeBooks.map(b=>parseFloat(b.price)||0).filter(p=>p>0&&p<50000);
+  const totalVal=prices.reduce((a,b2)=>a+b2,0);
+  const avg=prices.length?totalVal/prices.length:0;
+  const top=prices.length?Math.max(...prices):0;
+  const sym=currSym();
   
   // Populate publisher filter dropdown
   const pubSelect=document.getElementById('filterPublisher');
