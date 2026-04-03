@@ -1325,3 +1325,392 @@ const scrollY = window.scrollY || document.documentElement.scrollTop;
 
 
 
+
+// ══ BULK EDIT ══════════════════════════════════════════════════
+//  Injected by deploy tool
+// ═══════════════════════════════════════════════════════════════
+(function(){
+
+var _on = false;
+var _sel = new Set();
+
+// ── CSS ────────────────────────────────────────────────────────
+var _CSS = [
+  /* Select All banner above grid */
+  '.bk-banner{display:none;align-items:center;gap:8px;',
+    'padding:4px 0 2px;font-size:12px;font-weight:600;',
+    'color:var(--ink,#1A1814);}',
+  '.bk-banner.on{display:flex;}',
+  '.bk-all{font-size:11px;background:rgba(42,31,107,.1);border:none;',
+    'color:var(--accent,#2A1F6B);padding:3px 8px;border-radius:5px;',
+    'cursor:pointer;font-family:inherit;}',
+  /* Floating action bar — only when selecting */
+  '.bk-act{',
+    'display:none;',
+    'position:fixed;bottom:68px;left:50%;transform:translateX(-50%);',
+    'background:rgba(26,20,58,0.93);',
+    'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);',
+    'color:#fff;border-radius:12px;',
+    'padding:7px 10px;align-items:center;gap:5px;',
+    'z-index:300;',
+    'box-shadow:0 4px 24px rgba(0,0,0,.32);',
+    'font-family:inherit;',
+    'min-width:min(280px,88vw);',
+  '}',
+  '.bk-act.on{display:flex;}',
+  '.bk-cnt{font-size:12px;font-weight:600;opacity:.7;white-space:nowrap;padding:0 4px;flex:1;}',
+  '.bk-b{background:rgba(255,255,255,.13);border:none;color:#fff;',
+    'border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;',
+    'cursor:pointer;white-space:nowrap;transition:background .15s;font-family:inherit;}',
+  '.bk-b:hover{background:rgba(255,255,255,.24);}',
+  '.bk-b.red{background:rgba(210,50,50,.28);}',
+  '.bk-b.red:hover{background:rgba(210,50,50,.5);}',
+  '.bk-b.gold{background:rgba(201,168,76,.24);}',
+  '.bk-b.gold:hover{background:rgba(201,168,76,.44);}',
+  '.bk-b.exit{padding:5px 8px;opacity:.5;}',
+  '.bk-b.exit:hover{opacity:1;}',
+  /* Cards */
+  '.book-card.bk-sel{outline:2px solid #C9A84C;outline-offset:1px;}',
+  '.bk-cbw{position:absolute;top:6px;left:6px;z-index:5;pointer-events:none;}',
+  '.bk-cb{width:20px;height:20px;border-radius:5px;',
+    'border:2px solid rgba(201,168,76,.9);background:rgba(255,255,255,.95);',
+    'display:grid;place-items:center;font-size:12px;font-weight:700;',
+    'color:#2A1F6B;transition:background .12s,border-color .12s;}',
+  '.bk-cb.checked{background:#2A1F6B;border-color:#2A1F6B;color:#fff;}',
+  '.bk-ov{position:absolute;inset:0;z-index:4;cursor:pointer;}',
+  /* Select button in toolbar — matches app style */
+  '#_bkSelBtn{',
+    'display:inline-flex;align-items:center;gap:5px;',
+    'font-size:13px;font-weight:600;',
+    'padding:7px 14px;border-radius:8px;',
+    'border:1.5px solid var(--border,#D8D4CE);',
+    'background:transparent;cursor:pointer;',
+    'color:var(--ink,#1A1814);',
+    'font-family:inherit;white-space:nowrap;',
+    'transition:background .15s,border-color .15s;',
+  '}',
+  '#_bkSelBtn:hover{background:rgba(42,31,107,.06);border-color:rgba(42,31,107,.3);}',
+  '#_bkSelBtn.active{background:rgba(42,31,107,.1);border-color:rgba(42,31,107,.4);color:var(--accent,#2A1F6B);}',
+  /* Delete All in settings */
+  '.bk-del-all-btn{',
+    'width:100%;margin-top:8px;',
+    'background:transparent;',
+    'border:1.5px solid rgba(200,60,60,.35);',
+    'border-radius:9px;padding:11px 16px;',
+    'color:rgba(170,40,40,.9);font-size:14px;font-weight:600;',
+    'cursor:pointer;text-align:left;font-family:inherit;',
+    'transition:background .15s,border-color .15s;',
+  '}',
+  '.bk-del-all-btn:hover{background:rgba(200,60,60,.06);border-color:rgba(200,60,60,.6);}'
+].join('');
+
+function _css(){
+  if(document.getElementById('_bkCSS'))return;
+  var s=document.createElement('style');s.id='_bkCSS';s.textContent=_CSS;
+  document.head.appendChild(s);
+}
+
+// ── DOM ────────────────────────────────────────────────────────
+var _actBar, _banner;
+
+function _buildDOM(){
+  if(_actBar)return;
+
+  // Floating action bar (center-bottom, only visible when selecting)
+  _actBar=document.createElement('div');
+  _actBar.className='bk-act';_actBar.id='_bkAct';
+  _actBar.innerHTML=
+    '<span class="bk-cnt" id="_bkCount">0 selected</span>'+
+    '<button class="bk-b gold" onclick="_bkFill()">Auto-fill</button>'+
+    '<button class="bk-b gold" onclick="_bkPrice()">Prices</button>'+
+    '<button class="bk-b red"  onclick="_bkDel()">Delete</button>'+
+    '<button class="bk-b exit" onclick="_bkExit()" title="Exit">\u2715</button>';
+  document.body.appendChild(_actBar);
+
+  // Select All banner (above books grid)
+  _banner=document.createElement('div');
+  _banner.className='bk-banner';_banner.id='_bkBanner';
+  _banner.innerHTML=
+    '<span id="_bkBTxt">Tap books to select</span>'+
+    '<button class="bk-all" id="_bkAllBtn" onclick="_bkAll()">Select All</button>';
+  document.body.appendChild(_banner);
+}
+
+// ── Find the Refresh Library button row ────────────────────────
+// Searches for the button that calls loadCatalog() and returns
+// its parent container — that's the top toolbar row.
+function _findRefreshBtn(){
+  // By onclick attribute
+  var btns=document.querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){
+    var oc=btns[i].getAttribute('onclick')||'';
+    var txt=btns[i].textContent||'';
+    if(oc.indexOf('loadCatalog')!==-1||txt.indexOf('Refresh')!==-1){
+      return btns[i];
+    }
+  }
+  return null;
+}
+
+// ── Inject Select button into toolbar ─────────────────────────
+var _injTries=0;
+function _injectSelBtn(){
+  if(document.getElementById('_bkSelBtn'))return;
+  _injTries++;
+  var ref=_findRefreshBtn();
+  if(!ref){
+    if(_injTries<15)setTimeout(_injectSelBtn,300);
+    return;
+  }
+  var btn=document.createElement('button');
+  btn.id='_bkSelBtn';
+  btn.textContent='\u2611 Select';
+  btn.title='Select multiple books for bulk actions';
+  btn.onclick=function(){_on?_bkExit():_bkEnter();};
+  // Insert just before the Refresh Library button
+  ref.parentNode.insertBefore(btn,ref);
+}
+
+// ── Sync UI ────────────────────────────────────────────────────
+function _sync(){
+  var n=_sel.size;
+  // Floating action bar: only when in select mode
+  if(_actBar)_actBar.classList.toggle('on',_on);
+  // Count label
+  var c=document.getElementById('_bkCount');
+  if(c)c.textContent=n+' selected';
+  var bt=document.getElementById('_bkBTxt');
+  if(bt)bt.textContent=n===0?'Tap books to select':n+' selected';
+  // Select button appearance
+  var sb=document.getElementById('_bkSelBtn');
+  if(sb){
+    sb.textContent=_on?'\u2715 Exit Select':'\u2611 Select';
+    sb.classList.toggle('active',_on);
+  }
+}
+
+// ── Stamp cards ────────────────────────────────────────────────
+function _stamp(){
+  document.querySelectorAll('.book-card').forEach(function(card,i){
+    var b=S.books[i];if(!b)return;
+    var bid=b._id||('i'+i);
+    card.dataset.bkid=bid;
+    card.style.position=card.style.position||'relative';
+    var ov=card.querySelector('.bk-ov');if(ov)ov.remove();
+    var cbw=card.querySelector('.bk-cbw');if(cbw)cbw.remove();
+    if(_on){
+      var o=document.createElement('div');
+      o.className='bk-ov';o.dataset.bid=bid;
+      o.addEventListener('click',function(e){
+        e.stopPropagation();e.preventDefault();
+        _tog(this.dataset.bid);
+      });
+      card.appendChild(o);
+      var w=document.createElement('div');w.className='bk-cbw';
+      var cb=document.createElement('div');
+      var sel=_sel.has(bid);
+      cb.className='bk-cb'+(sel?' checked':'');
+      cb.textContent=sel?'\u2713':'';
+      w.appendChild(cb);
+      card.insertAdjacentElement('afterbegin',w);
+      card.classList.toggle('bk-sel',sel);
+    }else{
+      card.classList.remove('bk-sel');
+    }
+  });
+}
+
+function _refreshCards(){
+  document.querySelectorAll('.book-card[data-bkid]').forEach(function(card){
+    var bid=card.dataset.bkid;var sel=_sel.has(bid);
+    card.classList.toggle('bk-sel',sel);
+    var cb=card.querySelector('.bk-cb');
+    if(cb){cb.className='bk-cb'+(sel?' checked':'');cb.textContent=sel?'\u2713':'';}
+  });
+}
+
+function _tog(bid){
+  _sel.has(bid)?_sel.delete(bid):_sel.add(bid);
+  _refreshCards();_sync();
+}
+
+// ── Enter / Exit ───────────────────────────────────────────────
+function _bkEnter(){
+  _css();_buildDOM();
+  _on=true;_sel.clear();
+  _stamp();
+  var grid=document.getElementById('booksGrid');
+  if(grid&&_banner){grid.before(_banner);_banner.classList.add('on');}
+  _sync();
+}
+function _bkExit(){
+  _on=false;_sel.clear();
+  if(_actBar)_actBar.classList.remove('on');
+  if(_banner)_banner.classList.remove('on');
+  _stamp();_sync();
+}
+window._bkExit=_bkExit;
+
+function _bkAll(){
+  var all=S.books.map(function(b,i){return b._id||('i'+i);});
+  var allIn=all.every(function(id){return _sel.has(id);});
+  if(allIn){_sel.clear();}else{all.forEach(function(id){_sel.add(id);});}
+  var ab=document.getElementById('_bkAllBtn');
+  if(ab)ab.textContent=allIn?'Select All':'Deselect All';
+  _refreshCards();_sync();
+}
+window._bkAll=_bkAll;
+
+// ── Bulk delete selected ───────────────────────────────────────
+async function _bkDel(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Delete '+n+' book'+(n!==1?'s':'')+' from your library?\n\nThis cannot be undone.'))return;
+  if(!confirm('\u26A0\uFE0F Final warning: permanently delete '+n+' book'+(n!==1?'s':'')+'.\n\nPress OK to confirm.'))return;
+  var done=0;var ids=[..._sel];
+  for(var j=0;j<ids.length;j++){
+    var bid=ids[j];
+    if(String(bid).startsWith('i'))continue;
+    var res=await _supa.from('books').delete().eq('id',bid);
+    if(!res.error)done++;
+  }
+  S.books=S.books.filter(function(b){return !_sel.has(b._id);});
+  _bkExit();renderCatalog();
+  showToast('Deleted '+done+' book'+(done!==1?'s':'')+' \u2713','success',3000);
+}
+window._bkDel=_bkDel;
+
+// ── Bulk price refresh ─────────────────────────────────────────
+async function _bkPrice(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Refresh prices for '+n+' selected book'+(n!==1?'s':'')+'\nfrom local price database?'))return;
+  var done=0,skip=0;
+  var list=S.books.filter(function(b,i){return _sel.has(b._id||('i'+i));});
+  for(var j=0;j<list.length;j++){
+    var b=list[j];
+    if(!b.title||!b._id||String(b._id).startsWith('i')){skip++;continue;}
+    var result=typeof localPriceLookup==='function'?localPriceLookup(b.title):null;
+    if(!result){skip++;continue;}
+    var r=await _supa.from('books').update({market_price:result.recommended,updated_at:new Date().toISOString()}).eq('id',b._id);
+    if(!r.error){b.price=String(result.recommended);done++;}else skip++;
+  }
+  _bkExit();renderCatalog();
+  showToast('Prices: '+done+' updated, '+skip+' skipped \u2713','success',3500);
+}
+window._bkPrice=_bkPrice;
+
+// ── Auto-fill from Conjuring DB ────────────────────────────────
+async function _bkFill(){
+  var n=_sel.size;
+  if(!n)return showToast('No books selected','error');
+  if(!confirm('Auto-fill missing fields for '+n+' book'+(n!==1?'s':'')+
+    '?\n\nFills year, publisher, cover image.\n100% title match only. Existing values will NOT be overwritten.'))return;
+  var done=0,skip=0;
+  var list=S.books.filter(function(b,i){return _sel.has(b._id||('i'+i));});
+  for(var j=0;j<list.length;j++){
+    var b=list[j];
+    if(!b.title||!b._id||String(b._id).startsWith('i')){skip++;continue;}
+    var hit=typeof lookupConjuringEntry==='function'?lookupConjuringEntry(b.title):null;
+    if(!hit||!hit.entry){skip++;continue;}
+    var e=hit.entry,upd={};
+    if(!b.year&&e.y){upd.year=e.y;b.year=e.y;}
+    if(!b.publisher&&e.p){upd.publisher=e.p;b.publisher=e.p;}
+    if(!b.coverUrl&&typeof dbCoverUrl==='function'){
+      var cu=dbCoverUrl(e);
+      if(cu){upd.cover_url=cu;b.coverUrl=cu;b.rawCover=cu;}
+    }
+    if(!Object.keys(upd).length){skip++;continue;}
+    upd.updated_at=new Date().toISOString();
+    var r=await _supa.from('books').update(upd).eq('id',b._id);
+    if(!r.error)done++;else skip++;
+  }
+  _bkExit();renderCatalog();
+  showToast('Auto-fill: '+done+' updated, '+skip+' skipped \u2713','success',4000);
+}
+window._bkFill=_bkFill;
+
+// ── Delete entire library (called from Settings) ───────────────
+async function _bkDelAll(){
+  var total=S.books.length;
+  if(!total)return showToast('Library is already empty','info');
+  if(!confirm('\u26A0\uFE0F DELETE ENTIRE LIBRARY\n\nPermanently delete ALL '+total+' books?\n\nThis CANNOT be undone.'))return;
+  if(!confirm('\uD83D\uDEA8 FINAL WARNING\n\nErase ALL '+total+' books permanently.\n\nPress OK only if 100% certain.'))return;
+  var typed=window.prompt('Type  DELETE  to confirm erasing your entire library of '+total+' books:');
+  if(!typed||typed.trim().toUpperCase()!=='DELETE'){
+    showToast('Cancelled \u2014 library safe \u2713','success');return;
+  }
+  showToast('Deleting\u2026','info');
+  var done=0;
+  for(var j=0;j<S.books.length;j++){
+    var b=S.books[j];
+    if(!b._id||String(b._id).startsWith('i'))continue;
+    var r=await _supa.from('books').delete().eq('id',b._id);
+    if(!r.error)done++;
+  }
+  S.books=[];renderCatalog();
+  showToast('Library cleared \u2014 '+done+' books deleted \u2713','success',5000);
+}
+window._bkDelAll=_bkDelAll;
+
+// ── Inject Delete All into Settings ───────────────────────────
+var _settTries=0;
+function _injectSettingsBtn(){
+  if(document.getElementById('_bkDelAllBtn'))return;
+  _settTries++;
+  var anchor=
+    document.querySelector('#view-settings .settings-section:last-child')||
+    document.querySelector('#view-settings .settings-footer')||
+    document.querySelector('#view-settings > div:last-child')||
+    document.querySelector('#view-settings');
+  if(!anchor){
+    if(_settTries<15)setTimeout(_injectSettingsBtn,400);
+    return;
+  }
+  var wrap=document.createElement('div');
+  wrap.style.cssText='padding:16px 0 8px;border-top:1px solid var(--border,#D8D4CE);margin-top:16px;';
+  var label=document.createElement('div');
+  label.style.cssText='font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-light,#6B6560);font-weight:700;margin-bottom:8px;';
+  label.textContent='Danger Zone';
+  var btn=document.createElement('button');
+  btn.id='_bkDelAllBtn';
+  btn.className='bk-del-all-btn';
+  btn.textContent='\uD83D\uDDD1  Delete Entire Library';
+  btn.onclick=_bkDelAll;
+  wrap.appendChild(label);wrap.appendChild(btn);
+  anchor.appendChild(wrap);
+}
+
+// Watch for settings tab becoming active
+function _watchSettings(){
+  var settings=document.getElementById('view-settings');
+  if(!settings)return;
+  var obs=new MutationObserver(function(){
+    if(settings.classList.contains('active')){
+      _settTries=0;setTimeout(_injectSettingsBtn,200);
+    }
+  });
+  obs.observe(settings,{attributes:true,attributeFilter:['class']});
+}
+
+// ── Wrap renderCatalog ─────────────────────────────────────────
+setTimeout(function(){
+  if(typeof renderCatalog!=='function')return;
+  var _orig=renderCatalog;
+  window.renderCatalog=function(){
+    _orig.apply(this,arguments);
+    setTimeout(function(){
+      _css();_buildDOM();
+      // Inject Select button — resets tries each render so it keeps trying
+      if(!document.getElementById('_bkSelBtn')){_injTries=0;_injectSelBtn();}
+      if(_on)_stamp();
+      _sync();
+    },0);
+  };
+  _watchSettings();
+  // Try settings inject immediately in case already on that tab
+  _settTries=0;_injectSettingsBtn();
+},120);
+
+})();
+// ══ END BULK EDIT ══════════════════════════════════════════════
