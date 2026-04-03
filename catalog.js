@@ -13,6 +13,7 @@ function downloadCSVTemplate() {
   a.download = 'MagiLib-import-template.csv';
   a.click();
 }
+
 async function importFromCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
