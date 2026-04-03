@@ -315,7 +315,7 @@ function getScriptUrl(){ return ''; } // Legacy stub â no longer used
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
   initScrollTopBtn();
-  grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading...¦</div>';
+  grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading...</div>';
   if (!_supaUser) { grid.innerHTML=''; return; }
   try{
     const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
