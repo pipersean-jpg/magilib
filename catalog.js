@@ -21,11 +21,11 @@ async function importFromCSV(event) {
   if (!file) return;
   if (!_supaUser) { showToast('Please sign in first', 'error'); return; }
   const btn = document.getElementById('csvImportBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Importingâ¦'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Importing…'; }
 
   const text = await file.text();
 
-  // Proper CSV parser â handles quoted fields with commas inside
+  // Proper CSV parser — handles quoted fields with commas inside
   function parseCSV(str) {
     const rows = []; let row = []; let field = ''; let inQuote = false;
     for (let i = 0; i < str.length; i++) {
@@ -122,7 +122,7 @@ async function importFromCSV(event) {
   }
   if (btn) { btn.disabled=false; btn.textContent='Import CSV'; }
   event.target.value='';
-  const msg = failed > 0 ? 'Imported ' + imported + ', ' + failed + ' failed' : 'Imported ' + imported + ' books â';
+  const msg = failed > 0 ? 'Imported ' + imported + ', ' + failed + ' failed' : 'Imported ' + imported + ' books ✓';
   showToast(msg, failed > 0 ? 'error' : 'success', 3500);
   loadCatalog();
 }
@@ -177,7 +177,7 @@ function setCondition(c){
   S.condition=c;
   document.querySelectorAll('.condition-opt').forEach(b=>b.classList.toggle('selected',b.textContent.trim()===c));
 }
-function currSym(){return{AUD:'A$',USD:'$',GBP:'Â£',EUR:'â¬'}[S.settings.currency||'AUD']||'$';}
+function currSym(){return{AUD:'A$',USD:'$',GBP:'£',EUR:'€'}[S.settings.currency||'AUD']||'$';}
 
 function renderSources(sources){
   const bd=document.getElementById('sourceBreakdown');
@@ -194,9 +194,9 @@ function renderSources(sources){
       <div class="source-info">
         <div class="source-name">${s.name}<span class="source-tag ${tagClass[s.tag]||''}">${tagLabel[s.tag]||''}</span></div>
         <div class="source-detail">${s.detail||''}</div>
-        ${s.url?`<a class="source-link" href="${s.url}" target="_blank">${s.urlLabel||'View â'}</a>`:''}
+        ${s.url?`<a class="source-link" href="${s.url}" target="_blank">${s.urlLabel||'View ↗'}</a>`:''}
       </div>
-      <div class="source-price">${s.price!=null?sym+parseFloat(s.price).toFixed(0):'â'}</div>
+      <div class="source-price">${s.price!=null?sym+parseFloat(s.price).toFixed(0):'—'}</div>
     </div>`).join('');
   bd.style.display='block';
 }
@@ -227,8 +227,8 @@ async function scanCover(event){
 
   const statusEl=document.getElementById('scanStatus');
   statusEl.className='scan-status scanning';
-  document.getElementById('scanIcon').textContent='â³';
-  document.getElementById('scanTitle').textContent='Analysing coverâ¦';
+  document.getElementById('scanIcon').textContent='⏳';
+  document.getElementById('scanTitle').textContent='Analysing cover…';
   document.getElementById('scanDetail').textContent='Claude is reading the title, author, and edition from your photo.';
 
   try{
@@ -242,7 +242,7 @@ async function scanCover(event){
     fields.forEach(f=>{if(f.val&&f.val.trim()){const el=document.getElementById(f.id);el.value=toTitleCase(f.val.trim());el.classList.add('field-populated');setTimeout(()=>el.classList.remove('field-populated'),3000);populated++;}});
     const confClass={high:'conf-high',medium:'conf-med',low:'conf-low'}[json.confidence]||'conf-med';
     statusEl.className='scan-status done';
-    document.getElementById('scanIcon').textContent='â';
+    document.getElementById('scanIcon').textContent='✓';
     document.getElementById('scanTitle').innerHTML=`${populated} fields extracted <span class="confidence-badge ${confClass}">${json.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent=json.notes||'Please verify the details below before saving.';
     if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(json.title,json.author),1500);}
@@ -259,7 +259,7 @@ async function scanCover(event){
     }
   }catch(err){
     statusEl.className='scan-status error';
-    document.getElementById('scanIcon').textContent='â';
+    document.getElementById('scanIcon').textContent='✕';
     document.getElementById('scanTitle').textContent='Scan failed';
     document.getElementById('scanDetail').textContent=(err&&err.message)||'Could not read the cover. Please fill in details manually.';
   }
@@ -270,12 +270,12 @@ async function searchCover(){
   const author=document.getElementById('f-author').value.trim();
   const isbn=document.getElementById('f-isbn').value.trim();
   if(!title){showToast('Enter a title first','error');return;}
-  showToast('Searching for coverâ¦','info');
+  showToast('Searching for cover…','info');
   let imgUrl='';
   if(isbn){imgUrl=`https://books.google.com/books/content?vid=ISBN${isbn.replace(/-/g,'')}&printsec=frontcover&img=1&zoom=2`;}
   else{const q=encodeURIComponent(`${title} ${author} magic conjuring`);try{const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=5`);if(r.ok){const d=await r.json();const item=(d.items||[]).find(i=>i.volumeInfo&&i.volumeInfo.imageLinks);if(item)imgUrl=(item.volumeInfo.imageLinks.thumbnail||'').replace('http://','https://').replace('&zoom=1','&zoom=2');}}catch(e){}}
   if(imgUrl){setCover(imgUrl);showToast('Cover found!','success');}
-  else showToast('No cover found â try uploading or pasting a URL','error');
+  else showToast('No cover found — try uploading or pasting a URL','error');
 }
 function setCover(url){S.coverUrl=url;const img=document.getElementById('coverImg');const ph=document.getElementById('coverPlaceholder');img.onload=()=>{img.style.display='block';ph.style.display='none';};img.onerror=()=>{img.style.display='none';ph.style.display='flex';};img.src=url;}
 function uploadCover(event){const file=event.target.files[0];if(!file)return;const r=new FileReader();r.onload=async e=>{await setCoverCompressed(e.target.result);};r.readAsDataURL(file);}
@@ -328,7 +328,7 @@ function openEbay(e){
 
 
 // Apps Script URL is now configurable in Settings
-function getScriptUrl(){ return ''; } // Legacy stub â no longer used
+function getScriptUrl(){ return ''; } // Legacy stub — no longer used
 
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
@@ -365,7 +365,7 @@ async function loadCatalog(){
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
     console.error('Catalog load error:',e);
-    grid.innerHTML='<div class="empty-state"><div class="empty-icon">â </div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon">⚠ </div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
   }
 }
 function renderCatalog(){
@@ -392,11 +392,11 @@ function renderCatalog(){
     if(sort==='price') return dir==='asc'?(parseFloat(a.price)||0)-(parseFloat(b2.price)||0):(parseFloat(b2.price)||0)-(parseFloat(a.price)||0);
     if(sort==='year') return dir==='asc'?(parseInt(a.year)||0)-(parseInt(b2.year)||0):(parseInt(b2.year)||0)-(parseInt(a.year)||0);
     if(sort==='star') return dir==='asc'?(parseInt(a.star)||0)-(parseInt(b2.star)||0):(parseInt(b2.star)||0)-(parseInt(a.star)||0);
-    // dateAdded â parse en-AU date (DD/MM/YYYY), use row index as tiebreaker for same-day entries
+    // dateAdded — parse en-AU date (DD/MM/YYYY), use row index as tiebreaker for same-day entries
     const parseDate=d=>{if(!d)return 0;const p=d.split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():0;};
     const da=parseDate(a.dateAdded), db=parseDate(b2.dateAdded);
     if(da!==db) return dir==='asc'?da-db:db-da;
-    // Same date (or both missing) â use row position so last-added appears first
+    // Same date (or both missing) — use row position so last-added appears first
     const ia=S.books.indexOf(a), ib=S.books.indexOf(b2);
     return dir==='asc'?ia-ib:ib-ia;
   });
@@ -416,19 +416,19 @@ function renderStatsRow() {
     top:   document.getElementById('s-stat-top')   ? document.getElementById('s-stat-top').checked   : (settings.statTop   !== false),
   };
   const cards = [
-    show.total ? '<div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">â</div></div>' : '',
-    show.value ? '<div class="stat-card"><div class="stat-label">Total value</div><div class="stat-val" id="statValue">â</div></div>' : '',
-    show.avg   ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">â</div></div>' : '',
-    show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">â</div></div>' : '',
+    show.total ? '<div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">—</div></div>' : '',
+    show.value ? '<div class="stat-card"><div class="stat-label">Total value</div><div class="stat-val" id="statValue">—</div></div>' : '',
+    show.avg   ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
+    show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>' : '',
   ].filter(Boolean).join('');
   const row = document.getElementById('statsRow');
   if (row) row.innerHTML = cards;
 }
 
-  document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='â / '+S.books.length));
-  document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'â');
-  document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'â');
-  document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'â');
+  document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='— / '+S.books.length));
+  document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—');
+  document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—');
+  document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—');
   // Populate publisher filter dropdown
   const pubSelect=document.getElementById('filterPublisher');
   if(pubSelect&&pubSelect.options.length<=1){
@@ -437,17 +437,17 @@ function renderStatsRow() {
   }
   const condClasses={'Fine':'cond-fine','Very Good':'cond-vg','Good':'cond-good','Fair':'cond-fair'};
   const grid=document.getElementById('booksGrid');
-  if(!books.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">ð</div><p>No books match your filters.</p></div>';return;}
+  if(!books.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><p>No books match your filters.</p></div>';return;}
   const isListView = S.viewMode === 'list';
   const gridEl = document.getElementById('booksGrid');
   gridEl.parentElement.classList.toggle('list-view', isListView);
 
-  // ââ GROUPING ââ
+  // ── GROUPING ──
   // Normalise: strip leading The/A/An, lowercase, trim
   const normTitle = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
   const groupKey = b => normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();
 
-  // Build groups â each group keyed by normalised title+author
+  // Build groups — each group keyed by normalised title+author
   // Representative card = first non-sold copy, or first copy if all sold
   const groupMap = new Map();
   books.forEach(b => {
@@ -478,25 +478,25 @@ function renderStatsRow() {
     const isGrouped = totalCopies > 1;
     const thumbHtml = hasCover
       ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
-      : `<span>${b.coverUrl==='__local__'?'ð·':'ð'}</span>`;
+      : `<span>${b.coverUrl==='__local__'?'📷':'📖'}</span>`;
     const clickHandler = isGrouped
       ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')` 
       : `openModal(${idx})`;
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${b.coverUrl}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'ð·':''}</p><p style="margin-top:4px">${b.title}</p></div>
+        ${hasCover?`<img src="${b.coverUrl}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
-        ${isGrouped?`<span class="copies-badge">Ã${totalCopies}</span>`:''}
+        ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
       <div class="book-info">
         ${isListView?`<div class="book-info-thumb">${thumbHtml}</div>`:''}
         <div class="book-info-main">
           <div class="book-title-text">${b.title}</div>
           <div class="book-author-text">${b.author}</div>
-          <div style="font-size:9px;color:var(--ink-faint);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.publisher||''} ${b.year?'Â· '+b.year:''}</div>
+          <div style="font-size:9px;color:var(--ink-faint);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.publisher||''} ${b.year?'· '+b.year:''}</div>
         </div>
-        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'â'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'â'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}</div>
-        ${b.star&&parseInt(b.star)>0&&!isGrouped?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">â</span>`).join('')}</div>`:''}
+        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}</div>
+        ${b.star&&parseInt(b.star)>0&&!isGrouped?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">★</span>`).join('')}</div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -538,21 +538,21 @@ function openCopiesSheet(key) {
       <div class="copy-thumb">
         ${hasCover
           ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
-          : `<span style="font-size:16px;">${b.coverUrl==='__local__'?'ð·':'ð'}</span>`}
+          : `<span style="font-size:16px;">${b.coverUrl==='__local__'?'📷':'📖'}</span>`}
       </div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
-          <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'â'}</span>
+          <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'—'}</span>
           ${b.price&&!isNaN(parseFloat(b.price))?`<span style="font-size:14px;font-weight:500;color:var(--ink);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
           ${isSold?'<span class="draft-badge" style="background:#fdecea;color:#a32d2d;margin-left:0;">Sold</span>':''}
           ${isWishlist?'<span class="wishlist-badge" style="margin-left:0;">Wishlist</span>':''}
           ${isDraft?'<span class="draft-badge" style="margin-left:0;">Draft</span>':''}
         </div>
         <div style="font-size:12px;color:var(--ink-faint);">
-          ${[b.edition, b.year, b.dateAdded?'Added '+b.dateAdded:''].filter(Boolean).join(' Â· ')}
+          ${[b.edition, b.year, b.dateAdded?'Added '+b.dateAdded:''].filter(Boolean).join(' · ')}
         </div>
       </div>
-      <span style="color:var(--ink-faint);font-size:18px;margin-left:8px;">âº</span>
+      <span style="color:var(--ink-faint);font-size:18px;margin-left:8px;">›</span>
     </div>`;
   }).join('');
 
@@ -574,10 +574,10 @@ function openModal(idx){
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
       <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);align-self:center;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
-        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">ð</div>`}
+        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
       </div>
       <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);text-align:center;line-height:1.35;margin-bottom:5px;padding:0 4px;">${b.title}</div>
-      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:10px;">${b.author||''}${b.artist?` Â· <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
+      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:10px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
       <div style="display:flex;align-items:center;gap:10px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
         ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0.03em;">${b.condition}</span>`:''}
         ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
@@ -600,7 +600,7 @@ function openModal(idx){
   const soldBtn = document.getElementById('modalSoldBtn');
   if (soldBtn) soldBtn.textContent = (b.sold === 'Sold') ? 'Return to Library' : 'Mark Sold';
   const wishBtn = document.getElementById('modalWishlistBtn');
-  if (wishBtn) wishBtn.textContent = (b.sold === 'Wishlist') ? 'In Wishlist â' : '+ Wishlist';
+  if (wishBtn) wishBtn.textContent = (b.sold === 'Wishlist') ? 'In Wishlist ✓' : '+ Wishlist';
   // Render star rating
   renderModalStars(b);
   // If draft, open in Add form instead
@@ -615,9 +615,9 @@ function openEbayModal(){
 }
 function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target)document.getElementById('modalOverlay').classList.add('hidden');}
 
-const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Ãditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribnerâs Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard BÃ¶ttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones MarrÃ©", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Hermetic Press", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag ZÃ¼rich", "JustJoshinMagic", "JÃ¶rg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & SchÃ¼ppel, Leipzig", "Lesclapart", "Levy & MÃ¼ller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - Å", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "PÃ¡ginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf BraunmÃ¼ller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk ZÃ¼rich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van BÃ¼ren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & SÃ¶hne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale MÃ¼nchen", "Zentralhaus fÃ¼r Kulturarbeit", "Ãdition Ch. Eggimann, GenÃ¨ve"];
+const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Éditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribner’s Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard Böttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones Marré", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Hermetic Press", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag Zürich", "JustJoshinMagic", "Jörg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & Schüppel, Leipzig", "Lesclapart", "Levy & Müller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - œ", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "Páginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf Braunmüller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk Zürich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van Büren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & Söhne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale München", "Zentralhaus für Kulturarbeit", "Édition Ch. Eggimann, Genève"];
 
-// ââ ERROR BANNER ââ
+// ── ERROR BANNER ──
 let saveErrorActive = false;
 function showErrorBanner(title, msg) {
   saveErrorActive = true;
@@ -634,7 +634,7 @@ function dismissError() {
   document.querySelector('.nav').style.marginTop = '0';
 }
 
-// ââ PHOTO QUEUE ââ
+// ── PHOTO QUEUE ──
 const photoQueue = [];
 function addToQueue(event) {
   const files = Array.from(event.target.files);
@@ -661,7 +661,7 @@ function updateQueueUI() {
      </div>`
   ).join('');
   const btn = document.getElementById('processQueueBtn');
-  if (btn) btn.textContent = `Process next (${count} left) â`;
+  if (btn) btn.textContent = `Process next (${count} left) →`;
 }
 async function processNextFromQueue() {
   if (!photoQueue.length) { showToast('Queue is empty', 'info'); return; }
@@ -675,8 +675,8 @@ async function processNextFromQueue() {
   // Run scan
   const statusEl = document.getElementById('scanStatus');
   statusEl.className = 'scan-status scanning';
-  document.getElementById('scanIcon').textContent = 'â³';
-  document.getElementById('scanTitle').textContent = 'Analysing queued photoâ¦';
+  document.getElementById('scanIcon').textContent = '⏳';
+  document.getElementById('scanTitle').textContent = 'Analysing queued photo…';
   document.getElementById('scanDetail').textContent = 'Claude is reading the cover metadata.';
   const b64 = scanDataUrl.split(',')[1];
   const mimeMatch = scanDataUrl.match(/data:([^;]+);/);
@@ -701,19 +701,19 @@ async function processNextFromQueue() {
     });
     const confClass = {high:'conf-high',medium:'conf-med',low:'conf-low'}[parsed.confidence]||'conf-med';
     statusEl.className = 'scan-status done';
-    document.getElementById('scanIcon').textContent = 'â';
+    document.getElementById('scanIcon').textContent = '✓';
     document.getElementById('scanTitle').innerHTML = `${populated} fields extracted <span class="confidence-badge ${confClass}">${parsed.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent = (photoQueue.length > 0 ? `${photoQueue.length} photo(s) still in queue. ` : '') + (parsed.notes || 'Verify details below before saving.');
     if (parsed.title && parsed.author) setTimeout(() => fetchPrice(), 800);
   } catch(err) {
     statusEl.className = 'scan-status error';
-    document.getElementById('scanIcon').textContent = 'â';
+    document.getElementById('scanIcon').textContent = '✕';
     document.getElementById('scanTitle').textContent = 'Scan failed';
     document.getElementById('scanDetail').textContent = err.message || 'Could not read the cover.';
   }
 }
 
-// ââ CATALOG FILTERS/SORT ââ
+// ── CATALOG FILTERS/SORT ──
 S.filterCondition = 'all';
 S.sortBy = 'dateAdded';
 S.sortDir = 'desc';
@@ -733,7 +733,7 @@ function setFilter(type, val, btn) {
 function setSort(val, btn) {
   S.sortBy = val;
   // Remove active from sort chips only
-  const sortChips = ['Last Added','Title AâZ','Author AâZ','Price â','Price â','Year'];
+  const sortChips = ['Last Added','Title A–Z','Author A–Z','Price ↓','Price ↑','Year'];
   document.querySelectorAll('.filter-chip').forEach(b => {
     if (sortChips.includes(b.textContent.trim())) b.classList.remove('active');
   });
@@ -742,7 +742,7 @@ function setSort(val, btn) {
 }
 
 
-// ââ IMAGE COMPRESSION ââ
+// ── IMAGE COMPRESSION ──
 // Compress any image to a small JPEG thumbnail (max 300px wide, ~15KB)
 async function compressImage(dataUrl, maxWidth=300, quality=0.6) {
   return new Promise((resolve) => {
@@ -761,9 +761,9 @@ async function compressImage(dataUrl, maxWidth=300, quality=0.6) {
   });
 }
 
-// Compress cover before storing â called whenever a local image is set
+// Compress cover before storing — called whenever a local image is set
 async function setCoverCompressed(dataUrl) {
-  showToast('Processing imageâ¦', 'info', 1500);
+  showToast('Processing image…', 'info', 1500);
   const compressed = await compressImage(dataUrl);
   const kb = Math.round(compressed.length * 0.75 / 1024);
   S.coverUrl = compressed;
@@ -772,7 +772,7 @@ async function setCoverCompressed(dataUrl) {
   img.onload = () => { img.style.display='block'; ph.style.display='none'; };
   img.src = compressed;
   showToast('Cover ready (' + kb + 'KB)', 'success', 2000);
-  // Upload full-res to Cloudinary silently in background â NEVER blocks save
+  // Upload full-res to Cloudinary silently in background — NEVER blocks save
   if (S.settings && S.settings.cloudName && S.settings.cloudPreset) {
     setTimeout(() => {
       uploadToCloudinary(dataUrl)
@@ -783,12 +783,12 @@ async function setCoverCompressed(dataUrl) {
 }
 
 
-// ââ CURRENT MODAL BOOK INDEX ââ
+// ── CURRENT MODAL BOOK INDEX ──
 S.currentModalIdx = -1;
 S.editCoverUrl = '';
 S.coverPickerTarget = 'add'; // 'add' or 'edit'
 
-// ââ ZOOM ââ
+// ── ZOOM ──
 function openZoom(src) {
   if (!src) return;
   document.getElementById('zoomImg').src = src;
@@ -800,9 +800,9 @@ function openZoomFromModal() {
 }
 function closeZoom() { document.getElementById('zoomOverlay').classList.add('hidden'); }
 
-// ââ CLOUDINARY UPLOAD ââ
+// ── CLOUDINARY UPLOAD ──
 async function uploadToCloudinary(dataUrl) {
-  // Fully silent â never shows errors to user, never blocks anything
+  // Fully silent — never shows errors to user, never blocks anything
   const cloudName = (S.settings.cloudName || '').trim();
   const preset = (S.settings.cloudPreset || '').trim();
   if (!cloudName || !preset) return null;
@@ -822,13 +822,13 @@ async function uploadToCloudinary(dataUrl) {
     });
     const data = await resp.json();
     if (data.secure_url) return data.secure_url;
-  } catch(e) { /* silent â Cloudinary is optional */ }
+  } catch(e) { /* silent — Cloudinary is optional */ }
   return null;
 }
 
-// Cloudinary upload happens separately â called after setCoverCompressed when needed
+// Cloudinary upload happens separately — called after setCoverCompressed when needed
 
-// ââ CLOUDINARY CONNECTION TEST ââ
+// ── CLOUDINARY CONNECTION TEST ──
 async function testCloudinaryUpload() {
   const cloudName = (S.settings.cloudName || '').trim();
   const preset = (S.settings.cloudPreset || '').trim();
@@ -843,17 +843,17 @@ async function testCloudinaryUpload() {
   };
 
   if (!cloudName || !preset) {
-    showStatus('â  Enter your Cloud Name and Upload Preset above first.', false);
+    showStatus('⚠  Enter your Cloud Name and Upload Preset above first.', false);
     return;
   }
 
-  showStatus('Testingâ¦', true);
+  showStatus('Testing…', true);
   statusEl.style.background = '#f3f4f6';
   statusEl.style.color = '#374151';
   statusEl.style.border = '0.5px solid #d1d5db';
 
   try {
-    // Upload a minimal 1Ã1 transparent PNG as a test image
+    // Upload a minimal 1×1 transparent PNG as a test image
     const testPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const arr = testPng.split(',');
     const bstr = atob(arr[1]);
@@ -871,25 +871,25 @@ async function testCloudinaryUpload() {
     const data = await resp.json();
 
     if (data.secure_url) {
-      showStatus('â Connected! Test image uploaded successfully. Cloudinary is working.', true);
+      showStatus('✓ Connected! Test image uploaded successfully. Cloudinary is working.', true);
     } else if (data.error) {
       const msg = data.error.message || 'Unknown error';
       if (msg.toLowerCase().includes('preset')) {
-        showStatus('â Invalid preset "' + preset + '". Check it exists and is set to Unsigned in Cloudinary.', false);
+        showStatus('✗ Invalid preset "' + preset + '". Check it exists and is set to Unsigned in Cloudinary.', false);
       } else if (msg.toLowerCase().includes('cloud')) {
-        showStatus('â Cloud name "' + cloudName + '" not found. Check your Cloudinary dashboard.', false);
+        showStatus('✗ Cloud name "' + cloudName + '" not found. Check your Cloudinary dashboard.', false);
       } else {
-        showStatus('â Cloudinary error: ' + msg, false);
+        showStatus('✗ Cloudinary error: ' + msg, false);
       }
     } else {
-      showStatus('â Unexpected response from Cloudinary. Check your credentials.', false);
+      showStatus('✗ Unexpected response from Cloudinary. Check your credentials.', false);
     }
   } catch(e) {
-    showStatus('â Network error â could not reach Cloudinary. Check your internet connection.', false);
+    showStatus('✗ Network error — could not reach Cloudinary. Check your internet connection.', false);
   }
 }
 
-// ââ COVER PICKER ââ
+// ── COVER PICKER ──
 function resetPickerState() {
   document.getElementById('coverPickerStatus').textContent = '';
   document.getElementById('coverPickerResults').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;"><span class="spinner dark"></span></div>';
@@ -940,7 +940,7 @@ async function searchCoverSource(source) {
 
   const statusEl = document.getElementById('coverPickerStatus');
   const resultsEl = document.getElementById('coverPickerResults');
-  statusEl.textContent = 'Searchingâ¦';
+  statusEl.textContent = 'Searching…';
   resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;"><span class="spinner dark"></span></div>';
 
   const images = [];
@@ -956,7 +956,7 @@ async function searchCoverSource(source) {
     if (_gPf) _gPf.style.display = 'block';
   }
 
-  // ââ GOOGLE IMAGES â show instruction card + URL field, no results grid ââ
+  // ── GOOGLE IMAGES — show instruction card + URL field, no results grid ──
   if (source === 'images') {
     const searchQuery = encodeURIComponent('"' + title + '"' + (author ? ' "' + author + '"' : '') + ' book cover');
     S._googleImgUrl = 'https://www.google.com/search?tbm=isch&q=' + searchQuery;
@@ -991,7 +991,7 @@ async function searchCoverSource(source) {
             if (links) {
               let url = links.extraLarge || links.large || links.medium || links.small || links.thumbnail || '';
               url = url.replace('http://', 'https://').replace(/zoom=\d/g, 'zoom=3');
-              const label = v.title + (v.authors ? ' â ' + v.authors[0] : '');
+              const label = v.title + (v.authors ? ' — ' + v.authors[0] : '');
               if (url && !images.find(i => i.url === url)) images.push({ url, label, source: 'Google Books' });
             }
           });
@@ -1118,13 +1118,13 @@ async function searchCoverSource(source) {
     try {
       const q = encodeURIComponent(title);
       const searchUrl = 'https://magicref.net/magicbooks/?s=' + q;
-      statusEl.textContent = 'Fetching MagicRefâ¦';
+      statusEl.textContent = 'Fetching MagicRef…';
       const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
       const data = await resp.json();
       if (!data.success) throw new Error(data.error || 'Fetch failed');
       const linkMatches = [...data.html.matchAll(/href="(https?:\/\/magicref\.net\/magicbooks\/[^"?#\/][^"]*\/?)"/gi)];
       const uniqueLinks = [...new Set(linkMatches.map(m => m[1]))].slice(0, 6);
-      statusEl.textContent = 'Found ' + uniqueLinks.length + ' results, loading coversâ¦';
+      statusEl.textContent = 'Found ' + uniqueLinks.length + ' results, loading covers…';
       for (const link of uniqueLinks) {
         try {
           const dr = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(link));
@@ -1147,19 +1147,19 @@ async function searchCoverSource(source) {
 
   if (!images.length) {
     statusEl.textContent = 'No covers found.';
-    resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">No covers found for â' + title + 'â â try another source or paste a URL manually.</div>';
+    resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">No covers found for “' + title + '” — try another source or paste a URL manually.</div>';
     return;
   }
 
-  statusEl.textContent = images.length + ' cover(s) found â tap to select';
+  statusEl.textContent = images.length + ' cover(s) found — tap to select';
   resultsEl.innerHTML = images.map(img => {
     if (img.url === '__google_images__') {
       // Special card: opens Google Images
       const gUrl = img.googleUrl || '';
       return '<div onclick="window.open(\'' + gUrl + '\',\'_blank\')" style="cursor:pointer;border-radius:8px;border:1.5px dashed var(--border-med);background:var(--paper-warm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:6px;">' +
-        '<span style="font-size:24px;">ð</span>' +
+        '<span style="font-size:24px;">🔍</span>' +
         '<div style="font-size:11px;font-weight:500;color:var(--ink);text-align:center;">Open Google Images</div>' +
-        '<div style="font-size:9px;color:var(--ink-faint);text-align:center;">Find image, copy URL,<br>paste in â URL field</div>' +
+        '<div style="font-size:9px;color:var(--ink-faint);text-align:center;">Find image, copy URL,<br>paste in ↗ URL field</div>' +
         '</div>';
     }
     const esc = img.url.replace(/\\/g,'\\\\').replace(/'/g, "\\'");
@@ -1190,9 +1190,9 @@ function selectPickedCover(url, el) {
   setTimeout(() => document.getElementById('coverPickerOverlay').classList.add('hidden'), 400);
 }
 
-// ââ EDIT BOOK ââ
+// ── EDIT BOOK ──
 
-// ââ SCROLL-TO-TOP BUTTON ââ
+// ── SCROLL-TO-TOP BUTTON ──
 // Injected once into the catalog view. Appears after 300px scroll, fades out at top.
 let _scrollTopBtn = null;
 
