@@ -14,7 +14,27 @@ export default async function handler(req, res) {
   try {
     const action = req.query.action || 'fetch';
 
-    if (action === 'fetch') {
+      if (action === 'image') {
+    try {
+      const imgResp = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; MagiLib/1.0)',
+          'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+          'Referer': new URL(url).origin + '/'
+        }
+      });
+      if (!imgResp.ok) {
+        return res.status(200).json({ success: false, error: 'Image fetch failed: ' + imgResp.status });
+      }
+      const contentType = imgResp.headers.get('content-type') || 'image/jpeg';
+      const buffer = await imgResp.arrayBuffer();
+      const b64 = Buffer.from(buffer).toString('base64');
+      return res.status(200).json({ success: true, dataUrl: 'data:' + contentType + ';base64,' + b64 });
+    } catch(imgErr) {
+      return res.status(200).json({ success: false, error: imgErr.message });
+    }
+  }
+if (action === 'fetch') {
       const url = req.query.url;
       if (!url) return res.status(400).json({ error: 'url parameter required' });
       const urlObj = new URL(url);
