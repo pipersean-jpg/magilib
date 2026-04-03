@@ -55,15 +55,37 @@ function normTitle(t) {
 }
 
 // ── EXACT LOCAL LOOKUP ──
-// Returns the raw DB entry (object) or null
+// Returns the best single DB entry match, or null.
+// For disambiguated titles (e.g. "tricks of the trade armstrong"),
+// returns the first variant if multiple exist — use lookupConjuringAll for all.
 function lookupConjuringEntry(title) {
   if (typeof CONJURING_DB === 'undefined' || !title) return null;
   const key = normTitle(title);
+  // Direct key match
   if (CONJURING_DB[key]) return { key, entry: CONJURING_DB[key] };
-  // Strip subtitle after colon/dash (e.g. "Expert at the Card Table: Revised")
+  // Strip subtitle (e.g. "Expert at the Card Table: Revised" → "expert at the card table")
   const shortKey = key.split(/[—:]/)[0].trim();
   if (shortKey !== key && CONJURING_DB[shortKey]) return { key: shortKey, entry: CONJURING_DB[shortKey] };
+  // Check for disambiguated variants: any entry whose b (baseKey) matches this key
+  for (const [k, e] of Object.entries(CONJURING_DB)) {
+    if (e.b === key || e.b === shortKey) return { key: k, entry: e };
+  }
   return null;
+}
+
+// Returns ALL DB entries whose key or baseKey matches the normalised title.
+// Used to surface all variants of a duplicate title in the dropdown.
+function lookupConjuringAll(title) {
+  if (typeof CONJURING_DB === 'undefined' || !title) return [];
+  const key = normTitle(title);
+  const shortKey = key.split(/[—:]/)[0].trim();
+  const results = [];
+  for (const [k, e] of Object.entries(CONJURING_DB)) {
+    if (k === key || k === shortKey || e.b === key || e.b === shortKey) {
+      results.push({ key: k, entry: e, url: dbCoverUrl(e), score: 1.0 });
+    }
+  }
+  return results;
 }
 
 // Legacy helper — returns just the cover URL string (used by cover picker)
@@ -167,21 +189,31 @@ function conjuringFuzzyLookup(title) {
 }
 
 // ── TOP N FUZZY MATCHES (for title dropdown) ──
+// Surfaces disambiguated variants (e.g. all "Tricks of the Trade" authors) first,
+// then fills remaining slots with fuzzy matches.
 function conjuringTopMatches(title, n) {
   if (typeof CONJURING_DB === 'undefined' || !title) return [];
-  const norm = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(the|a|an)\s+/i, '').trim();
-  const q = norm(title);
-  const results = [];
+  const normFn = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(the|a|an)\s+/i, '').trim();
+  const q = normFn(title);
+
+  // First: exact baseKey variants (score 1.0)
+  const exactVariants = lookupConjuringAll(title);
+  const exactKeys = new Set(exactVariants.map(r => r.key));
+
+  // Then: fuzzy matches excluding already-found exact variants
+  const fuzzy = [];
   for (const key of Object.keys(CONJURING_DB)) {
-    const score = conjuringFuzzyScore(q, norm(key));
+    if (exactKeys.has(key)) continue;
+    const score = conjuringFuzzyScore(q, normFn(key));
     if (score >= 0.45) {
-      results.push({ key, entry: CONJURING_DB[key], score, url: dbCoverUrl(CONJURING_DB[key]) });
+      fuzzy.push({ key, entry: CONJURING_DB[key], score, url: dbCoverUrl(CONJURING_DB[key]) });
     }
   }
-  results.sort((a, b) => b.score - a.score);
-  return results.slice(0, n);
-}
+  fuzzy.sort((a, b) => b.score - a.score);
 
+  // Combine: exact variants first, then fuzzy, trim to n
+  return [...exactVariants, ...fuzzy].slice(0, n);
+}
 // ── EXTRACT CONJURING ARCHIVE BOOK ID FROM URL ──
 function conjuringBookId(coverUrl) {
   const m = coverUrl && coverUrl.match(/\/covers\/(\d+)a\./);
