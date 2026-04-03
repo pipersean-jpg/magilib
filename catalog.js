@@ -1171,7 +1171,10 @@ async function searchCoverSource(source) {
     }
     const esc = img.url.replace(/\\/g,'\\\\').replace(/'/g, "\\'");
     return '<div onclick="selectPickedCover(\'' + esc + '\',this)" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color 0.15s;background:var(--paper-warm);">' +
-      '<img src="' + img.url + '" style="width:100%;aspect-ratio:2/3;object-fit:cover;display:block;" onerror="this.parentElement.style.display=\'none\'" loading="lazy"/>' +
+      '<div style="width:100%;aspect-ratio:2/3;background:var(--paper-warm);position:relative;">' +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.18;">&#128218;</div>' +
+      '<img src="' + img.url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy"/>' +
+      '</div>' +
       '<div style="padding:4px 6px;font-size:9px;color:var(--ink-faint);text-align:center;line-height:1.3;">' + img.source + '<br><span style="color:var(--ink);font-size:8px;">' + (img.label||'').substring(0,35) + '</span></div>' +
       '</div>';
   }).join('');
