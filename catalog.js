@@ -347,7 +347,7 @@ async function loadCatalog(){
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
     console.error('Catalog load error:',e);
-    grid.innerHTML='<div class="empty-state"><div class="empty-icon">â </div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon">â </div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
   }
 }
 function renderCatalog(){
@@ -406,14 +406,11 @@ function renderStatsRow() {
   const row = document.getElementById('statsRow');
   if (row) row.innerHTML = cards;
 }
-// Exclude sold books from value totals
-  const activeBooks = books.filter(b => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft');
-  const prices=activeBooks.map(b=>parseFloat(b.price)||0).filter(p=>p>0&&p<50000);
-  const totalVal=prices.reduce((a,b2)=>a+b2,0);
-  const avg=prices.length?totalVal/prices.length:0;
-  const top=prices.length?Math.max(...prices):0;
-  const sym=currSym();
-  
+
+  document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='â / '+S.books.length));
+  document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'â');
+  document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'â');
+  document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'â');
   // Populate publisher filter dropdown
   const pubSelect=document.getElementById('filterPublisher');
   if(pubSelect&&pubSelect.options.length<=1){
@@ -440,18 +437,7 @@ function renderStatsRow() {
     if (!groupMap.has(k)) groupMap.set(k, []);
     groupMap.get(k).push(b);
   });
-  // ── Stat cards: reflect current view ──
-  const activeBooks = books.filter(b => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft');
-  const prices = activeBooks.map(b => parseFloat(b.price)||0).filter(p => p > 0 && p < 50000);
-  const totalVal = prices.reduce((a, b2) => a + b2, 0);
-  const avg = prices.length ? totalVal / prices.length : 0;
-  const top = prices.length ? Math.max(...prices) : 0;
-  const sym = currSym();
-  const isFiltered = books.length < S.books.length;
-  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent = isFiltered ? groupMap.size+' / '+S.books.length : String(groupMap.size));
-  document.getElementById('statValue') && (document.getElementById('statValue').textContent = totalVal ? sym+totalVal.toFixed(0) : '—');
-  document.getElementById('statAvg')   && (document.getElementById('statAvg').textContent   = avg       ? sym+avg.toFixed(0)       : '—');
-  document.getElementById('statTop')   && (document.getElementById('statTop').textContent   = top       ? sym+top.toFixed(0)       : '—');
+  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length);
 
   // Badge count: active + wishlist + draft (not sold)
   const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;
@@ -839,7 +825,7 @@ async function testCloudinaryUpload() {
   };
 
   if (!cloudName || !preset) {
-    showStatus('â  Enter your Cloud Name and Upload Preset above first.', false);
+    showStatus('â  Enter your Cloud Name and Upload Preset above first.', false);
     return;
   }
 
