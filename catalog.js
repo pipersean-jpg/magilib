@@ -1139,10 +1139,10 @@ function initScrollTopBtn() {
   });
 
   const vc = document.getElementById('view-catalog');
-  const scrollTarget = vc || window;
+
 
   const onScroll = () => {
-    const scrollY = vc ? vc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+const scrollY = window.scrollY || document.documentElement.scrollTop;
     if (scrollY > 300) {
       btn.style.opacity = '0.4';
       btn.style.pointerEvents = 'auto';
@@ -1152,5 +1152,5 @@ function initScrollTopBtn() {
     }
   };
 
-  scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+ window.addEventListener('scroll', onScroll, { passive: true });
 }
