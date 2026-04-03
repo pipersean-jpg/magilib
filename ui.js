@@ -682,6 +682,7 @@ if (htmlSplash) htmlSplash.style.display = 'none';
 function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!stored.welcomeSeen) {
+    // New user — show welcome screen
     document.getElementById('welcomeScreen').classList.remove('hidden');
     updateUserMenu();
   } else {
