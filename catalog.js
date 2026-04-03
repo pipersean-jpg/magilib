@@ -1002,22 +1002,41 @@ async function searchCoverSource(source) {
 
   if (source === 'conjuring') {
     try {
+      // Helper: expand compressed DB cover codes to full URLs
+      function _expandCover(u) {
+        if (!u) return '';
+        if (u.startsWith('C:')) return 'https://www.conjuringarchive.com/images/covers/' + u.slice(2) + 'a.jpg';
+        if (u.startsWith('M:')) return 'https://www.magicref.net/images/books/' + u.slice(2);
+        return u;
+      }
+      // Helper: get all cover URLs from a DB entry (handles both old string format and new object format)
+      function _entryCovers(entry) {
+        if (!entry) return [];
+        if (typeof entry === 'string') return [entry];
+        var urls = [];
+        if (entry.c) urls.push(_expandCover(entry.c));
+        if (Array.isArray(entry.i)) entry.i.forEach(function(u) { var x = _expandCover(u); if (x) urls.push(x); });
+        return urls.filter(Boolean);
+      }
+      // Helper: get MagicRef page URL from entry
+      function _entryMagicRefUrl(entry) {
+        if (!entry || typeof entry !== 'object' || !entry.m) return '';
+        var m = entry.m;
+        if (m.startsWith('P:')) return 'https://www.magicref.net/magicbooks/' + m.slice(2);
+        return m;
+      }
+
       // 1. User's own previously saved covers for this title
       if (typeof _supa !== 'undefined' && _supa && typeof _supaUser !== 'undefined' && _supaUser) {
         try {
-          const normT = title.toLowerCase().trim();
-          const { data: userBooks } = await _supa
-            .from('books')
-            .select('cover_url, title')
-            .eq('user_id', _supaUser.id)
-            .not('cover_url', 'is', null)
-            .neq('cover_url', '');
-          if (userBooks) {
-            userBooks.forEach(b => {
-              const t = (b.title || '').toLowerCase().trim();
+          var normT = title.toLowerCase().trim();
+          var ubRes = await _supa.from('books').select('cover_url, title').eq('user_id', _supaUser.id).not('cover_url', 'is', null).neq('cover_url', '');
+          if (ubRes.data) {
+            ubRes.data.forEach(function(b) {
+              var t = (b.title || '').toLowerCase().trim();
               if (t === normT && b.cover_url && b.cover_url.length > 10) {
-                if (!images.find(i => i.url === b.cover_url)) {
-                  images.push({ url: b.cover_url, label: 'Your saved cover', source: 'My Library' });
+                if (!images.find(function(i) { return i.url === b.cover_url; })) {
+                  images.push({ url: b.cover_url, label: 'Your photo', source: 'My Library' });
                 }
               }
             });
@@ -1025,69 +1044,81 @@ async function searchCoverSource(source) {
         } catch(e3) { /* non-critical */ }
       }
 
-      // 2. Local DB - all variants + all alt images
-      const variants = (typeof lookupConjuringAll === 'function') ? lookupConjuringAll(title) : [];
-      if (variants.length) {
-        variants.forEach(v => {
-          if (!v.entry) return;
-          const allCovers = (typeof dbAllCovers === 'function') ? dbAllCovers(v.entry) : (v.url ? [v.url] : []);
-          const displayTitle = (v.entry.t) ? v.entry.t : toTitleCase(v.key);
-          const displayAuthor = (v.entry.a) ? v.entry.a : '';
-          allCovers.forEach((url, idx) => {
-            if (!url) return;
-            if (!images.find(i => i.url === url)) {
-              const label = displayTitle + (displayAuthor ? ' - ' + displayAuthor : '') + (idx > 0 ? ' (alt ' + idx + ')' : '');
-              images.push({ url, label, source: 'Local Database' });
+      // 2. Local DB: Conjuring Archive cover + alt images
+      if (typeof CONJURING_DB !== 'undefined') {
+        var normKey = normTitle ? normTitle(title) : title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+        var dbEntry = CONJURING_DB[normKey];
+        if (!dbEntry) {
+          var shortKey = normKey.split(/[:]/)[0].trim();
+          if (shortKey !== normKey) dbEntry = CONJURING_DB[shortKey];
+        }
+        if (!dbEntry && typeof conjuringFuzzyLookup === 'function') {
+          var fuzz = conjuringFuzzyLookup(title);
+          if (fuzz) dbEntry = CONJURING_DB[fuzz.key];
+        }
+        if (dbEntry) {
+          var caCovers = _entryCovers(dbEntry);
+          caCovers.forEach(function(url, idx) {
+            if (!images.find(function(i) { return i.url === url; })) {
+              images.push({ url: url, label: idx === 0 ? 'Conjuring Archive' : 'Conjuring Archive (alt ' + idx + ')', source: 'Local Database' });
             }
           });
-        });
-        statusEl.textContent = images.length + ' cover(s) found in local database';
-      } else {
-        // Fallback: legacy single-cover lookup
-        const localUrl = (typeof lookupConjuringCover === 'function') ? lookupConjuringCover(title) : null;
-        if (localUrl) {
-          images.push({ url: localUrl, label: title + ' (local DB)', source: 'Local Database' });
-          statusEl.textContent = '1 cover found in local database';
+          // 3. MagicRef cover - fetch image from MagicRef page URL stored in entry
+          var mrPageUrl = _entryMagicRefUrl(dbEntry);
+          if (mrPageUrl) {
+            try {
+              statusEl.textContent = (images.length > 0 ? images.length + ' found - ' : '') + 'fetching MagicRef cover...';
+              var mrResp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(mrPageUrl));
+              var mrData = await mrResp.json();
+              if (mrData.success && mrData.html) {
+                var imgMatches = [...mrData.html.matchAll(/<img[^>]+src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*>/gi)];
+                for (var mi = 0; mi < imgMatches.length; mi++) {
+                  var src = imgMatches[mi][1];
+                  if (!src.startsWith('http')) src = 'https://www.magicref.net' + src;
+                  if (!src.includes('logo') && !src.includes('icon') && !src.includes('banner') && !src.includes('avatar')) {
+                    if (!images.find(function(i) { return i.url === src; })) {
+                      images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
+                      break;
+                    }
+                  }
+                }
+              }
+            } catch(mrErr) { /* MagicRef fetch failed - non-critical */ }
+          }
         }
       }
 
-      // 3. Online search (Conjuring Archive)
-      const q = encodeURIComponent(title);
-      const searchUrl = 'https://www.conjuringarchive.com/list/search?q=' + q;
-      if (images.length) {
-        statusEl.textContent = images.length + ' cover(s) found - also checking online...';
-      } else {
+      // 4. Online search fallback (Conjuring Archive website) if nothing found yet
+      if (!images.length) {
         statusEl.textContent = 'Searching online...';
-      }
-      const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
-      const data = await resp.json();
-      if (!data.success) throw new Error(data.error || 'Fetch failed');
-      const linkMatches = [...data.html.matchAll(/href="(\/list\/medium\/\d+)"/gi)];
-      const uniqueLinks = [...new Set(linkMatches.map(m => m[1]))].slice(0, 6);
-      for (const link of uniqueLinks) {
-        try {
-          const dr = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent('https://www.conjuringarchive.com' + link));
-          const dd = await dr.json();
-          if (dd.success) {
-            const patterns = [
-              /src="([^"]*\/media\/image\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i,
-              /src="([^"]*\/images\/[^"]+\.(?:jpg|jpeg|png))"[^>]*(?:class|alt)="[^"]*(?:cover|book)[^"]*"/i,
-            ];
-            for (const pat of patterns) {
-              const m = dd.html.match(pat);
-              if (m) {
-                let src = m[1].startsWith('http') ? m[1] : 'https://www.conjuringarchive.com' + m[1];
-                if (!images.find(i => i.url === src)) {
-                  const titleM = dd.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-                  images.push({ url: src, label: titleM ? titleM[1].trim() : 'Conjuring Archive', source: 'Local Database' });
+        var q = encodeURIComponent(title);
+        var searchUrl = 'https://www.conjuringarchive.com/list/search?q=' + q;
+        var resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
+        var data = await resp.json();
+        if (data.success) {
+          var linkMatches = [...data.html.matchAll(/href="(\/list\/medium\/\d+)"/gi)];
+          var uniqueLinks = [...new Set(linkMatches.map(function(m) { return m[1]; }))].slice(0, 4);
+          for (var li = 0; li < uniqueLinks.length; li++) {
+            try {
+              var dr = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent('https://www.conjuringarchive.com' + uniqueLinks[li]));
+              var dd = await dr.json();
+              if (dd.success) {
+                var pat1 = /src="([^"]*\/media\/image\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i;
+                var pat2 = /src="([^"]*\/images\/[^"]+\.(?:jpg|jpeg|png))"[^>]*(?:class|alt)="[^"]*(?:cover|book)[^"]*"/i;
+                var pm = dd.html.match(pat1) || dd.html.match(pat2);
+                if (pm) {
+                  var src = pm[1].startsWith('http') ? pm[1] : 'https://www.conjuringarchive.com' + pm[1];
+                  if (!images.find(function(i) { return i.url === src; })) {
+                    var titleM = dd.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+                    images.push({ url: src, label: titleM ? titleM[1].trim() : 'Conjuring Archive', source: 'Local Database' });
+                  }
                 }
-                break;
               }
-            }
+            } catch(e2) {}
           }
-        } catch(e2) {}
+        }
       }
-    } catch(e) { statusEl.textContent = 'Local database error: ' + e.message; }
+    } catch(e) { statusEl.textContent = 'Search error: ' + e.message; }
   }
 
   if (source === 'magicref') {
