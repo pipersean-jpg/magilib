@@ -1002,21 +1002,68 @@ async function searchCoverSource(source) {
 
   if (source === 'conjuring') {
     try {
-      // Try local database first â instant, no network call
-      const localUrl = lookupConjuringCover(title);
-      if (localUrl) {
-        images.push({ url: localUrl, label: title + ' (local DB match)', source: 'Local Database' });
-        statusEl.textContent = 'Found in local database â also checking onlineâ¦';
+      // 1. User's own previously saved covers for this title
+      if (typeof _supa !== 'undefined' && _supa && typeof _supaUser !== 'undefined' && _supaUser) {
+        try {
+          const normT = title.toLowerCase().trim();
+          const { data: userBooks } = await _supa
+            .from('books')
+            .select('cover_url, title')
+            .eq('user_id', _supaUser.id)
+            .not('cover_url', 'is', null)
+            .neq('cover_url', '');
+          if (userBooks) {
+            userBooks.forEach(b => {
+              const t = (b.title || '').toLowerCase().trim();
+              if (t === normT && b.cover_url && b.cover_url.length > 10) {
+                if (!images.find(i => i.url === b.cover_url)) {
+                  images.push({ url: b.cover_url, label: 'Your saved cover', source: 'My Library' });
+                }
+              }
+            });
+          }
+        } catch(e3) { /* non-critical */ }
       }
+
+      // 2. Local DB - all variants + all alt images
+      const variants = (typeof lookupConjuringAll === 'function') ? lookupConjuringAll(title) : [];
+      if (variants.length) {
+        variants.forEach(v => {
+          if (!v.entry) return;
+          const allCovers = (typeof dbAllCovers === 'function') ? dbAllCovers(v.entry) : (v.url ? [v.url] : []);
+          const displayTitle = (v.entry.t) ? v.entry.t : toTitleCase(v.key);
+          const displayAuthor = (v.entry.a) ? v.entry.a : '';
+          allCovers.forEach((url, idx) => {
+            if (!url) return;
+            if (!images.find(i => i.url === url)) {
+              const label = displayTitle + (displayAuthor ? ' - ' + displayAuthor : '') + (idx > 0 ? ' (alt ' + idx + ')' : '');
+              images.push({ url, label, source: 'Local Database' });
+            }
+          });
+        });
+        statusEl.textContent = images.length + ' cover(s) found in local database';
+      } else {
+        // Fallback: legacy single-cover lookup
+        const localUrl = (typeof lookupConjuringCover === 'function') ? lookupConjuringCover(title) : null;
+        if (localUrl) {
+          images.push({ url: localUrl, label: title + ' (local DB)', source: 'Local Database' });
+          statusEl.textContent = '1 cover found in local database';
+        }
+      }
+
+      // 3. Online search (Conjuring Archive)
       const q = encodeURIComponent(title);
       const searchUrl = 'https://www.conjuringarchive.com/list/search?q=' + q;
-      statusEl.textContent = localUrl ? 'Found locally + checking onlineâ¦' : 'Searching local databaseâ¦';
+      if (images.length) {
+        statusEl.textContent = images.length + ' cover(s) found - also checking online...';
+      } else {
+        statusEl.textContent = 'Searching online...';
+      }
       const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(searchUrl));
       const data = await resp.json();
       if (!data.success) throw new Error(data.error || 'Fetch failed');
       const linkMatches = [...data.html.matchAll(/href="(\/list\/medium\/\d+)"/gi)];
       const uniqueLinks = [...new Set(linkMatches.map(m => m[1]))].slice(0, 6);
-      statusEl.textContent = 'Found ' + uniqueLinks.length + ' results, loading coversâ¦';
       for (const link of uniqueLinks) {
         try {
           const dr = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent('https://www.conjuringarchive.com' + link));
@@ -1032,7 +1079,7 @@ async function searchCoverSource(source) {
                 let src = m[1].startsWith('http') ? m[1] : 'https://www.conjuringarchive.com' + m[1];
                 if (!images.find(i => i.url === src)) {
                   const titleM = dd.html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-                  images.push({ url: src, label: titleM ? titleM[1].trim() : 'Local Database', source: 'Local Database' });
+                  images.push({ url: src, label: titleM ? titleM[1].trim() : 'Conjuring Archive', source: 'Local Database' });
                 }
                 break;
               }
