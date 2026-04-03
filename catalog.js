@@ -1077,7 +1077,15 @@ async function searchCoverSource(source) {
                   if (!src.startsWith('http')) src = 'https://www.magicref.net' + src;
                   if (!src.includes('logo') && !src.includes('icon') && !src.includes('banner') && !src.includes('avatar')) {
                     if (!images.find(function(i) { return i.url === src; })) {
-                      images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
+                      // Fetch image via proxy to bypass CORS
+                      try {
+                        var imgProxyResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(src));
+                        var imgProxyData = await imgProxyResp.json();
+                        var finalUrl = (imgProxyData.success && imgProxyData.dataUrl) ? imgProxyData.dataUrl : src;
+                        images.push({ url: finalUrl, label: 'MagicRef', source: 'MagicRef' });
+                      } catch(imgEx) {
+                        images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
+                      }
                       break;
                     }
                   }
