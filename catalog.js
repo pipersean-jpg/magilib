@@ -1,9 +1,14 @@
 function downloadCSVTemplate() {
   const headers = ['Title','Author','Artist/Subject','Edition','Year','Publisher','ISBN','Condition','Market Price','Purchase Price','Notes','Cover URL','Date Added','Condition Flags','Sold Status','Star Rating','Collector Note','Where Acquired','Draft'];
+  // Condition: Fine | Very Good | Good | Fair
+  // Sold Status: Active | Sold | Wishlist  (leave blank = Active)
+  // Star Rating: 1–5  (leave blank = unrated)
+  // Draft: Draft  (leave blank = normal library entry)
   const examples = [
     ['The Art of Magic','Houdini Harry','','First Edition','1920','Sphinx Press','978-0-000-00001-1','Fine','150.00','80.00','Signed copy with dust jacket.','','2024-01-15','','Active','5','Purchased at auction.','Potter & Potter',''],
-    ['Card Technique','Hugard Jean','','Second Edition','1946','Faber and Faber','','Good','45.00','20.00','Some foxing to pages.','','','','','3','','eBay',''],
-    ['Expert Card Technique','Hugard Jean','Braue Frederick','Revised Edition','1950','Faber and Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Active','4','','Gift',''],
+    ['Card Technique','Hugard Jean','','Second Edition','1946','Faber and Faber','','Good','45.00','20.00','','','','','Sold','3','','eBay',''],
+    ['Expert Card Technique','Hugard Jean','Braue Frederick','Revised Edition','1950','Faber and Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Wishlist','4','','',''],
+    ['Stars of Magic','Various','','','1961','Louis Tannen','','Fair','35.00','','','','','','Active','2','Needs closer inspection before cataloguing.','','Draft'],
   ];
   const rows = [headers, ...examples].map(function(r) {
     return r.map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
@@ -229,11 +234,29 @@ function saveSettings(){
 function showView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-  const tabs={entry:0,catalog:1,settings:2};
+  const tabs={entry:0,catalog:1,settings:2,wishlist:3};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
-  if(v==='catalog')loadCatalog();
-  if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
+  if(v==='wishlist'){
+    document.getElementById('view-catalog').classList.add('active');
+    S.showWishlist=true; S.showSold=false; S.showDrafts=false;
+    const wc=document.getElementById('showWishlistChip');
+    const sc=document.getElementById('showSoldChip');
+    const dc=document.getElementById('showDraftsChip');
+    if(wc){wc.classList.add('active');wc.style.background='#185fa5';wc.style.color='white';}
+    if(sc){sc.classList.remove('active');sc.style.background='transparent';sc.style.color='#a32d2d';}
+    if(dc){dc.classList.remove('active');dc.style.background='transparent';dc.style.color='#5f5e5a';}
+    loadCatalog();
+  } else {
+    document.getElementById('view-'+v).classList.add('active');
+    // Leaving wishlist: reset the flag and chip
+    if(S.showWishlist){
+      S.showWishlist=false;
+      const wc=document.getElementById('showWishlistChip');
+      if(wc){wc.classList.remove('active');wc.style.background='transparent';wc.style.color='#185fa5';}
+    }
+    if(v==='catalog')loadCatalog();
+    if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
+  }
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
@@ -467,9 +490,9 @@ function renderCatalog(){
     const ia=S.books.indexOf(a), ib=S.books.indexOf(b2);
     return dir==='asc'?ia-ib:ib-ia;
   });
-  // Exclude sold books from value totals
-  const activeBooks = books.filter(b => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft');
-  const prices=activeBooks.map(b=>parseFloat(b.price)||0).filter(p=>p>0&&p<50000);
+  // Price source: wishlist uses the filtered wishlist set; normal view excludes sold/wishlist/drafts
+  const priceSrc=S.showWishlist?books:books.filter(b=>b.sold!=='Sold'&&b.sold!=='Wishlist'&&b.draft!=='Draft');
+  const prices=priceSrc.map(b=>parseFloat(b.price)||0).filter(p=>p>0&&p<50000);
   const totalVal=prices.reduce((a,b2)=>a+b2,0);
   const avg=prices.length?totalVal/prices.length:0;
   const top=prices.length?Math.max(...prices):0;
@@ -482,9 +505,10 @@ function renderStatsRow() {
     avg:   document.getElementById('s-stat-avg')   ? document.getElementById('s-stat-avg').checked   : (settings.statAvg   !== false),
     top:   document.getElementById('s-stat-top')   ? document.getElementById('s-stat-top').checked   : (settings.statTop   !== false),
   };
+  const isWL=!!S.showWishlist;
   const cards = [
-    show.total ? '<div class="stat-card"><div class="stat-label">Total books</div><div class="stat-val" id="statTotal">—</div></div>' : '',
-    show.value ? '<div class="stat-card"><div class="stat-label">Total value</div><div class="stat-val" id="statValue">—</div></div>' : '',
+    show.total ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Wishlist':'Total books')+'</div><div class="stat-val" id="statTotal">—</div></div>' : '',
+    show.value ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Market value':'Total value')+'</div><div class="stat-val" id="statValue">—</div></div>' : '',
     show.avg   ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
     show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>' : '',
   ].filter(Boolean).join('');
@@ -522,7 +546,8 @@ function renderStatsRow() {
     if (!groupMap.has(k)) groupMap.set(k, []);
     groupMap.get(k).push(b);
   });
-  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=groupMap.size+' / '+S.books.length);
+  const wishlistTotal=S.books.filter(b=>b.sold==='Wishlist').length;
+  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=S.showWishlist?(groupMap.size+' / '+wishlistTotal):(groupMap.size+' / '+S.books.length));
 
   // Badge count: active + wishlist + draft (not sold)
   const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;
