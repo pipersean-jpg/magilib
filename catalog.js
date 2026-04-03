@@ -1,3 +1,18 @@
+function downloadCSVTemplate() {
+  const headers = ['Title','Author','Artist/Subject','Edition','Year','Publisher','ISBN','Condition','Market Price','Purchase Price','Notes','Cover URL','Date Added','Condition Flags','Sold Status','Star Rating','Collector Note','Where Acquired','Draft'];
+  const examples = [
+    ['The Art of Magic','T. Nelson Downs','','First Edition','1921','Arthur P. Felsman','978-0-000-00001-1','Fine','150.00','80.00','Signed copy with dust jacket.','','2024-01-15','','Active','5','Purchased at auction.','Potter & Potter',''],
+   
+    ['Expert Card Technique','Jean Hugard','Frederick Braué,'Third Edition','1950','Faber & Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Active','4','','Gift',''],
+  ];
+  const rows = [headers, ...examples].map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'MagiLib-import-template.csv';
+  a.click();
+}
 async function importFromCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
