@@ -84,12 +84,33 @@ async function importFromCSV(event) {
     return null;
   };
 
-  const rows = [];
+  // ── Conjuring DB enrichment helper ──
+  // Finds the best fuzzy match in CONJURING_DB (≥0.80 confidence).
+  // Runs entirely in-memory — no network call needed.
+  function enrichFromConjuringDB(title) {
+    if (typeof CONJURING_DB === 'undefined' || !title) return null;
+    const norm = s => s.toLowerCase()
+      .replace(/["""'']/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ').trim()
+      .replace(/^(the|a|an)\s+/i, '').trim();
+    const q = norm(title);
+    let bestKey = null, bestEntry = null, bestScore = 0;
+    for (const key of Object.keys(CONJURING_DB)) {
+      const score = conjuringFuzzyScore(q, norm(key));
+      if (score > bestScore) { bestScore = score; bestKey = key; bestEntry = CONJURING_DB[key]; }
+    }
+    if (bestScore < 0.80) return null;
+    return bestEntry;
+  }
+
+  // ── Build rows from CSV ──
+  const dataRows = [];
   for (let i = 1; i < allRows.length; i++) {
     const cols = allRows[i];
     const title = getC(cols, 'title');
     if (!title) continue;
-    rows.push({
+    dataRows.push({
       user_id: _supaUser.id,
       title,
       author: getC(cols,'author'),
@@ -113,20 +134,58 @@ async function importFromCSV(event) {
     });
   }
 
+  // ── Enrich each row from Conjuring DB ──
+  // Only fills blank fields — never overwrites what the user already provided.
+  let enriched = 0;
+  for (let i = 0; i < dataRows.length; i++) {
+    const row = dataRows[i];
+    if (btn) btn.textContent = 'Enriching ' + (i + 1) + ' of ' + dataRows.length + '…';
+
+    const entry = enrichFromConjuringDB(row.title);
+    if (!entry) continue;
+
+    // entry may be a full object (new format) or a plain string cover URL (legacy)
+    const isObj = entry && typeof entry === 'object';
+
+    if (!row.cover_url) {
+      const cover = isObj ? dbCoverUrl(entry) : (typeof entry === 'string' ? entry : '');
+      if (cover) row.cover_url = cover;
+    }
+    if (!row.author && isObj) {
+      const a = dbAuthor(entry);
+      if (a) row.author = toTitleCase(a);
+    }
+    if (!row.year && isObj) {
+      const y = dbYear(entry);
+      if (y) row.year = y;
+    }
+    if (!row.publisher && isObj && entry.p) {
+      row.publisher = toTitleCasePublisher(entry.p);
+    }
+
+    enriched++;
+  }
+
+  // ── Insert to Supabase in batches of 100 ──
+  if (btn) btn.textContent = 'Saving…';
   let imported = 0;
   let failed = 0;
-  for (let i = 0; i < rows.length; i += 100) {
-    const { error } = await _supa.from('books').insert(rows.slice(i, i+100));
-    if (!error) imported += Math.min(100, rows.length - i);
-    else { console.error('Import chunk error:', error); failed += Math.min(100, rows.length - i); }
+  for (let i = 0; i < dataRows.length; i += 100) {
+    const { error } = await _supa.from('books').insert(dataRows.slice(i, i+100));
+    if (!error) imported += Math.min(100, dataRows.length - i);
+    else { console.error('Import chunk error:', error); failed += Math.min(100, dataRows.length - i); }
   }
+
   if (btn) { btn.disabled=false; btn.textContent='Import CSV'; }
   event.target.value='';
-  const msg = failed > 0 ? 'Imported ' + imported + ', ' + failed + ' failed' : 'Imported ' + imported + ' books ✓';
-  showToast(msg, failed > 0 ? 'error' : 'success', 3500);
+
+  let msg = failed > 0
+    ? 'Imported ' + imported + ', ' + failed + ' failed'
+    : 'Imported ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' ✓';
+  if (enriched > 0 && failed === 0) msg += ' · ' + enriched + ' matched in local database';
+  showToast(msg, failed > 0 ? 'error' : 'success', 4000);
   loadCatalog();
 }
-
 function loadSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
