@@ -1,11 +1,13 @@
 function downloadCSVTemplate() {
   const headers = ['Title','Author','Artist/Subject','Edition','Year','Publisher','ISBN','Condition','Market Price','Purchase Price','Notes','Cover URL','Date Added','Condition Flags','Sold Status','Star Rating','Collector Note','Where Acquired','Draft'];
   const examples = [
-    ['The Art of Magic','T. Nelson Downs','','First Edition','1921','Arthur P. Felsman','978-0-000-00001-1','Fine','150.00','80.00','Signed copy with dust jacket.','','2024-01-15','','Active','5','Purchased at auction.','Potter & Potter',''],
-   
-    ['Expert Card Technique','Jean Hugard','Frederick Braué,'Third Edition','1950','Faber & Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Active','4','','Gift',''],
+    ['The Art of Magic','Houdini Harry','','First Edition','1920','Sphinx Press','978-0-000-00001-1','Fine','150.00','80.00','Signed copy with dust jacket.','','2024-01-15','','Active','5','Purchased at auction.','Potter & Potter',''],
+    ['Card Technique','Hugard Jean','','Second Edition','1946','Faber and Faber','','Good','45.00','20.00','Some foxing to pages.','','','','','3','','eBay',''],
+    ['Expert Card Technique','Hugard Jean','Braue Frederick','Revised Edition','1950','Faber and Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Active','4','','Gift',''],
   ];
-  const rows = [headers, ...examples].map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+  const rows = [headers, ...examples].map(function(r) {
+    return r.map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+  });
   const csv = rows.join('\n');
   const blob = new Blob([csv], {type:'text/csv'});
   const a = document.createElement('a');
