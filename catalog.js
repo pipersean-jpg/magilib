@@ -1073,21 +1073,37 @@ async function searchCoverSource(source) {
               if (mrData.success && mrData.html) {
                 var imgMatches = [...mrData.html.matchAll(/<img[^>]+src="([^"]+\.(?:jpg|jpeg|png|webp))"[^>]*>/gi)];
                 for (var mi = 0; mi < imgMatches.length; mi++) {
-                  var src = imgMatches[mi][1];
-                  if (!src.startsWith('http')) src = 'https://www.magicref.net' + src;
-                  if (!src.includes('logo') && !src.includes('icon') && !src.includes('banner') && !src.includes('avatar')) {
-                    if (!images.find(function(i) { return i.url === src; })) {
-                      // Fetch image via proxy to bypass CORS
-                      try {
-                        var imgProxyResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(src));
-                        var imgProxyData = await imgProxyResp.json();
-                        var finalUrl = (imgProxyData.success && imgProxyData.dataUrl) ? imgProxyData.dataUrl : src;
-                        images.push({ url: finalUrl, label: 'MagicRef', source: 'MagicRef' });
-                      } catch(imgEx) {
-                        images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
-                      }
-                      break;
+                  var rawSrc = imgMatches[mi][1];
+                  // Skip navigation/UI images
+                  if (rawSrc.includes('but-') || rawSrc.includes('logo') || rawSrc.includes('icon') || rawSrc.includes('banner') || rawSrc.includes('avatar')) continue;
+                  // Resolve relative paths: ../../images/books/foo.jpg -> https://www.magicref.net/images/books/foo.jpg
+                  var src;
+                  if (rawSrc.startsWith('http')) {
+                    src = rawSrc;
+                  } else if (rawSrc.startsWith('/')) {
+                    src = 'https://www.magicref.net' + rawSrc;
+                  } else {
+                    // Resolve relative to page URL base (strip filename from mrPageUrl)
+                    var base = mrPageUrl.replace(/\/[^\/]*$/, '/');
+                    var parts = rawSrc.split('/');
+                    var baseParts = base.split('/');
+                    for (var pi = 0; pi < parts.length; pi++) {
+                      if (parts[pi] === '..') { baseParts.pop(); }
+                      else if (parts[pi] !== '.') { baseParts.push(parts[pi]); }
                     }
+                    src = baseParts.join('/');
+                  }
+                  if (!images.find(function(i) { return i.url === src; })) {
+                    // Fetch image via proxy to bypass CORS
+                    try {
+                      var imgProxyResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(src));
+                      var imgProxyData = await imgProxyResp.json();
+                      var finalUrl = (imgProxyData.success && imgProxyData.dataUrl) ? imgProxyData.dataUrl : src;
+                      images.push({ url: finalUrl, label: 'MagicRef', source: 'MagicRef' });
+                    } catch(imgEx) {
+                      images.push({ url: src, label: 'MagicRef', source: 'MagicRef' });
+                    }
+                    break;
                   }
                 }
               }
