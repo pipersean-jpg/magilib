@@ -594,6 +594,60 @@ function toggleView(mode) {
   renderCatalog();
 }
 
+async function addWishlistItem() {
+  const title = (document.getElementById('wl-title').value || '').trim();
+  if (!title) { showToast('Enter a title first', 'error'); return; }
+  const author = (document.getElementById('wl-author').value || '').trim();
+  const price = parseFloat(document.getElementById('wl-price').value) || null;
+  const notes = (document.getElementById('wl-notes').value || '').trim();
+  if (!_supaUser) { showToast('Not signed in', 'error'); return; }
+  const row = {
+    user_id: _supaUser.id,
+    title,
+    author: author || null,
+    notes: notes || null,
+    market_price: price,
+    date_added: new Date().toISOString().slice(0, 10),
+    sold_status: 'Wishlist',
+  };
+  // Attach photo if one was selected
+  const preview = document.getElementById('wl-photo-preview');
+  if (preview && preview.src && preview.style.display !== 'none') {
+    const cloudUrl = await uploadToCloudinary(preview.src);
+    row.cover_url = cloudUrl || preview.src;
+  }
+  const { error } = await _supa.from('books').insert(row);
+  if (error) { showToast('Could not add: ' + error.message, 'error'); return; }
+  ['wl-title', 'wl-author', 'wl-price', 'wl-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  if (preview) { preview.src = ''; preview.style.display = 'none'; }
+  showToast('"' + title + '" added to wishlist', 'success', 2500);
+  loadCatalog();
+}
+
+function findOnGoogle() {
+  const title = (document.getElementById('wl-title').value || '').trim();
+  const author = (document.getElementById('wl-author').value || '').trim();
+  if (!title) { showToast('Enter a title first', 'error'); return; }
+  const q = encodeURIComponent(title + (author ? ' ' + author : '') + ' book');
+  window.open('https://www.google.com/search?q=' + q, '_blank', 'noopener');
+}
+
+function wlPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const compressed = await compressImage(e.target.result, 300, 0.7);
+    const preview = document.getElementById('wl-photo-preview');
+    preview.src = compressed;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
 function clearFilters() {
   document.getElementById('catalogSearch').value = '';
   document.getElementById('filterPublisher').value = '';
@@ -637,6 +691,12 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', async function() {
   // Initialise Supabase client now that supabase.min.js is guaranteed loaded
   _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  _supa.auth.onAuthStateChange(function(event) {
+    if (event === 'PASSWORD_RECOVERY') {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('reset-password-form').style.display = 'flex';
+    }
+  });
   loadSettings();
   // Check for existing Supabase session (e.g. returning user, tab reopen)
   try {

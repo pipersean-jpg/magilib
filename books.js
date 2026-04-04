@@ -1,4 +1,20 @@
 S.editRowNum = -1;
+S.editInPrint = undefined;
+
+function setEditInPrint(val) {
+  S.editInPrint = val;
+  const map = {true: 'editInPrintYes', false: 'editInPrintNo', null: 'editInPrintUnknown'};
+  ['editInPrintYes','editInPrintNo','editInPrintUnknown'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) { btn.style.background = ''; btn.style.borderColor = ''; btn.style.fontWeight = ''; }
+  });
+  const activeId = map[String(val)];
+  const activeBtn = document.getElementById(activeId);
+  if (activeBtn) { activeBtn.style.background = 'var(--accent-light)'; activeBtn.style.borderColor = 'var(--accent)'; activeBtn.style.fontWeight = '600'; }
+  const hidden = document.getElementById('edit-in-print');
+  if (hidden) hidden.value = val === null ? '' : String(val);
+  _markEditDirty();
+}
 
 function openEditFromModal() {
   const idx = S.currentModalIdx;
@@ -14,7 +30,6 @@ function openEditFromModal() {
   });
   populateEditCondition('', ''); // clear condition + flags
 
-  document.getElementById('editModalTitle').textContent = 'Edit — ' + b.title;
   document.getElementById('edit-title').value = b.title || '';
   document.getElementById('edit-author').value = b.author || '';
   const artistEl = document.getElementById('edit-artist');
@@ -39,6 +54,20 @@ function openEditFromModal() {
   } else {
     img.style.display = 'none'; ph.style.display = 'flex';
   }
+
+  // Show/hide fields based on whether this is a wishlist item
+  const isWishlist = b.sold === 'Wishlist';
+  const libOnlyIds = ['editYearField','editIsbnField','editConditionDivider','editConditionSection','editPurchasePriceField','editLocationField','editCollectorNoteField'];
+  libOnlyIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isWishlist ? 'none' : '';
+  });
+  // In Print toggle: wishlist only
+  const ipRow = document.getElementById('editInPrintRow');
+  if (ipRow) ipRow.style.display = isWishlist ? '' : 'none';
+  S.editInPrint = undefined;
+  if (isWishlist) setEditInPrint(b.inPrint !== undefined ? b.inPrint : null);
+  document.getElementById('editModalTitle').textContent = isWishlist ? 'Edit Wishlist — ' + b.title : 'Edit — ' + b.title;
 
   closeModal();
   document.getElementById('editModalOverlay').classList.remove('hidden');
@@ -82,6 +111,13 @@ async function saveEdit() {
   const btn = document.getElementById('editSaveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
 
+  const _rawNotes   = document.getElementById('edit-notes').value.trim();
+  const _editInPrint = S.editInPrint !== undefined ? S.editInPrint : (b.inPrint !== undefined ? b.inPrint : null);
+  // For wishlist items, encode In Print status into the notes field (no dedicated DB column)
+  const _savedNotes = (b.sold === 'Wishlist')
+    ? buildNotesWithInPrint(_rawNotes, _editInPrint)
+    : _rawNotes;
+
   const updatedFields = {
     title:          document.getElementById('edit-title').value.trim(),
     author:         document.getElementById('edit-author').value.trim(),
@@ -93,7 +129,7 @@ async function saveEdit() {
     condition:      S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
     market_price:   parseFloat(document.getElementById('edit-price').value) || null,
     purchase_price: parseFloat(document.getElementById('edit-cost').value) || null,
-    notes:          document.getElementById('edit-notes').value.trim(),
+    notes:          _savedNotes,
     cover_url:      S.editCoverUrl || b.coverUrl || '',
     condition_flags:(S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
     collectors_note:(document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
@@ -104,8 +140,8 @@ async function saveEdit() {
   const { error } = await _supa.from('books').update(updatedFields).eq('id', b._id);
   if (error) { showToast('Update failed: ' + error.message, 'error'); btn.disabled=false; btn.textContent='Save Changes'; return; }
 
-  // Update local cache
-  S.books[idx] = { ...b, title:updatedFields.title, author:updatedFields.author, artist:updatedFields.artist_subject, edition:updatedFields.edition, year:updatedFields.year, publisher:updatedFields.publisher, isbn:updatedFields.isbn, condition:updatedFields.condition, price:updatedFields.market_price!=null?String(updatedFields.market_price):'', cost:updatedFields.purchase_price!=null?String(updatedFields.purchase_price):'', notes:updatedFields.notes, coverUrl:updatedFields.cover_url, rawCover:updatedFields.cover_url, flags:updatedFields.condition_flags, collectorNote:updatedFields.collectors_note, location:updatedFields.where_acquired };
+  // Update local cache — store clean notes (no IP tag) so UI always shows readable text
+  S.books[idx] = { ...b, title:updatedFields.title, author:updatedFields.author, artist:updatedFields.artist_subject, edition:updatedFields.edition, year:updatedFields.year, publisher:updatedFields.publisher, isbn:updatedFields.isbn, condition:updatedFields.condition, price:updatedFields.market_price!=null?String(updatedFields.market_price):'', cost:updatedFields.purchase_price!=null?String(updatedFields.purchase_price):'', notes:_rawNotes, coverUrl:updatedFields.cover_url, rawCover:updatedFields.cover_url, flags:updatedFields.condition_flags, collectorNote:updatedFields.collectors_note, location:updatedFields.where_acquired, inPrint:_editInPrint };
   renderCatalog();
   _editDirty = false;
   showToast('✓ Book updated', 'success', 3000);

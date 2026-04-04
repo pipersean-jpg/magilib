@@ -232,28 +232,47 @@ function saveSettings(){
   if(cl) cl.textContent = s.currency || 'AUD';
 }
 function showView(v){
+  // Safety lock: block leaving Add tab if queue or key fields have content
+  if(v!=='entry'){
+    const entryActive=document.getElementById('view-entry');
+    if(entryActive&&entryActive.classList.contains('active')){
+      const titleVal=(document.getElementById('f-title')||{value:''}).value.trim();
+      const authorVal=(document.getElementById('f-author')||{value:''}).value.trim();
+      if(photoQueue.length>0||titleVal||authorVal){
+        showToast('Save or clear the form before switching tabs.','error',4000);
+        return;
+      }
+    }
+  }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  const tabs={entry:0,catalog:1,settings:2,wishlist:3};
+  const tabs={entry:0,catalog:1,wishlist:2,settings:3};
   document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
+  const catH2=document.querySelector('.catalog-header h2');
   if(v==='wishlist'){
     document.getElementById('view-catalog').classList.add('active');
     S.showWishlist=true; S.showSold=false; S.showDrafts=false;
-    const wc=document.getElementById('showWishlistChip');
     const sc=document.getElementById('showSoldChip');
     const dc=document.getElementById('showDraftsChip');
-    if(wc){wc.classList.add('active');wc.style.background='#185fa5';wc.style.color='white';}
-    if(sc){sc.classList.remove('active');sc.style.background='transparent';sc.style.color='#a32d2d';}
-    if(dc){dc.classList.remove('active');dc.style.background='transparent';dc.style.color='#5f5e5a';}
+    const qa=document.getElementById('wishlistQuickAdd');
+    if(sc){sc.style.display='none';}
+    if(dc){dc.style.display='none';}
+    if(qa){qa.style.display='block';}
+    if(catH2){catH2.textContent='Wishlist';}
     loadCatalog();
   } else {
     document.getElementById('view-'+v).classList.add('active');
-    // Leaving wishlist: reset the flag and chip
+    // Leaving wishlist: restore chips and hide quick-add
     if(S.showWishlist){
       S.showWishlist=false;
-      const wc=document.getElementById('showWishlistChip');
-      if(wc){wc.classList.remove('active');wc.style.background='transparent';wc.style.color='#185fa5';}
+      const sc=document.getElementById('showSoldChip');
+      const dc=document.getElementById('showDraftsChip');
+      const qa=document.getElementById('wishlistQuickAdd');
+      if(sc){sc.style.display='';}
+      if(dc){dc.style.display='';}
+      if(qa){qa.style.display='none';}
     }
+    if(catH2&&v==='catalog'){catH2.textContent='Library';}
     if(v==='catalog')loadCatalog();
     if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
   }
@@ -385,6 +404,10 @@ function applyManualUrl(){
   if(urlArea)urlArea.style.display='none';
 }
 function buildEbayUrl(title,author){const siteMap={EBAY_AU:'ebay.com.au',EBAY_US:'ebay.com',EBAY_GB:'ebay.co.uk'};const domain=siteMap[S.settings.marketplace||'EBAY_AU']||'ebay.com.au';return`https://www.${domain}/sch/i.html?_nkw=${encodeURIComponent(title+' '+author+' magic')}&LH_Sold=1&LH_Complete=1`;}
+function buildWishlistEbayUrl(title, author) {
+  const q = encodeURIComponent(title + (author ? ' ' + author : '') + ' book');
+  return 'https://www.ebay.com/sch/i.html?_nkw=' + q + '&_sacat=0&_stpos=4123&_fcid=15';
+}
 function openDealerSearch(dealer, e) {
   if (e) e.preventDefault();
   const title  = document.getElementById('f-title').value.trim();
@@ -420,6 +443,22 @@ function openEbay(e){
 // Apps Script URL is now configurable in Settings
 function getScriptUrl(){ return ''; } // Legacy stub — no longer used
 
+// ── IN PRINT ↔ NOTES ENCODING ──
+// Persists "In Print" status as a trailing line in the notes field.
+// Format appended: "\nIn Print: Yes"  or  "\nIn Print: No"
+function parseInPrintFromNotes(raw) {
+  if (!raw) return { notes: '', inPrint: null };
+  const m = raw.match(/\nIn Print: (Yes|No)\s*$/i);
+  if (!m) return { notes: raw.trim(), inPrint: null };
+  return { notes: raw.slice(0, raw.length - m[0].length).trim(), inPrint: m[1].toLowerCase() === 'yes' };
+}
+function buildNotesWithInPrint(notes, inPrint) {
+  const base = (notes || '').trim();
+  if (inPrint === null || inPrint === undefined) return base;
+  const tag = '\nIn Print: ' + (inPrint ? 'Yes' : 'No');
+  return base ? base + tag : tag.trim();
+}
+
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
   initScrollTopBtn();
@@ -428,29 +467,33 @@ async function loadCatalog(){
   try{
     const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
     if (error) throw error;
-    S.books = (data || []).map(row => ({
-      _id: row.id,
-      title: row.title || '',
-      author: row.author || '',
-      artist: row.artist_subject || '',
-      edition: row.edition || '',
-      year: row.year || '',
-      publisher: row.publisher || '',
-      isbn: row.isbn || '',
-      condition: row.condition || '',
-      price: row.market_price != null ? String(row.market_price) : '',
-      cost: row.purchase_price != null ? String(row.purchase_price) : '',
-      notes: row.notes || '',
-      coverUrl: row.cover_url || '',
-      rawCover: row.cover_url || '',
-      dateAdded: row.date_added || '',
-      flags: row.condition_flags || '',
-      sold: row.sold_status || '',
-      star: row.star_rating != null ? String(row.star_rating) : '',
-      collectorNote: row.collectors_note || '',
-      location: row.where_acquired || '',
-      draft: row.draft_status || '',
-    }));
+    S.books = (data || []).map(row => {
+      const { notes, inPrint } = parseInPrintFromNotes(row.notes || '');
+      return {
+        _id: row.id,
+        title: row.title || '',
+        author: row.author || '',
+        artist: row.artist_subject || '',
+        edition: row.edition || '',
+        year: row.year || '',
+        publisher: row.publisher || '',
+        isbn: row.isbn || '',
+        condition: row.condition || '',
+        price: row.market_price != null ? String(row.market_price) : '',
+        cost: row.purchase_price != null ? String(row.purchase_price) : '',
+        notes,
+        coverUrl: row.cover_url || '',
+        rawCover: row.cover_url || '',
+        dateAdded: row.date_added || '',
+        flags: row.condition_flags || '',
+        sold: row.sold_status || '',
+        star: row.star_rating != null ? String(row.star_rating) : '',
+        collectorNote: row.collectors_note || '',
+        location: row.where_acquired || '',
+        draft: row.draft_status || '',
+        inPrint,
+      };
+    });
     renderCatalog();
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
@@ -509,7 +552,7 @@ function renderStatsRow() {
   const cards = [
     show.total ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Wishlist':'Total books')+'</div><div class="stat-val" id="statTotal">—</div></div>' : '',
     show.value ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Market value':'Total value')+'</div><div class="stat-val" id="statValue">—</div></div>' : '',
-    show.avg   ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
+    (show.avg && !isWL) ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
     show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>' : '',
   ].filter(Boolean).join('');
   const row = document.getElementById('statsRow');
@@ -560,23 +603,54 @@ function renderStatsRow() {
     return active.sort((a,b2) => condOrder.indexOf(a.condition) - condOrder.indexOf(b2.condition))[0];
   };
 
+  // Build set + cover map from active library books for duplicate detection and cover inheritance
+  let libraryTitleSet = null;
+  let libraryTitleCoverMap = null;
+  if (S.showWishlist) {
+    libraryTitleSet = new Set();
+    libraryTitleCoverMap = new Map();
+    S.books.forEach(lb => {
+      if (lb.sold === 'Wishlist' || lb.sold === 'Sold' || lb.draft === 'Draft') return;
+      const nt = normTitle(lb.title);
+      libraryTitleSet.add(nt);
+      if (lb.coverUrl && lb.coverUrl !== '__local__' && !libraryTitleCoverMap.has(nt)) {
+        libraryTitleCoverMap.set(nt, lb.coverUrl);
+      }
+    });
+  }
+
   grid.innerHTML = [...groupMap.values()].map(copies => {
     const b = repCopy(copies);
     const idx = S.books.indexOf(b);
-    const hasCover = b.coverUrl && b.coverUrl !== '__local__';
     const isSold = b.sold === 'Sold';
     const count = badgeCount(copies);
     const totalCopies = copies.length;
     const isGrouped = totalCopies > 1;
+    const inLibrary = libraryTitleSet && !isGrouped && b.sold === 'Wishlist' && libraryTitleSet.has(normTitle(b.title));
+
+    // Inherit cover from library match when wishlist card has none
+    const ownCover = b.coverUrl && b.coverUrl !== '__local__' ? b.coverUrl : '';
+    const inheritedCover = (!ownCover && libraryTitleCoverMap && b.sold === 'Wishlist')
+      ? (libraryTitleCoverMap.get(normTitle(b.title)) || '')
+      : '';
+    const effectiveCover = ownCover || inheritedCover;
+    const hasCover = !!effectiveCover;
+
     const thumbHtml = hasCover
-      ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
+      ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
       : `<span>${b.coverUrl==='__local__'?'📷':'📖'}</span>`;
     const clickHandler = isGrouped
-      ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')` 
+      ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')`
       : `openModal(${idx})`;
+    // Adaptive duplicate badge: icon-only in card view, icon+text in list view
+    const dupBadge = inLibrary
+      ? (isListView
+          ? '<span style="display:inline-block;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:4px;white-space:nowrap;">⚠️ In Library</span>'
+          : '<span style="display:inline-block;font-size:11px;margin-left:3px;" title="Already in Library">⚠️</span>')
+      : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${b.coverUrl}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
@@ -587,7 +661,7 @@ function renderStatsRow() {
           <div class="book-author-text">${b.author}</div>
           <div style="font-size:9px;color:var(--ink-faint);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.publisher||''} ${b.year?'· '+b.year:''}</div>
         </div>
-        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}</div>
+        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}${dupBadge}</div>
         ${b.star&&parseInt(b.star)>0&&!isGrouped?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">★</span>`).join('')}</div>`:''}
       </div>
     </div>`;
@@ -659,42 +733,92 @@ function closeCopiesSheet(e) {
 function openModal(idx){
   S.currentModalIdx=idx;
   const b=S.books[idx];if(!b)return;
-  const sym=currSym();S.currentModalUrl=buildEbayUrl(b.title,b.author);
+  const isWishlist = b.sold === 'Wishlist';
+  const sym=currSym();
+  S.currentModalUrl = isWishlist
+    ? buildWishlistEbayUrl(b.title, b.author)
+    : buildEbayUrl(b.title, b.author);
   document.getElementById('modalTitle').textContent=b.title;
-  const modalCoverSrc = b.rawCover || b.coverUrl || '';
+
+  // For wishlist: find a matching active library record (normalised title compare)
+  const _normT = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
+  const libraryMatch = isWishlist
+    ? S.books.find(lb => lb.sold !== 'Wishlist' && lb.sold !== 'Sold' && lb.draft !== 'Draft' && _normT(lb.title) === _normT(b.title))
+    : null;
+
+  // Inherit cover from matching library record if wishlist item has none
+  const ownCover = b.rawCover || b.coverUrl || '';
+  const modalCoverSrc = ownCover || (libraryMatch ? libraryMatch.rawCover || libraryMatch.coverUrl || '' : '');
+
+  // In Print label (uses DB column in_print if it exists)
+  const inPrintLabel = b.inPrint === true ? 'Yes' : b.inPrint === false ? 'No' : '—';
+  // Google search URL for fallback prompt
+  const _gq = encodeURIComponent(b.title + (b.author ? ' ' + b.author : '') + ' book');
+  const googleUrl = 'https://www.google.com/search?q=' + _gq;
+
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
+      ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid #D97706;background:rgba(251,191,36,0.07);border-radius:0 6px 6px 0;"><span style="font-size:14px;flex-shrink:0;">⚠️</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#92400E;letter-spacing:0.02em;">Already in your library</span></div>` : ''}
       <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);align-self:center;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
         `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
       </div>
       <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);text-align:center;line-height:1.35;margin-bottom:5px;padding:0 4px;">${b.title}</div>
-      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:10px;">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
+      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:${isWishlist?'6px':'10px'};">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
+      ${isWishlist?`<div style="font-size:12px;color:var(--ink-faint);text-align:center;margin-bottom:10px;">In Print: <strong style="color:var(--ink);">${inPrintLabel}</strong></div>`:''}
       <div style="display:flex;align-items:center;gap:10px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
         ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0.03em;">${b.condition}</span>`:''}
         ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
       </div>
       ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.5;">${b.flags}</div>`:''}
-      <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;">
-        <span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span>
-        <div id="modalStarRow" class="star-row" style="margin-top:0;"></div>
-      </div>
+      ${!isWishlist?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;"><span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span><div id="modalStarRow" class="star-row" style="margin-top:0;"></div></div>`:''}
     </div>
     <div style="width:100%;border-top:0.5px solid var(--border);margin-top:14px;display:grid;grid-template-columns:1fr 1fr;">
       ${b.publisher?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
       ${b.year?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Published</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
-      ${b.dateAdded?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
+      ${b.dateAdded&&!isWishlist?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
       ${b.location?`<div style="padding:14px 20px;text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
     </div>
     ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
+    ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button onclick="window.open('${googleUrl}','_blank','noopener')" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
 `;
-  // Set sold/wishlist button labels
-  const soldBtn = document.getElementById('modalSoldBtn');
-  if (soldBtn) soldBtn.textContent = (b.sold === 'Sold') ? 'Return to Library' : 'Mark Sold';
-  const wishBtn = document.getElementById('modalWishlistBtn');
-  if (wishBtn) wishBtn.textContent = (b.sold === 'Wishlist') ? 'In Wishlist ✓' : '+ Wishlist';
-  // Render star rating
-  renderModalStars(b);
+  // Rewrite action buttons based on wishlist vs library
+  const actionsArea = document.getElementById('modalActionsArea');
+  if (actionsArea) {
+    const ebayIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+    if (isWishlist) {
+      actionsArea.innerHTML =
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
+          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} Check eBay</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>`;
+    } else {
+      actionsArea.innerHTML =
+        `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
+          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} eBay</button>
+          <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+          <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>`;
+    }
+  }
+  // Set sold/wishlist button labels (only present for library items)
+  if (!isWishlist) {
+    const soldBtn = document.getElementById('modalSoldBtn');
+    if (soldBtn) soldBtn.textContent = (b.sold === 'Sold') ? 'Return to Library' : 'Mark Sold';
+    const wishBtn = document.getElementById('modalWishlistBtn');
+    if (wishBtn) wishBtn.textContent = (b.sold === 'Wishlist') ? 'In Wishlist ✓' : '+ Wishlist';
+  }
+  // Render star rating only for non-wishlist items
+  if (!isWishlist) renderModalStars(b);
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
   document.getElementById('modalOverlay').classList.remove('hidden');

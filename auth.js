@@ -11,6 +11,56 @@ function authSwitchMode() {
     ? 'Already have an account? <a onclick="authSwitchMode()">Sign in</a>'
     : "Don't have an account? <a onclick='authSwitchMode()'>Create one</a>";
   document.getElementById('authError').classList.remove('show');
+  document.getElementById('authSuccess').classList.remove('show');
+  const forgotLink = document.getElementById('authForgotLink');
+  if (forgotLink) forgotLink.style.display = isSignup ? 'none' : '';
+}
+
+async function saveNewPassword() {
+  const pw = document.getElementById('resetPassword').value;
+  const statusEl = document.getElementById('resetStatus');
+  statusEl.style.color = '#b91c1c';
+  statusEl.textContent = '';
+  if (!pw || pw.length < 6) { statusEl.textContent = 'Password must be at least 6 characters.'; return; }
+  const btn = document.getElementById('resetPasswordBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const { error } = await _supa.auth.updateUser({ password: pw });
+  btn.disabled = false; btn.textContent = 'Save Password';
+  if (error) { statusEl.textContent = error.message || 'Could not update password.'; return; }
+  statusEl.style.color = '#166534';
+  statusEl.textContent = 'Password updated! Taking you to your library…';
+  setTimeout(() => {
+    document.getElementById('reset-password-form').style.display = 'none';
+    showView('entry');
+  }, 1800);
+}
+
+async function changePasswordFromSettings(btn) {
+  const pw = document.getElementById('s-new-password').value;
+  const statusEl = document.getElementById('s-password-status');
+  statusEl.style.color = '#b91c1c';
+  statusEl.textContent = '';
+  if (!pw || pw.length < 6) { statusEl.textContent = 'Password must be at least 6 characters.'; return; }
+  btn.disabled = true; btn.textContent = 'Updating…';
+  const { error } = await _supa.auth.updateUser({ password: pw });
+  btn.disabled = false; btn.textContent = 'Update Password';
+  if (error) { statusEl.textContent = error.message || 'Could not update password.'; return; }
+  statusEl.style.color = '#166534';
+  statusEl.textContent = 'Password updated!';
+  document.getElementById('s-new-password').value = '';
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
+}
+
+async function forgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const successEl = document.getElementById('authSuccess');
+  successEl.classList.remove('show');
+  document.getElementById('authError').classList.remove('show');
+  if (!email) { showAuthError('Enter your email address above first.'); return; }
+  const { error } = await _supa.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  if (error) { showAuthError(error.message || 'Could not send reset email.'); return; }
+  successEl.textContent = 'Check your email for a password reset link.';
+  successEl.classList.add('show');
 }
 
 function showAuthError(msg) {
@@ -101,6 +151,9 @@ async function signOut() {
   document.getElementById('authUsernameField').style.display = 'none';
   document.getElementById('authSubmitBtn').textContent = 'Sign In';
   document.getElementById('authToggle').innerHTML = "Don't have an account? <a onclick='authSwitchMode()'>Create one</a>";
+  document.getElementById('authSuccess').classList.remove('show');
+  const forgotLink = document.getElementById('authForgotLink');
+  if (forgotLink) forgotLink.style.display = '';
   closeUserMenu();
 }
 function confirmSignOut() { if (confirm('Sign out of MagiLib?')) signOut(); }
