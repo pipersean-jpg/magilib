@@ -18,6 +18,7 @@
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -311,7 +312,15 @@ input[type=file].file-input{display:none;}
 .user-dropdown-item:hover{background:var(--paper-warm);}
 .user-dropdown-item.danger{color:#b91c1c;}
 .user-dropdown-divider{height:0.5px;background:var(--border);margin:4px 0;}
-</style>
+/* The Ink-faint Effect */
+#booksGrid {
+  transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
+}
+
+#booksGrid.ink-faint {
+  opacity: 0.2;
+  filter: blur(4px);
+  transition: none; /* Make it vanish instantly when typing */</style>
 </head>
 <body>
 

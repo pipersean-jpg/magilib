@@ -1,3 +1,9 @@
+I am Sean. We are working on MagiLib. 
+
+I am pasting my current project state (CLAUDE.md) below so you have full context immediately. 
+Please read the 'Next Actions' section and let me know when you're ready to start.
+
+--- CLAUDE.MD CONTENT START ---
 # MagiLib Project Status - 2026-04-05
 
 ## Current Project Status
@@ -20,3 +26,4 @@
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
 - **Styling:** Flexbox-first, mobile-responsive.
 - **Workflow:** Run `handoff` at end of session; `newchat` at start.
+--- CLAUDE.MD CONTENT END ---
