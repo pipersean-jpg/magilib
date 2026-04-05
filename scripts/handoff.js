@@ -30,17 +30,17 @@ exec(gitCommand, (gitErr) => {
         }
         console.log("✅ Notion Hub Updated.");
 
-        // 3. PREPARE THE BRAIN DUMP
+        // 3. PREPARE THE BRAIN DUMP (Now with the prompt fix!)
         const claudeContent = fs.readFileSync(claudePath, 'utf8');
         const masterPrompt = `
 I am Sean. We are working on MagiLib. 
-Below is the full content of my CLAUDE.md for context.
+
+I am pasting my current project state (CLAUDE.md) below so you have full context immediately. 
+Please read the 'Next Actions' section and let me know when you're ready to start.
 
 --- CLAUDE.MD CONTENT START ---
 ${claudeContent}
 --- CLAUDE.MD CONTENT END ---
-
-The code is backed up to GitHub. Read the 'Next Actions' and let's go.
 `.trim();
 
         // Save to file for 'newchat' to find tomorrow
