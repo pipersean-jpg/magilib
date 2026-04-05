@@ -1,0 +1,15 @@
+{
+  "name": "magilib-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "sync-notion": "node sync-to-notion.js",
+    "sync-claude": "node sync-claude-to-notion.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.3.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^16.6.1"
+  }
+}
