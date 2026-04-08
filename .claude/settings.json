@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Read(//Users/seanpiper/Documents/ClaudeUsageWidget/**)",
+      "Bash(xcodebuild -project ~/Documents/ClaudeUsageWidget/ClaudeUsageWidget.xcodeproj -scheme ClaudeUsageWidget -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build)",
+      "Read(//Applications/**)",
+      "Bash(xcode-select -p)",
+      "Bash(curl -s https://raw.githubusercontent.com/romeobalta/claude-radar/main/README.md)",
+      "Bash(curl -s \"https://api.github.com/repos/romeobalta/claude-radar\")",
+      "WebSearch",
+      "Bash(curl -s https://api.github.com/repos/rjwalters/claude-monitor)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s https://raw.githubusercontent.com/rjwalters/claude-monitor/main/README.md)",
+      "Bash(curl -s https://api.github.com/repos/rjwalters/claude-monitor/contents)",
+      "Bash(curl -s \"https://api.github.com/repos/rjwalters/claude-monitor/contents/menubar-app\")",
+      "Bash(curl -s \"https://api.github.com/repos/rjwalters/claude-monitor/contents/menubar-app/ClaudeMonitor\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/rjwalters/claude-monitor/main/menubar-app/ClaudeMonitor/Package.swift\")",
+      "Bash(curl -s \"https://api.github.com/repos/rjwalters/claude-monitor/contents/menubar-app/ClaudeMonitor/Package.swift\")",
+      "Bash(python3 -c \"import sys,json,base64; d=json.load\\(sys.stdin\\); print\\(base64.b64decode\\(d['content']\\).decode\\(\\)\\)\")",
+      "Bash(curl -sL https://www.claudeusagebar.com/)",
+      "Bash(curl -s \"https://api.github.com/repos/Artzainnn/ClaudeUsageBar/releases/latest\")",
+      "Bash(curl -L \"https://github.com/Artzainnn/ClaudeUsageBar/releases/download/v1.0.0/ClaudeUsageBar-Installer.dmg\" -o ~/Downloads/ClaudeUsageBar-Installer.dmg)",
+      "Bash(hdiutil attach:*)",
+      "Read(//Volumes/ClaudeUsageBar/**)",
+      "Bash(ditto /Volumes/ClaudeUsageBar/ClaudeUsageBar.app /Applications/ClaudeUsageBar.app)",
+      "Bash(hdiutil detach:*)",
+      "Bash(open /Applications/ClaudeUsageBar.app)",
+      "Bash(security find-generic-password:*)",
+      "Read(//Users/seanpiper/.claude/**)",
+      "Read(//Users/seanpiper/.config/claude/**)",
+      "Read(//Users/seanpiper/.config/**)",
+      "Bash(security dump-keychain:*)",
+      "Bash(curl -s \"https://api.github.com/repos/Artzainnn/ClaudeUsageBar/contents\")",
+      "Bash(curl -s \"https://api.github.com/repos/Artzainnn/ClaudeUsageBar/contents/app\")",
+      "Bash(curl -s \"https://api.github.com/repos/Artzainnn/ClaudeUsageBar/contents/app/ClaudeUsageBar.swift\")",
+      "Bash(defaults read:*)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print CFBundleIdentifier\" /Applications/ClaudeUsageBar.app/Contents/Info.plist)",
+      "Bash(python3 -)",
+      "Bash(node scripts/handoff.js)"
+    ],
+    "additionalDirectories": [
+      "/Applications/ClaudeUsageBar.app"
+    ]
+  }
+}

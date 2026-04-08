@@ -503,11 +503,23 @@ async function loadCatalog(){
 }
 function renderCatalog(){
   renderStatsRow();
-  const search=(document.getElementById('catalogSearch').value||'').toLowerCase();
+  const search=(document.getElementById('catalogSearch').value||'').trim();
   const cond=S.filterCondition||'all';
   const pub=(document.getElementById('filterPublisher')||{}).value||'';
+
+  // Fuzzy search via Fuse.js (if loaded and query present)
+  let fuzzyMatched = null;
+  if(search && typeof Fuse !== 'undefined'){
+    const fuse = new Fuse(S.books, {
+      keys: ['title','author','publisher','year'],
+      threshold: 0.3,
+      ignoreLocation: true,
+    });
+    fuzzyMatched = new Set(fuse.search(search).map(r => r.item));
+  }
+
   let books=S.books.filter(b=>{
-    const ms=!search||(b.title.toLowerCase().includes(search)||b.author.toLowerCase().includes(search)||(b.publisher||'').toLowerCase().includes(search)||(b.year||'').includes(search));
+    const ms=!search||(fuzzyMatched ? fuzzyMatched.has(b) : b.title.toLowerCase().includes(search.toLowerCase())||b.author.toLowerCase().includes(search.toLowerCase())||(b.publisher||'').toLowerCase().includes(search.toLowerCase())||(b.year||'').includes(search));
     const mc=cond==='all'||b.condition===cond;
     const mp=!pub||b.publisher===pub;
     if(S.showWishlist) return ms&&mc&&mp&&b.sold==='Wishlist';
@@ -571,7 +583,7 @@ function renderStatsRow() {
   }
   const condClasses={'Fine':'cond-fine','Very Good':'cond-vg','Good':'cond-good','Fair':'cond-fair'};
   const grid=document.getElementById('booksGrid');
-  if(!books.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><p>No books match your filters.</p></div>';return;}
+  if(!books.length){grid.innerHTML='<div class="empty-search-container"><div class="empty-icon">📚</div><p>'+(search?'No results for \u201c'+search+'\u201d':'No books match your filters.')+'</p></div>';return;}
   const isListView = S.viewMode === 'list';
   const gridEl = document.getElementById('booksGrid');
   gridEl.parentElement.classList.toggle('list-view', isListView);
@@ -759,25 +771,26 @@ function openModal(idx){
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
       ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid #D97706;background:rgba(251,191,36,0.07);border-radius:0 6px 6px 0;"><span style="font-size:14px;flex-shrink:0;">⚠️</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#92400E;letter-spacing:0.02em;">Already in your library</span></div>` : ''}
-      <div class="modal-cover" style="width:140px;height:185px;cursor:${modalCoverSrc?'zoom-in':'default'};margin-bottom:14px;border-radius:8px;overflow:hidden;border:0.5px solid var(--border);flex-shrink:0;background:var(--paper-warm);align-self:center;" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
-        ${modalCoverSrc?`<img src="${modalCoverSrc}" alt="${b.title}" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`:
-        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;">📖</div>`}
+      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
+        ${modalCoverSrc
+          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${b.title}" onerror="this.style.display='none'">`
+          : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;background:var(--paper-warm);border-radius:6px;">📖</div>`}
       </div>
-      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);text-align:center;line-height:1.35;margin-bottom:5px;padding:0 4px;">${b.title}</div>
-      <div style="font-size:13px;color:var(--ink-light);text-align:center;margin-bottom:${isWishlist?'6px':'10px'};">${b.author||''}${b.artist?` · <span style="color:var(--ink-faint)">${b.artist}</span>`:''}</div>
-      ${isWishlist?`<div style="font-size:12px;color:var(--ink-faint);text-align:center;margin-bottom:10px;">In Print: <strong style="color:var(--ink);">${inPrintLabel}</strong></div>`:''}
-      <div style="display:flex;align-items:center;gap:10px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
-        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0.03em;">${b.condition}</span>`:''}
-        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
+      <div class="ms-title">${b.title}</div>
+      <div class="ms-subtitle" style="margin-bottom:${isWishlist?'6px':'10px'};">${[b.author, b.artist].filter(Boolean).join(' · ')}</div>
+      ${isWishlist?`<div class="ms-subtitle" style="margin-bottom:10px;">In Print: <strong style="color:var(--ink);">${inPrintLabel}</strong></div>`:''}
+      <div style="display:flex;align-items:center;gap:8px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
+        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;letter-spacing:0.02em;">${b.condition}</span>`:''}
+        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="background:var(--paper-warm);color:var(--ink);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;border:0.5px solid var(--border-med);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
       </div>
       ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.5;">${b.flags}</div>`:''}
       ${!isWishlist?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;"><span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span><div id="modalStarRow" class="star-row" style="margin-top:0;"></div></div>`:''}
     </div>
-    <div style="width:100%;border-top:0.5px solid var(--border);margin-top:14px;display:grid;grid-template-columns:1fr 1fr;">
-      ${b.publisher?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Publisher</div><div style="font-size:13px;color:var(--ink);line-height:1.4;">${b.publisher}</div></div>`:''}
-      ${b.year?`<div style="padding:14px 20px;text-align:center;border-bottom:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Published</div><div style="font-size:13px;color:var(--ink);">${b.year}</div></div>`:''}
-      ${b.dateAdded&&!isWishlist?`<div style="padding:14px 20px;text-align:center;border-right:0.5px solid var(--border);"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Added</div><div style="font-size:13px;color:var(--ink);">${b.dateAdded}</div></div>`:''}
-      ${b.location?`<div style="padding:14px 20px;text-align:center;"><div style="font-size:9px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Acquired</div><div style="font-size:13px;color:var(--ink);">${b.location}</div></div>`:''}
+    <div class="ms-metadata-row">
+      ${b.publisher?`<div class="ms-metadata-item"><span class="ms-label">Publisher</span><span class="ms-value">${b.publisher}</span></div>`:''}
+      ${b.year?`<div class="ms-metadata-item"><span class="ms-label">Year</span><span class="ms-value">${b.year}</span></div>`:''}
+      ${b.dateAdded&&!isWishlist?`<div class="ms-metadata-item"><span class="ms-label">Added</span><span class="ms-value">${b.dateAdded}</span></div>`:''}
+      ${b.location?`<div class="ms-metadata-item"><span class="ms-label">Acquired</span><span class="ms-value">${b.location}</span></div>`:''}
     </div>
     ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
     ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button onclick="window.open('${googleUrl}','_blank','noopener')" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
@@ -788,25 +801,25 @@ function openModal(idx){
     const ebayIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
     if (isWishlist) {
       actionsArea.innerHTML =
-        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
           <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
           <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} Check eBay</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
-          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        <div style="text-align:center;">
+          <button onclick="confirmDelete()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:#a32d2d;cursor:pointer;padding:4px 8px;opacity:0.8;">Delete Book</button>
         </div>`;
     } else {
       actionsArea.innerHTML =
-        `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
           <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
           <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} eBay</button>
-          <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-          <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
-          <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
-          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()" style="background:transparent;border:0.5px solid var(--border-med);color:var(--ink-light);">Mark Sold</button>
+          <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()" style="background:transparent;border:0.5px solid var(--border-med);color:var(--ink-light);">+ Wishlist</button>
+        </div>
+        <div style="text-align:center;">
+          <button onclick="confirmDelete()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:#a32d2d;cursor:pointer;padding:4px 8px;opacity:0.8;">Delete Book</button>
         </div>`;
     }
   }
@@ -821,7 +834,7 @@ function openModal(idx){
   if (!isWishlist) renderModalStars(b);
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
-  document.getElementById('modalOverlay').classList.remove('hidden');
+  document.getElementById('modalOverlay').classList.add('is-active');
 }
 function openEbayModal(){
   // Use location.href on mobile to avoid white-screen-on-back issue
@@ -829,7 +842,7 @@ function openEbayModal(){
   if (isMobile) { window.location.href = S.currentModalUrl; }
   else { window.open(S.currentModalUrl, '_blank'); }
 }
-function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target)document.getElementById('modalOverlay').classList.add('hidden');}
+function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target)document.getElementById('modalOverlay').classList.remove('is-active');}
 
 const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Éditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribner’s Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard Böttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones Marré", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Hermetic Press", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag Zürich", "JustJoshinMagic", "Jörg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & Schüppel, Leipzig", "Lesclapart", "Levy & Müller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - œ", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "Páginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf Braunmüller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk Zürich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van Büren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & Söhne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale München", "Zentralhaus für Kulturarbeit", "Édition Ch. Eggimann, Genève"];
 
@@ -1863,3 +1876,4 @@ setTimeout(function(){
 
 })();
 // ══ END BULK EDIT ══════════════════════════════════════════════
+
