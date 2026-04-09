@@ -1125,12 +1125,14 @@ async function bulkAutofill() {
 window.bulkAutofill = bulkAutofill;
 
 async function bulkPriceUpdate() {
+  showToast('DEBUG: bulkPriceUpdate called, size=' + S.selectedBooks.size, 'info', 4000);
   if (S.selectedBooks.size === 0) { showToast('No books selected', 'error'); return; }
   openPriceReviewSheet([...S.selectedBooks]);
 }
 window.bulkPriceUpdate = bulkPriceUpdate;
 
 function openPriceReviewSheet(ids) {
+  showToast('DEBUG: opening sheet, ids=' + ids.length, 'info', 4000);
   console.log('[PriceReview] ids received:', ids);
   // Inject shell into DOM on first use
   if (!document.getElementById('priceReviewOverlay')) {
