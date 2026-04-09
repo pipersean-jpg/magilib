@@ -60,9 +60,11 @@ async function main() {
   console.log('🔄 Syncing to Notion...');
   const { sections, completedTasks } = parseClaude();
 
-  // 1. Update the Text Page
+  // 1. Update the Text Page (chunk into batches of 100 — Notion API limit)
   const newBlocks = sections.flatMap(sectionToBlocks);
-  await notion.blocks.children.append({ block_id: NOTION_PAGE_ID, children: newBlocks });
+  for (let i = 0; i < newBlocks.length; i += 100) {
+    await notion.blocks.children.append({ block_id: NOTION_PAGE_ID, children: newBlocks.slice(i, i + 100) });
+  }
   console.log('✅ Page updated.');
 
   // 2. Update the Build Tracker Database
