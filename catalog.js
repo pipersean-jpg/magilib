@@ -1169,10 +1169,13 @@ function openPriceReviewSheet(ids) {
     <div>${rows}</div>
     <button onclick="applyManualPrices()" style="width:100%;margin-top:20px;padding:14px;background:var(--accent-mid);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;min-height:48px;">Apply Manual Prices</button>`;
 
-  document.getElementById('priceReviewOverlay').classList.add('is-active');
+  const ov = document.getElementById('priceReviewOverlay');
+  ov.classList.add('is-active');
+  ov.style.pointerEvents = 'none';
   document.body.classList.add('sheet-open');
   const bar = document.getElementById('batchActionsBar');
   if (bar) bar.classList.add('sheet-hidden');
+  setTimeout(() => { ov.style.pointerEvents = ''; }, 400);
 }
 window.openPriceReviewSheet = openPriceReviewSheet;
 
