@@ -37,7 +37,11 @@
       "Bash(defaults read:*)",
       "Bash(/usr/libexec/PlistBuddy -c \"Print CFBundleIdentifier\" /Applications/ClaudeUsageBar.app/Contents/Info.plist)",
       "Bash(python3 -)",
-      "Bash(node scripts/handoff.js)"
+      "Bash(node scripts/handoff.js)",
+      "Bash(pbcopy)",
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(python3 -m http.server 8000 --bind 0.0.0.0)",
+      "Bash(node ~/magilib/scripts/handoff.js)"
     ],
     "additionalDirectories": [
       "/Applications/ClaudeUsageBar.app"
