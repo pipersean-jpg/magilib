@@ -19,7 +19,7 @@
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/magilib.css">
+<link rel="stylesheet" href="assets/css/magilib.css">
 
 </head>
 <body>
@@ -93,16 +93,40 @@
     <button class="tab-btn active" onclick="showView('entry')">Add</button>
     <button class="tab-btn" onclick="showView('catalog')">Library</button>
     <button class="tab-btn" onclick="showView('wishlist')">Wishlist</button>
-    <button class="tab-btn" onclick="showView('settings')">Settings</button>
   </div>
-  <div style="position:relative;">
+  <div class="nav-right">
+    <div class="nav-actions-group">
+    <!-- Hamburger: mobile only -->
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleNavMenu()" aria-label="Navigation menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <!-- Avatar -->
     <button class="user-menu-btn" id="userMenuBtn" onclick="toggleUserMenu()" style="display:none;">?</button>
+    </div>
+    <div class="nav-menu" id="navMenu">
+      <div class="nav-menu-item" onclick="showView('entry');closeNavMenu();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </div>
+      <div class="nav-menu-item" onclick="showView('catalog');closeNavMenu();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Library
+      </div>
+      <div class="nav-menu-item" onclick="showView('wishlist');closeNavMenu();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Wishlist
+      </div>
+    </div>
     <div class="user-dropdown" id="userDropdown">
       <div class="user-dropdown-item" id="userMenuName" style="font-weight:600;cursor:default;color:var(--ink-light);font-size:12px;"></div>
       <div class="user-dropdown-divider"></div>
       <div class="user-dropdown-item" onclick="showView('settings');closeUserMenu();">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Account
+      </div>
+      <div class="user-dropdown-item" onclick="showView('settings');closeUserMenu();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
       </div>
       <div class="user-dropdown-divider"></div>
       <div class="user-dropdown-item" style="cursor:default;color:var(--ink-faint);font-size:11px;justify-content:center;padding:6px 12px;">
@@ -116,6 +140,7 @@
     </div>
   </div>
 </nav>
+
 
 <div id="view-entry" class="view active">
   <div class="camera-hero">
@@ -628,11 +653,11 @@
           </div>
           <div class="flags-grid" id="conditionFlags">
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Signed')">Signed</button>
-            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Inscribed to Owner')">Inscribed to Owner</button>
-            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Dustjacket Missing')">Dustjacket Missing</button>
+            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Inscribed')">Inscribed</button>
+            <button type="button" class="flag-btn" onclick="toggleFlag(this,'No Dustjacket')">No Dustjacket</button>
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Foxing')">Foxing</button>
-            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Water/Other Damage')">Water/Other Damage</button>
-            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Annotations/Highlighting')">Annotations/Highlighting</button>
+            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Other Damage')">Other Damage</button>
+            <button type="button" class="flag-btn" onclick="toggleFlag(this,'Written Notes')">Written Notes</button>
           </div>
         </div>
         <div class="field-row two">
@@ -649,7 +674,7 @@
         <div class="section-title">Notes</div>
         <div class="field">
           <label>Description / Notes</label>
-          <textarea id="f-notes" placeholder="Binding, provenance, inscriptions, dust jacket, foxing, any notable details…"></textarea>
+          <textarea id="f-notes" placeholder="Any notable details about condition or provenance"></textarea>
         </div>
         <div class="field" style="margin-top:12px;">
           <label>Collector's note <span style="font-size:9px;color:var(--ink-faint);font-weight:400;">(private)</span></label>
@@ -669,45 +694,25 @@
 </div>
 
 <div id="view-catalog" class="view">
-  <div class="catalog-header">
-    <h2>Library</h2>
-    <div class="search-bar">
-      <input type="text" id="catalogSearch" placeholder="Search…" oninput="filterCatalog()"/>
-      <span class="search-icon">⌕</span>
+  <div class="catalog-toolbar">
+    <!-- Row 1: Search (flex:1) | Button group [View Toggle + Refresh] -->
+    <div class="toolbar-row-1">
+      <div class="search-bar">
+        <input type="text" id="catalogSearch" placeholder="Search your library…" oninput="filterCatalog();catalogSearchInput(this)"/>
+        <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear search">✕</button>
+        <span class="search-icon" id="searchIcon">⌕</span>
+      </div>
+      <div class="toolbar-btn-group">
+        <button onclick="toggleView()" id="viewToggleBtn" class="view-toggle" title="Toggle grid/list view">⊞</button>
+        <button onclick="loadCatalog()" class="view-toggle" title="Refresh library"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg></button>
+      </div>
     </div>
-    <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="toggleView('grid')" id="viewGrid" class="btn-primary" style="font-size:16px;padding:8px 12px;" title="Grid view">⊞</button>
-      <button onclick="toggleView('list')" id="viewList" class="btn-secondary" style="font-size:16px;padding:8px 12px;" title="List view">☰</button>
-      <button class="btn-primary" onclick="loadCatalog()" style="font-size:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg> Refresh Library</button>
+    <!-- Row 2: Edit | Move | Filters (each flex:1) -->
+    <div class="toolbar-row-2">
+      <button onclick="toggleEditMode()" id="editModeBtn" class="toolbar-row-btn">✓ Edit</button>
+      <button onclick="toggleMoveMode()" id="moveModeBtn" class="toolbar-row-btn">Move</button>
+      <button id="filterMenuBtn" class="toolbar-row-btn" onclick="openFilterSheet()">⊿ Filters <span id="filterCount"></span></button>
     </div>
-  </div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--border);margin-bottom:16px;">
-    <select id="filterCondition" onchange="setConditionFilter(this.value)" style="padding:7px 10px;border:0.5px solid var(--border-med);border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);-webkit-appearance:none;appearance:none;outline:none;min-height:36px;padding-right:24px;">
-      <option value="all">All conditions</option>
-      <option value="Fine">Fine</option>
-      <option value="Very Good">Very Good</option>
-      <option value="Good">Good</option>
-      <option value="Fair">Fair</option>
-    </select>
-    <select id="filterSort" onchange="setSortFromSelect(this.value)" style="padding:7px 10px;border:0.5px solid var(--border-med);border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);-webkit-appearance:none;appearance:none;outline:none;min-height:36px;padding-right:24px;">
-      <option value="dateAdded-desc">Last Added</option>
-      <option value="dateAdded-asc">Date added ↑ (oldest)</option>
-      <option value="title-asc">Title A → Z</option>
-      <option value="title-desc">Title Z → A</option>
-      <option value="author-asc">Author A → Z</option>
-      <option value="price-desc">Price ↓ (highest)</option>
-      <option value="price-asc">Price ↑ (lowest)</option>
-      <option value="year-desc">Year ↓ (newest)</option>
-      <option value="year-asc">Year ↑ (oldest)</option>
-      <option value="star-desc">Rating ↓</option>
-    </select>
-    <select id="filterPublisher" onchange="filterCatalog()" style="padding:7px 10px;border:0.5px solid var(--border-med);border-radius:7px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);-webkit-appearance:none;appearance:none;outline:none;min-height:36px;padding-right:24px;max-width:150px;">
-      <option value="">All publishers</option>
-    </select>
-    <div style="width:0.5px;height:20px;background:var(--border-med);flex-shrink:0;"></div>
-    <button id="showSoldChip" onclick="toggleShowSold(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #f5b7b5;background:transparent;color:#791F1F;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Sold</button>
-<button id="showDraftsChip" onclick="toggleDrafts(this)" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid #d3d1c7;background:transparent;color:#444441;font-family:'DM Sans',sans-serif;min-height:36px;white-space:nowrap;">Drafts</button>
-    <button onclick="clearFilters()" class="btn-secondary" style="margin-left:auto;font-size:12px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;min-height:36px;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear Filters</button>
   </div>
   <div id="wishlistQuickAdd" style="display:none;background:var(--paper-card);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;">
     <div style="font-size:11px;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Quick Add to Wishlist</div>
@@ -738,7 +743,7 @@
       <button onclick="addWishlistItem()" style="margin-left:auto;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">+ Add</button>
     </div>
   </div>
-  <div class="stats-row" id="statsRow"></div>
+  <div class="insights-bar" id="statsRow"></div>
   <div id="booksGrid" class="books-grid"></div>
 </div>
 
@@ -1019,12 +1024,9 @@
 <div class="magi-sheet-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="magi-sheet">
     <div class="magi-sheet-handle"></div>
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Book Detail</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+    <button class="sheet-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body" id="modalBody"></div>
-    <div class="modal-actions" id="modalActionsArea" style="display:block;padding:12px 16px 16px;">
+    <div class="modal-actions magi-sheet-content" id="modalActionsArea" style="display:block;padding:12px 16px 0;">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
         <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
         <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> eBay</button>
@@ -1035,6 +1037,60 @@
         <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
         <button class="btn-secondary" onclick="closeModal()">Close</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Sheet -->
+<div class="magi-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet(event)">
+  <div class="magi-sheet" id="filterSheet">
+    <div class="magi-sheet-handle"></div>
+    <div style="padding:16px 20px 0;">
+      <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:16px;">Filters</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Sort</div>
+          <select id="filterSort" class="filter-select" style="width:100%;" onchange="setSortFromSelect(this.value)">
+            <option value="dateAdded-desc">Last Added</option>
+            <option value="dateAdded-asc">Date added ↑</option>
+            <option value="title-asc">Title A → Z</option>
+            <option value="title-desc">Title Z → A</option>
+            <option value="author-asc">Author A → Z</option>
+            <option value="price-desc">Price ↓</option>
+            <option value="price-asc">Price ↑</option>
+            <option value="year-desc">Year ↓</option>
+            <option value="year-asc">Year ↑</option>
+            <option value="star-desc">Rating ↓</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Condition</div>
+          <select id="filterCondition" class="filter-select" style="width:100%;" onchange="setConditionFilter(this.value)">
+            <option value="all">All conditions</option>
+            <option value="Fine">Fine</option>
+            <option value="Very Good">Very Good</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Publisher</div>
+          <select id="filterPublisher" class="filter-select" style="width:100%;" onchange="filterCatalog()">
+            <option value="">All publishers</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Show</div>
+          <div style="display:flex;gap:8px;">
+            <button id="showSoldChip" onclick="toggleShowSold(this)" class="filter-pill" style="border:0.5px solid #f5b7b5;color:#791F1F;">Sold</button>
+            <button id="showDraftsChip" onclick="toggleDrafts(this)" class="filter-pill" style="border:0.5px solid #d3d1c7;color:#444441;">Drafts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 20px;padding-bottom:max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+      <button id="filterApplyBtn" class="btn-primary" style="width:100%;" onclick="closeFilterSheet()">Show Books</button>
+      <button onclick="clearFilters()" class="btn-ghost" style="width:100%;">Clear Filters</button>
     </div>
   </div>
 </div>
@@ -1154,11 +1210,11 @@
         </div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;" id="editConditionFlags">
           <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Signed')">Signed</button>
-          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Inscribed to Owner')">Inscribed to Owner</button>
-          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Dustjacket Missing')">Dustjacket Missing</button>
+          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Inscribed')">Inscribed</button>
+          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'No Dustjacket')">No Dustjacket</button>
           <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Foxing')">Foxing</button>
-          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Water/Other Damage')">Water/Other Damage</button>
-          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Annotations/Highlighting')">Annotations/Highlighting</button>
+          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Other Damage')">Other Damage</button>
+          <button type="button" class="flag-btn" onclick="toggleEditFlag(this,'Written Notes')">Written Notes</button>
         </div>
         <input type="hidden" id="edit-condition"/>
       </div>
@@ -1313,5 +1369,11 @@
   </div>
   <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;">Tap anywhere to close</div>
 </div>
+<div id="batchActionsBar" class="batch-actions-bar">
+  <button id="batchCloseBtn" class="batch-close-btn" onclick="exitSelectMode()" title="Exit selection mode">×</button>
+  <span id="batchCount" class="batch-count">0 selected</span>
+  <div id="batchActionsStack" class="batch-actions-stack"></div>
+</div>
+<div id="dialogOverlay" class="magi-dialog-overlay" onclick="if(event.target === this) closeDialog()"></div>
 </body>
 </html>

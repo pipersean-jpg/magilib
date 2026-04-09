@@ -20,6 +20,14 @@ function openEditFromModal() {
   const idx = S.currentModalIdx;
   const b = S.books[idx];
   if (!b) return;
+  closeModal();
+  setTimeout(() => openEditForm(b._id), 350);
+}
+
+function openEditForm(bookId) {
+  const b = S.books.find(book => book._id === bookId);
+  if (!b) return;
+  const idx = S.books.indexOf(b);
   S.editRowNum = idx + 2; // +2 for header row and 0-index offset
   S.editCoverUrl = b.rawCover || b.coverUrl || '';
 
@@ -69,7 +77,6 @@ function openEditFromModal() {
   if (isWishlist) setEditInPrint(b.inPrint !== undefined ? b.inPrint : null);
   document.getElementById('editModalTitle').textContent = isWishlist ? 'Edit Wishlist — ' + b.title : 'Edit — ' + b.title;
 
-  closeModal();
   document.getElementById('editModalOverlay').classList.remove('hidden');
   // Scroll the modal's own content to top, not the page
   const editScroll = document.getElementById('editModalScroll');

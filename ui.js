@@ -583,14 +583,10 @@ function setSortFromSelect(val) {
 
 // ── VIEW MODE ──
 S.viewMode = 'grid';
-function toggleView(mode) {
-  S.viewMode = mode;
-  document.getElementById('viewGrid').className = mode==='grid'?'btn-primary':'btn-secondary';
-  document.getElementById('viewList').className = mode==='list'?'btn-primary':'btn-secondary';
-  document.getElementById('viewGrid').style.fontSize='16px';
-  document.getElementById('viewGrid').style.padding='8px 12px';
-  document.getElementById('viewList').style.fontSize='16px';
-  document.getElementById('viewList').style.padding='8px 12px';
+function toggleView() {
+  S.viewMode = S.viewMode === 'grid' ? 'list' : 'grid';
+  const btn = document.getElementById('viewToggleBtn');
+  if (btn) btn.textContent = S.viewMode === 'grid' ? '⊞' : '☰';
   renderCatalog();
 }
 
@@ -675,6 +671,10 @@ function updateSheetBadge() { /* Legacy stub — Google Sheets removed */ }
   document.querySelectorAll('.filter-chip').forEach(b => {
     if (b.textContent.trim() === 'Last Added') b.classList.add('active');
   });
+  const clearBtn = document.getElementById('searchClear');
+  const searchIcon = document.getElementById('searchIcon');
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (searchIcon) searchIcon.style.display = '';
   renderCatalog();
   showToast('Filters cleared', 'info', 1500);
 }

@@ -554,21 +554,26 @@ function renderCatalog(){
   const sym=currSym();
 function renderStatsRow() {
   const settings = S.settings || {};
-  const show = {
-    total: document.getElementById('s-stat-total') ? document.getElementById('s-stat-total').checked : (settings.statTotal !== false),
-    value: document.getElementById('s-stat-value') ? document.getElementById('s-stat-value').checked : (settings.statValue !== false),
-    avg:   document.getElementById('s-stat-avg')   ? document.getElementById('s-stat-avg').checked   : (settings.statAvg   !== false),
-    top:   document.getElementById('s-stat-top')   ? document.getElementById('s-stat-top').checked   : (settings.statTop   !== false),
+  const chk = id => {
+    const el = document.getElementById(id);
+    return el ? el.checked : true;
   };
-  const isWL=!!S.showWishlist;
-  const cards = [
-    show.total ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Wishlist':'Total books')+'</div><div class="stat-val" id="statTotal">—</div></div>' : '',
-    show.value ? '<div class="stat-card"><div class="stat-label">'+(isWL?'Market value':'Total value')+'</div><div class="stat-val" id="statValue">—</div></div>' : '',
-    (show.avg && !isWL) ? '<div class="stat-card"><div class="stat-label">Avg. price</div><div class="stat-val" id="statAvg">—</div></div>' : '',
-    show.top   ? '<div class="stat-card"><div class="stat-label">Highest</div><div class="stat-val" id="statTop">—</div></div>' : '',
-  ].filter(Boolean).join('');
+  const show = {
+    total: chk('s-stat-total') && settings.statTotal !== false,
+    value: chk('s-stat-value') && settings.statValue !== false,
+    avg:   chk('s-stat-avg')   && settings.statAvg   !== false,
+    top:   chk('s-stat-top')   && settings.statTop   !== false,
+  };
+  const isWL = !!S.showWishlist;
+  const parts = [
+    show.total ? `<span class="stat-item"><span id="statTotal">—</span> ${isWL ? 'wishlist' : 'books'}</span>` : '',
+    show.value ? `<span class="stat-item"><span id="statValue">—</span> total</span>` : '',
+    (show.avg && !isWL) ? `<span class="stat-item">avg <span id="statAvg">—</span></span>` : '',
+    show.top   ? `<span class="stat-item">top <span id="statTop">—</span></span>` : '',
+  ].filter(Boolean);
+  const sep = '<span class="insights-sep">·</span>';
   const row = document.getElementById('statsRow');
-  if (row) row.innerHTML = cards;
+  if (row) row.innerHTML = parts.join(sep);
 }
 
   document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='— / '+S.books.length));
@@ -583,7 +588,12 @@ function renderStatsRow() {
   }
   const condClasses={'Fine':'cond-fine','Very Good':'cond-vg','Good':'cond-good','Fair':'cond-fair'};
   const grid=document.getElementById('booksGrid');
-  if(!books.length){grid.innerHTML='<div class="empty-search-container"><div class="empty-icon">📚</div><p>'+(search?'No results for \u201c'+search+'\u201d':'No books match your filters.')+'</p></div>';return;}
+  if(!books.length){
+    const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
+    const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
+    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon">📚</div><p>${msg}</p>${clearBtn}</div>`;
+    return;
+  }
   const isListView = S.viewMode === 'list';
   const gridEl = document.getElementById('booksGrid');
   gridEl.parentElement.classList.toggle('list-view', isListView);
@@ -651,16 +661,19 @@ function renderStatsRow() {
     const thumbHtml = hasCover
       ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
       : `<span>${b.coverUrl==='__local__'?'📷':'📖'}</span>`;
-    const clickHandler = isGrouped
-      ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')`
-      : `openModal(${idx})`;
+    const clickHandler = S.selectMode
+      ? `toggleBookSelection('${b._id}')`
+      : isGrouped
+        ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')`
+        : `openModal(${idx})`;
+    const isSelected = S.selectMode && S.selectedBooks.has(b._id);
     // Adaptive duplicate badge: icon-only in card view, icon+text in list view
     const dupBadge = inLibrary
       ? (isListView
           ? '<span style="display:inline-block;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:4px;white-space:nowrap;">⚠️ In Library</span>'
           : '<span style="display:inline-block;font-size:11px;margin-left:3px;" title="Already in Library">⚠️</span>')
       : '';
-    return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}" onclick="${clickHandler}" style="position:relative;">
+    return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
         ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
@@ -678,8 +691,58 @@ function renderStatsRow() {
       </div>
     </div>`;
   }).join('');
+  updateFilterBtn();
 }
-function filterCatalog(){renderCatalog();}
+
+// ── FILTER SHEET ──────────────────────────────────────────────────
+function openFilterSheet() {
+  document.getElementById('filterSheetOverlay').classList.add('is-active');
+  document.body.classList.add('sheet-open');
+  updateFilterBtn();
+}
+function closeFilterSheet(e) {
+  if (!e || e.target === document.getElementById('filterSheetOverlay') || !e.target) {
+    document.getElementById('filterSheetOverlay').classList.remove('is-active');
+    document.body.classList.remove('sheet-open');
+  }
+}
+function updateFilterBtn() {
+  const count = document.querySelectorAll('#booksGrid .book-card').length;
+  const applyBtn = document.getElementById('filterApplyBtn');
+  if (applyBtn) applyBtn.textContent = `Show ${count} Book${count !== 1 ? 's' : ''}`;
+  let active = 0;
+  if ((S.sortBy || 'dateAdded') !== 'dateAdded' || (S.sortDir || 'desc') !== 'desc') active++;
+  if ((S.filterCondition || 'all') !== 'all') active++;
+  if (((document.getElementById('filterPublisher') || {}).value || '') !== '') active++;
+  if (S.showSold) active++;
+  if (S.showDrafts) active++;
+  const badge = document.getElementById('filterCount');
+  if (badge) badge.textContent = active > 0 ? `(${active})` : '';
+}
+window.openFilterSheet = openFilterSheet;
+window.closeFilterSheet = closeFilterSheet;
+
+function debounce(fn, delay) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), delay); };
+}
+const filterCatalog = debounce(renderCatalog, 250);
+function catalogSearchInput(el) {
+  const has = !!el.value;
+  const btn = document.getElementById('searchClear');
+  const icon = document.getElementById('searchIcon');
+  if (btn) btn.style.display = has ? 'flex' : 'none';
+  if (icon) icon.style.display = has ? 'none' : '';
+}
+function clearSearch() {
+  const el = document.getElementById('catalogSearch');
+  if (el) el.value = '';
+  const btn = document.getElementById('searchClear');
+  const icon = document.getElementById('searchIcon');
+  if (btn) btn.style.display = 'none';
+  if (icon) icon.style.display = '';
+  renderCatalog();
+}
 function setFilter(val,btn){S.filterCondition=val;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCatalog();}
 
 function openCopiesSheet(key) {
@@ -750,7 +813,6 @@ function openModal(idx){
   S.currentModalUrl = isWishlist
     ? buildWishlistEbayUrl(b.title, b.author)
     : buildEbayUrl(b.title, b.author);
-  document.getElementById('modalTitle').textContent=b.title;
 
   // For wishlist: find a matching active library record (normalised title compare)
   const _normT = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
@@ -771,13 +833,13 @@ function openModal(idx){
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
       ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid #D97706;background:rgba(251,191,36,0.07);border-radius:0 6px 6px 0;"><span style="font-size:14px;flex-shrink:0;">⚠️</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#92400E;letter-spacing:0.02em;">Already in your library</span></div>` : ''}
-      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'openZoom(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
+      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'zoomCover(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc
           ? `<img class="ms-image" src="${modalCoverSrc}" alt="${b.title}" onerror="this.style.display='none'">`
           : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;background:var(--paper-warm);border-radius:6px;">📖</div>`}
       </div>
       <div class="ms-title">${b.title}</div>
-      <div class="ms-subtitle" style="margin-bottom:${isWishlist?'6px':'10px'};">${[b.author, b.artist].filter(Boolean).join(' · ')}</div>
+      <div class="ms-subtitle" style="margin-bottom:${isWishlist?'6px':'10px'};">${[b.author, (b.artist && b.artist !== b.author) ? b.artist : null].filter(Boolean).join(' · ')}</div>
       ${isWishlist?`<div class="ms-subtitle" style="margin-bottom:10px;">In Print: <strong style="color:var(--ink);">${inPrintLabel}</strong></div>`:''}
       <div style="display:flex;align-items:center;gap:8px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
         ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;letter-spacing:0.02em;">${b.condition}</span>`:''}
@@ -787,7 +849,7 @@ function openModal(idx){
       ${!isWishlist?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;"><span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span><div id="modalStarRow" class="star-row" style="margin-top:0;"></div></div>`:''}
     </div>
     <div class="ms-metadata-row">
-      ${b.publisher?`<div class="ms-metadata-item"><span class="ms-label">Publisher</span><span class="ms-value">${b.publisher}</span></div>`:''}
+      ${b.publisher && b.publisher !== b.author?`<div class="ms-metadata-item"><span class="ms-label">Publisher</span><span class="ms-value">${b.publisher}</span></div>`:''}
       ${b.year?`<div class="ms-metadata-item"><span class="ms-label">Year</span><span class="ms-value">${b.year}</span></div>`:''}
       ${b.dateAdded&&!isWishlist?`<div class="ms-metadata-item"><span class="ms-label">Added</span><span class="ms-value">${b.dateAdded}</span></div>`:''}
       ${b.location?`<div class="ms-metadata-item"><span class="ms-label">Acquired</span><span class="ms-value">${b.location}</span></div>`:''}
@@ -801,25 +863,27 @@ function openModal(idx){
     const ebayIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
     if (isWishlist) {
       actionsArea.innerHTML =
-        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        `<div class="ms-actions-primary">
           <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} Check eBay</button>
+          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} Check eBay</button>
         </div>
-        <div style="text-align:center;">
-          <button onclick="confirmDelete()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:#a32d2d;cursor:pointer;padding:4px 8px;opacity:0.8;">Delete Book</button>
+        <hr class="ms-separator">
+        <div class="ms-actions-danger">
+          <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
         </div>`;
     } else {
       actionsArea.innerHTML =
-        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        `<div class="ms-actions-primary">
           <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;">${ebayIcon} eBay</button>
+          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} eBay</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-          <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()" style="background:transparent;border:0.5px solid var(--border-med);color:var(--ink-light);">Mark Sold</button>
-          <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()" style="background:transparent;border:0.5px solid var(--border-med);color:var(--ink-light);">+ Wishlist</button>
+        <div class="ms-actions-secondary">
+          <button class="btn-ghost" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+          <button class="btn-ghost" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
         </div>
-        <div style="text-align:center;">
-          <button onclick="confirmDelete()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:13px;color:#a32d2d;cursor:pointer;padding:4px 8px;opacity:0.8;">Delete Book</button>
+        <hr class="ms-separator">
+        <div class="ms-actions-danger">
+          <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
         </div>`;
     }
   }
@@ -842,7 +906,196 @@ function openEbayModal(){
   if (isMobile) { window.location.href = S.currentModalUrl; }
   else { window.open(S.currentModalUrl, '_blank'); }
 }
-function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target)document.getElementById('modalOverlay').classList.remove('is-active');}
+function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target){document.getElementById('modalOverlay').classList.remove('is-active');document.body.classList.remove('sheet-open');}}
+
+// ── BATCH SELECT MODE ─────────────────────────────────────────────
+S.selectMode = null; // null | 'edit' | 'move'
+S.selectedBooks = new Set();
+
+function _setModeBtn(id, label, active) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.textContent = label;
+  btn.classList.toggle('is-active', active);
+}
+
+function toggleEditMode() {
+  if (S.selectMode === 'edit') { exitSelectMode(); return; }
+  S.selectMode = 'edit';
+  S.selectedBooks.clear();
+  _setModeBtn('editModeBtn', 'Exit Edit', true);
+  _setModeBtn('moveModeBtn', 'Move', false);
+  renderCatalog();
+}
+window.toggleEditMode = toggleEditMode;
+
+function toggleMoveMode() {
+  if (S.selectMode === 'move') { exitSelectMode(); return; }
+  S.selectMode = 'move';
+  S.selectedBooks.clear();
+  _setModeBtn('moveModeBtn', 'Exit Move', true);
+  _setModeBtn('editModeBtn', '✓ Edit', false);
+  renderCatalog();
+}
+window.toggleMoveMode = toggleMoveMode;
+
+function exitSelectMode() {
+  S.selectMode = null;
+  S.selectedBooks.clear();
+  _setModeBtn('editModeBtn', '✓ Edit', false);
+  _setModeBtn('moveModeBtn', 'Move', false);
+  const bar = document.getElementById('batchActionsBar');
+  if (bar) bar.classList.remove('is-visible');
+  renderCatalog();
+}
+window.exitSelectMode = exitSelectMode;
+
+function toggleBookSelection(bookId) {
+  if (S.selectedBooks.has(bookId)) {
+    S.selectedBooks.delete(bookId);
+  } else {
+    S.selectedBooks.add(bookId);
+  }
+  // Update card visual without full re-render
+  document.querySelectorAll('.book-card[data-id]').forEach(card => {
+    card.classList.toggle('is-selected', S.selectedBooks.has(card.dataset.id));
+  });
+  updateBatchBar();
+}
+window.toggleBookSelection = toggleBookSelection;
+
+function updateBatchBar() {
+  const n = S.selectedBooks.size;
+  const bar = document.getElementById('batchActionsBar');
+  const count = document.getElementById('batchCount');
+  const stack = document.getElementById('batchActionsStack');
+  if (count) count.textContent = n === 1 ? '1 selected' : `${n} selected`;
+  if (bar) bar.classList.toggle('is-visible', n > 0);
+  if (!stack) return;
+  if (S.selectMode === 'edit') {
+    stack.innerHTML =
+      '<button onclick="bulkAutofill()" class="batch-btn">Auto-fill</button>' +
+      '<button onclick="bulkPriceUpdate()" class="batch-btn">Price Update</button>' +
+      '<div class="danger-separator"><button onclick="bulkDelete()" class="batch-btn batch-btn--danger">Delete</button></div>';
+  } else if (S.selectMode === 'move') {
+    stack.innerHTML =
+      '<button onclick="bulkMarkSold()" class="batch-btn">Mark Sold</button>' +
+      '<button onclick="bulkWishlist()" class="batch-btn">Wishlist</button>' +
+      '<button onclick="bulkDraft()" class="batch-btn">Draft</button>';
+  }
+}
+
+async function bulkMarkSold() {
+  const ids = [...S.selectedBooks];
+  if (!ids.length) return;
+  const { error } = await _supa.from('books').update({ sold_status: 'Sold' }).in('id', ids);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Sold'; });
+  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as sold.`, 'success', 2500);
+  exitSelectMode();
+}
+window.bulkMarkSold = bulkMarkSold;
+
+async function bulkDelete() {
+  if (S.selectedBooks.size === 0) { alert('No books selected'); return; }
+  const ids = [...S.selectedBooks];
+  const n = ids.length;
+  magiConfirm({
+    title: `Delete ${n} book${n > 1 ? 's' : ''}?`,
+    message: `This will permanently remove ${n} book${n > 1 ? 's' : ''} from your collection. This cannot be undone.`,
+    confirmText: 'Delete All',
+    onConfirm: async () => {
+      const { error } = await _supa.from('books').delete().in('id', ids);
+      if (error) { showToast('Delete failed. Please try again.', 'error', 3000); return; }
+      S.books = S.books.filter(b => !ids.includes(b._id));
+      showToast(`${n} book${n > 1 ? 's' : ''} removed from your collection.`, 'success', 2500);
+      exitSelectMode();
+    }
+  });
+}
+window.bulkDelete = bulkDelete;
+
+async function bulkAutofill() {
+  const ids = [...S.selectedBooks];
+  if (!ids.length) { showToast('No books selected', 'error'); return; }
+  const n = ids.length;
+  if (!confirm(`Auto-fill missing fields for ${n} book${n !== 1 ? 's' : ''}?\n\nFills year, publisher, cover image. 100% title match only. Existing values will NOT be overwritten.`)) return;
+  let done = 0, skip = 0;
+  const list = S.books.filter(b => ids.includes(b._id));
+  for (const b of list) {
+    if (!b.title || !b._id) { skip++; continue; }
+    const hit = typeof lookupConjuringEntry === 'function' ? lookupConjuringEntry(b.title) : null;
+    if (!hit || !hit.entry) { skip++; continue; }
+    const e = hit.entry, upd = {};
+    if (!b.year && e.y) { upd.year = e.y; b.year = e.y; }
+    if (!b.publisher && e.p) { upd.publisher = e.p; b.publisher = e.p; }
+    if (!b.coverUrl && typeof dbCoverUrl === 'function') {
+      const cu = dbCoverUrl(e);
+      if (cu) { upd.cover_url = cu; b.coverUrl = cu; b.rawCover = cu; }
+    }
+    if (!Object.keys(upd).length) { skip++; continue; }
+    upd.updated_at = new Date().toISOString();
+    const r = await _supa.from('books').update(upd).eq('id', b._id);
+    if (!r.error) done++; else skip++;
+  }
+  renderCatalog();
+  showToast(`Auto-fill: ${done} updated, ${skip} skipped ✓`, 'success', 4000);
+  exitSelectMode();
+}
+window.bulkAutofill = bulkAutofill;
+
+async function bulkPriceUpdate() {
+  showToast('Price Update: coming in a future update.', 'info', 2500);
+}
+window.bulkPriceUpdate = bulkPriceUpdate;
+
+async function bulkWishlist() {
+  const ids = [...S.selectedBooks];
+  if (!ids.length) return;
+  const { error } = await _supa.from('books').update({ sold_status: 'Wishlist' }).in('id', ids);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Wishlist'; });
+  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} moved to Wishlist.`, 'success', 2500);
+  exitSelectMode();
+}
+window.bulkWishlist = bulkWishlist;
+
+async function bulkDraft() {
+  const ids = [...S.selectedBooks];
+  if (!ids.length) return;
+  const { error } = await _supa.from('books').update({ draft_status: 'Draft' }).in('id', ids);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.draft = 'Draft'; });
+  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as Draft.`, 'success', 2500);
+  exitSelectMode();
+}
+window.bulkDraft = bulkDraft;
+
+async function toggleSold() {
+  const b = S.books[S.currentModalIdx];
+  if (!b) return;
+  const newStatus = (b.sold === 'Sold') ? '' : 'Sold';
+  const { error } = await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  b.sold = newStatus;
+  closeModal();
+  renderCatalog();
+  showToast(newStatus === 'Sold' ? 'Marked as sold.' : 'Returned to library.', 'success', 2500);
+}
+window.toggleSold = toggleSold;
+
+async function toggleWishlistStatus() {
+  const b = S.books[S.currentModalIdx];
+  if (!b) return;
+  const newStatus = (b.sold === 'Wishlist') ? '' : 'Wishlist';
+  const { error } = await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  b.sold = newStatus;
+  closeModal();
+  renderCatalog();
+  showToast(newStatus === 'Wishlist' ? 'Moved to wishlist.' : 'Returned to library.', 'success', 2500);
+}
+window.toggleWishlistStatus = toggleWishlistStatus;
 
 const PUBLISHERS = ["A \"Magic Wand\" Publication", "A ConCam Production", "A G Films Production", "A G-M Publication", "A Goodliffe Publication", "A Mark Leveridge Magic Publication", "A Martini's Magic Company Release", "A Salon de Magie Book, Ken Klosterman", "A Talon Publication", "A Top Magic Publication", "A-1 MagicalMedia", "A. M. Wilson, M. D.", "Aaron Fisher Magic", "Abbott's Magic", "Abraxas", "Ace Place Magic", "Agency of World Entertainment", "Al Mann Exclusives", "Aladdin's Magic Shop", "Alakazam", "Alan Sands Entertainment", "Alexander de Cova Productions", "Alta California Book and Job Printing House", "An Andi Gladwin Production", "Anthony Brahams", "Antinomy Magic", "Aplar Publishing", "Arcas Publications", "Arthur P. Felsman", "Astor", "avanT-Garde Magic", "B.S. Publications", "BammoMagic", "Beat & Roy Books", "Ben Harris Magic Publications", "Benchmark Magic Production", "Berland Presents", "BHM Industries / New Directions Publishing", "Binary Star Publications", "Blue Bikes Production", "Bob King Magic", "Bob Lynn", "Bob Lynn / Tony Raven", "Bodean Enterprises", "Borden Publishing Company", "Borwig & Horster", "Bradbury, Agnew & Co.", "Brunel White", "BW Magic Publishing", "C. Arthur Pearson Limited", "C.C. Éditions", "Caddy Manufacturing Company", "Calostro Publications", "Camirand Academy of Magic", "Card-Shark", "Carl Waring Jones", "Catman Publications", "Cecil E. Griffin", "CEDAM", "Chambers Magic Company", "Charles Scribner’s Sons", "Charlsen + Johansen & Others", "Chas. C. Eastman", "ChicagoMagicBash Publications", "China Productions", "Chuck Martinez", "Clandestine Productions", "Cold Deck Company", "Coleccion Renglones", "Collectors' Workshop", "Columbia Magic Shop Inc.", "Conjuring Arts Research Center", "Conjurors' Library", "Conundrum Publishing", "Corinda's Magic Studio", "Crown Publishers, Inc.", "CYMYS", "D. Robbins & Co., Inc.", "Dan and Dave Industries, Inc.", "Daniel's Den Publication", "Danny Korem", "Dark Arts Press", "David Kemp & Company", "David Meyer Magic Books", "DeCovaMagic", "Developmental Productions Press", "dfgrd ediciones", "Divine Goddess 23 Productions", "DMB Publications", "Docc Co.", "Docc Hilford Productions", "Donald Holmes", "Donnybrook Enterprises, Inc.", "Dover Publications", "DTrik", "Dutton & Co.", "E. F. Rybolt", "East Coast Super Session", "Eckhard Böttchers Zauber-Butike", "Ed Mellon", "Ediciones El Espectador", "ediciones famulus", "ediciones Marré", "Ediciones Vernet Magic", "Edition Olms", "Editions Techniques du Spectacle", "Editorial El Caballo del Malo", "Editorial Frakson", "Edward Bagshawe & Co.", "El Duco", "Electro Fun", "Emerson & West", "Empire", "Every Trick in the Book Inc.", "Excelsior!! Productions", "F. G. Thayer", "Faber & Faber", "FASDIU Enterprises", "Fire Cat Studios", "Fleming Book Company", "Flora & Company", "Florence Art Edizioni", "FOCM Publication", "Fort Worth Magicians' Club", "Frank Werner", "Full Moon Magic Books", "Fun Inc.", "G & E Enterprises", "GBC Press", "Gene Gordon", "Genii", "Geo-Mar Publications", "George G. Harrap & Co., Ltd.", "George Snyder Jr", "George Starke", "Goldshadow Industries", "GrupoKaps", "Hermetic Press", "Guy Bavli - Perfect Magic", "I Saw That!", "Illuma - Illusion Management", "International Magic", "International Magic House", "Invisible Man Productions", "Invisible Practice Production", "Irv Weiner", "J A Enterprises", "Jahoda & Siegel", "Jeff Busby Magic, Inc.", "Jeff McBride, Inc.", "Jerry Mentzer (Magic Methods)", "John King - S. David Walker", "Jose's Studio", "Julius Sussmann, Hamburg", "Juris Druck + Verlag Zürich", "JustJoshinMagic", "Jörg Alexander ZauberKunst", "KANDA Publications", "Kanter's Magic Shop", "Kardyro-Torino Creations", "Kaufman and Company", "Kaufman and Greenberg", "Kee-West Productions", "Kennedy Enterprises", "Kerwin Benson Publishing", "Kreations & Trx", "L&L Publishing", "L. Davenport & Co.", "La boutique de l'illusion", "Laughing Room Only", "Lee Jacobs Productions", "Lehmann & Schüppel, Leipzig", "Lesclapart", "Levy & Müller", "Little, Brown and Company", "Louis Tannen", "Lybrary.com", "M. S. Messinger Printing", "M.C.M. Editora", "Magic Art Studio", "Magic by Boretti", "Magic City", "Magic Communication", "Magic House", "Magic Inspirations", "Magic Limited", "MAGIC Magazine", "Magic Methods", "Magic, Inc.", "Magical Publications", "Magicana", "Magick Enterprises", "Magicland, Tokyo", "Magico Magazine", "Magicseen Magazine", "Magicshop Vienna", "Magie", "Malbrough Magic", "Malek Enterprises", "ManusKrypt", "Marchand de Trucs", "Mark Wilson Publications", "Martin Breese", "Max Abrams", "Max Andrews (Vampire) LTD.", "Max Holden", "Mayette Magie Moderne", "Maynestream Productions", "Me and the other Guy Productions", "Media T Marketing", "Meir Yedid Magic", "Mephisto Huis", "Metempirical Magic", "Micky Hades", "Micky Hades Enterprises", "Micky Hades International", "Mike Caveney's Magic Words", "Mike Powers Magic", "Million Dollar Productions", "Mind Tapped Productions, LLC", "Miracle Makers", "Miracle Press", "Miracles Productions", "Montandon Magic", "Morissey Magic LTD.", "Murphy's Magic Supplies, Inc.", "Mystica", "MZvD", "Namlips Enterprises", "Nat Louis", "Necromancer Press", "Nelson & Nelson Ltd.", "Nelson Enterprises", "Neukomm & Zimmermann", "New Jinx Publication", "Nick Bolton", "Nightmare Alley Productions", "Obie O'Brien", "Ohmigosh Productions", "Old-Guy-In-The-Bathroom Productions", "Oliver Erens - œ", "Ortiz Publications", "Out of the Blue", "Owen Bros.", "Owen Magic Supreme", "Palooka Productions", "Paradigm Press", "Paraninfo", "Patrick Page Magic Limited", "Paul Diamond", "Pavel-Magic", "Penny's Publishing", "Penshaw Press", "PH Marketing Publication", "Philip R. Willmarth", "Piccadilly Books, Ltd", "Popular Magic Publications", "Princeton University Press", "Printed for T. Moore, London", "Private View", "Pro Print", "Producciones El Asombro, S.L.", "Professor Presto", "Psychic Entertainers Association", "Páginas", "R.O.P.S. Press", "Radio Free Atlantis Production", "Random House", "Rauscher & Cie AG", "Raw-Press", "Ray Gamble & W. Herbert Schuh", "Real Miracle Publication", "Red Silk Variety Productions", "Reed Swans Collective", "Reginald Scot Books", "Regow's House of Enchantment", "RFA Production", "Roche Magic Studio", "Rudolf Braunmüller", "Sacred Chao Productions", "San Francisco Book Company", "Sankey Magic", "Saturn Magic Ltd", "Savaco, Ltd.", "Scapegrace Press", "Schwabacher'sche Verlagsbuchhandlung", "Schweizerisches Jugendschriftenwerk Zürich", "Secrets of Dr. Dee", "Sedgehill Industries", "Selfpublished", "Silk King Studios", "simsalabonn", "Slydini Studio of Magic", "Smiling Mule Productions", "Sorcerer's Apprentice", "Sound of Magic", "Spade and Archer", "Sphinx Publishing Corporation", "Squash Publishing", "St. Pierre Enterprises", "Star Magic Co.", "Sterling Magic Company", "Steve Burton", "Steve Reynolds Magic", "Stevens Magic Emporium", "Syzygy Press", "Tannen Magic Inc.", "Taurus Magic Supply", "TCC", "Tenkai Prize Committee", "Tenyo", "Tesmar Zauberartikel", "The Cardician Press", "The Conjurors' Convention Corporation", "The Enchantment", "The False Deal (Mark Tams)", "The FM Factory", "The Genii Corporation", "The Impossible Co.", "The Ireland Magic Co.", "The Journal of Psience", "The Kee Publishing Co.", "The Kent & Surrey Press", "The London Magical Co.", "The Magic Apple", "The Magic Art Book Co.", "The Magic Circle", "The Magic Circle Foundation", "The Magic Corner", "The Magic Fun Factory", "the magic hands editions", "The Magic Wand Office", "The MasterMind Group", "The Merchant of Magic Ltd.", "The Miracle Factory", "The Neat Review", "The Presto Place", "The Second Deal (Jason Alford)", "The Secret Service", "The Sid Lorraine Hat & Rabbit Club", "The Supreme Magic Company", "The Tom-Foolery, Inc.", "The Usual Suspect", "The Welworth Company", "The Williamson Press, Inc.", "The Yogi Magic Mart", "Theory and Art of Magic Press", "Thinkers' Press", "Thomas van Büren Lenger", "Tokyodo Shuppan", "Trapdoor Productions", "Trik-Kard Specialties", "TVMagic.co.uk", "U. F. Grant", "Ultra Neat Ltd.", "Underground Collective", "Unikorn Magik", "Unique Magic Studio", "unknown publisher", "Vanishing Inc.", "Verlag Magischer Zirkel Hamburg", "Verlag Magischer Zirkel Leipzig", "Verlag O. Stolina", "W. H. Allen, London", "Weerd! Publishing", "Westbrook Publishing", "Wiener Spielkartenfabrik Fred. Piatnik & Söhne", "Will Goldston, Ltd.", "Wizard Publishing Company", "Wolfe Publishing Limited", "Wonder Workshop Berlin", "Wunderwinkel", "Zauberbuch-Verlag", "Zauberkabinett Shop", "Zauberkunst", "Zauberschrank", "Zauberzentrale München", "Zentralhaus für Kulturarbeit", "Édition Ch. Eggimann, Genève"];
 
@@ -1876,4 +2129,64 @@ setTimeout(function(){
 
 })();
 // ══ END BULK EDIT ══════════════════════════════════════════════
+/**
+ * Magi-Dialog: Custom Confirmation
+ */
+function magiConfirm({ title, message, confirmText, onConfirm }) {
+  const overlay = document.getElementById('dialogOverlay');
+  overlay.innerHTML = `
+    <div class="magi-dialog">
+      <h3>${title}</h3>
+      <p>${message}</p>
+      <div class="magi-dialog-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <button onclick="closeDialog()" class="btn-ghost">Cancel</button>
+        <button id="magiConfirmBtn" class="btn-primary" style="background:#a32d2d;">${confirmText}</button>
+      </div>
+    </div>
+  `;
+  overlay.classList.add('is-active');
+  document.getElementById('magiConfirmBtn').onclick = () => {
+    onConfirm();
+    closeDialog();
+  };
+}
 
+function closeDialog() {
+  document.getElementById('dialogOverlay').classList.remove('is-active');
+}
+
+/**
+ * Enhanced Delete Logic (Brand Safe)
+ */
+async function deleteBook(bookId) {
+  console.log("Delete triggered for:", bookId);
+  const book = S.books.find(b => b._id === bookId);
+  if (!book) { console.warn("deleteBook: no book found for id", bookId); return; }
+  magiConfirm({
+    title: 'Delete Book?',
+    message: `This will permanently remove "<strong>${book.title}</strong>" from your collection. This cannot be undone.`,
+    confirmText: 'Delete',
+    onConfirm: async () => {
+      const { error } = await _supa.from('books').delete().eq('id', bookId);
+      if (error) { showToast('Delete failed. Please try again.', 'error', 3000); return; }
+      S.books = S.books.filter(b => b._id !== bookId);
+      closeModal();
+      renderCatalog();
+      showToast('Book removed from your collection.', 'success', 2500);
+    }
+  });
+}
+window.deleteBook = deleteBook;
+window.magiConfirm = magiConfirm;
+window.closeDialog = closeDialog;
+
+/**
+ * Image Zoom: appends to body to respect z-index scale (--z-fullscreen)
+ */
+function zoomCover(imgSrc) {
+  const zoomEl = document.createElement('div');
+  zoomEl.className = 'ms-zoom-overlay';
+  zoomEl.innerHTML = `<img src="${imgSrc}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:6px;">`;
+  zoomEl.onclick = () => zoomEl.remove();
+  document.body.appendChild(zoomEl);
+}

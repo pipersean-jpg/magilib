@@ -1,14 +1,14 @@
-I am Sean. We are working on MagiLib. 
+I am Sean. We are working on MagiLib.
 
-I am pasting my current project state (CLAUDE.md) below so you have full context immediately. 
-Please read the 'Next Actions' section and let me know when you're ready to start.
+I am pasting our project "Blueprint" (CLAUDE.md) and the "Last Session Report" (SESSION_HANDOFF.md) below.
+Please read both carefully. They explain our workflow, the Magi-Sheet framework, and all current project rules.
 
---- CLAUDE.MD CONTENT START ---
-# MagiLib Project Status - 2026-04-05
+--- CLAUDE.MD (Blueprint) ---
+# MagiLib Project Status - 2026-04-09
 
 ## Current Project Status
-- **Phase:** Block 1 (Core UI & Navigation) - **COMPLETED**
-- **Current Focus:** Block 2 (Search & Catalog Functionality)
+- **Phase:** Block 2 (Search & Catalog Functionality) + Global Design System - **IN PROGRESS**
+- **Current Focus:** Device testing, Sold filter accuracy, and next Block 2 feature.
 
 ## Completed Tasks ✅
 - [x] Header Reordering (Add > Library > Wishlist > Settings)
@@ -17,13 +17,163 @@ Please read the 'Next Actions' section and let me know when you're ready to star
 - [x] Scroll-to-top fix for the 'Add' page
 - [x] Terminal Automation (Magic words: `handoff` and `newchat`)
 - [x] Notion Hub Sync Integration
+- [x] Implement Fuzzy Search (Fuse.js, threshold 0.3, keys: title/author/publisher/year)
+- [x] Global Design System: Created `assets/css/magilib.css` (all styles consolidated)
+- [x] Magi-Sheet pattern: `.magi-sheet-overlay` / `.magi-sheet` / `.magi-sheet-handle`
+- [x] Book Detail View: Bottom sheet, typography hierarchy, pill badges, button restructure
+- [x] Magi-Sheet Typography Utilities: `.ms-title`, `.ms-subtitle`, `.ms-metadata-row`, `.ms-image`
+- [x] Z-index scale: `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` in `:root`
+- [x] Action Button Hierarchy: Primary (Edit+eBay), Secondary ghost (Mark Sold + Wishlist), Danger text link (Delete)
+- [x] Book detail open fixed (removed EMERGENCY OVERRIDE block in catalog.js)
+- [x] Delete Book wired to Supabase (uses `b._id`)
+- [x] `toggleSold()` and `toggleWishlistStatus()` implemented + wired to Supabase
+- [x] Search UX: 250ms debounce on `#catalogSearch`, Clear (X) button in search bar
+- [x] Empty State: "Clear search" button in `.empty-search-container`
+- [x] Mobile UX Audit: fluid typography via `clamp()`, overflow-x fix, 48px touch targets, safe-area-inset-bottom
+- [x] Library Layout Consolidation: `.catalog-toolbar` + `.filter-bar` + `.insights-bar` (replaced 4-row layout)
+- [x] Batch Select Mode: `#selectModeBtn`, `#batchActionsBar`, bulk Mark Sold + Delete via Supabase
+- [x] Header Symmetry: `.nav` flex + `.nav-actions-group` (hamburger + avatar) symmetric with logo
+- [x] Two-Row Toolbar: Row 1 = search + icon group; Row 2 = Select + Filters (each flex:1)
+- [x] Insights Bar: centered, conditional per settings, separator-joined with no trailing dots
+- [x] Book Detail Sheet: `.modal-header` removed, `.sheet-close-btn` absolute-positioned, zero whitespace above cover
+- [x] CLAUDE.md Absolute Rules: no manual edits, newchat 5-step protocol, b._id guardrail, handoff protocol
+
+## Learnings
+- **Search algorithm:** Fuse.js with `threshold: 0.3`. Keys are `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse is not loaded.
+- **Data source:** Catalog data lives in `S.books` (state object). There is no `window.allBooks`. Supabase fetch populates `S.books` in `loadCatalog()`.
+- **Performance pattern:** Fuse results are stored in a `Set` so the filter pass uses O(1) `.has()` lookups.
+- **Environment guard:** Always ignore `node_modules` during file/content searches to prevent terminal overflows.
+- **CSS architecture:** ALL styles live in `assets/css/magilib.css`. Do NOT add `<style>` blocks to index.html. Do NOT inject CSS via JS (except the bulk-edit IIFE which is managed by a deploy tool).
+- **Magi-Sheet pattern:** `.magi-sheet-overlay` uses `opacity` + `pointer-events` (NOT `display:none`) for animation. `.magi-sheet` slides via `transform: translateY(100%) → translateY(0)`. Toggle by adding/removing `.is-active` on the overlay.
+- **Book detail open/close:** `openModal()` adds `.is-active` to `#modalOverlay`. `closeModal()` removes it. Do not use `.hidden`.
+- **Legacy modals** (support, changelog, wizard, etc.) still use `.modal-overlay` + `.hidden` — do NOT touch them.
+- **Bulk-edit IIFE:** The `_CSS` block and `_css()` function in catalog.js are marked "Injected by deploy tool" — leave them in place, do not move to magilib.css.
+- **Button hierarchy (Book Detail):** Primary row = Edit + eBay. Secondary row = Mark Sold + Wishlist (ghost style). Danger = "Delete Book" text link. No Close button.
+- **Critical ID bug:** `loadCatalog()` maps Supabase rows to `_id: row.id`. ALWAYS use `b._id`, never `b.id` — `b.id` is undefined and causes silent failures everywhere (Supabase queries, find(), delete, toggles).
+- **Z-index scale:** `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` defined in single `:root` block. Never duplicate `:root` blocks.
+- **debounce utility:** `debounce(fn, delay)` defined in catalog.js. `filterCatalog` = `debounce(renderCatalog, 250)`. Direct calls (clearSearch) bypass debounce.
+- **Batch state:** `S.selectMode` (bool) + `S.selectedBooks` (Set of `_id` strings). Cards get `data-id="${b._id}"`. Click handler branches on `S.selectMode`.
+- **Batch bar visibility:** `#batchActionsBar` uses `.batch-actions-bar` + `.is-visible` toggle (translateY animation from bottom).
+- **Cover zoom:** `zoomCover(imgSrc)` creates a `.ms-zoom-overlay` appended to `document.body` — NOT a static DOM element. Legacy `openZoom()` / `#zoomOverlay` removed.
+- **Insights bar:** `renderStatsRow()` outputs conditional inline stats in `.insights-bar`. Each stat is a `<span class="stat-item">` joined with `·` via `.filter(Boolean).join(sep)` — no trailing dots.
+- **`magiConfirm` / `closeDialog`:** Custom dialog system on `window`. Used for destructive confirmations (delete, bulk delete). Replace any `window.confirm()` usage.
+- **Sheet close button:** `.sheet-close-btn` is `position:absolute; top:14px; right:14px` on `.magi-sheet` (position:relative). No `.modal-header` in the book detail sheet.
+- **Mobile-first toolbar:** Two-row layout is canonical — Row 1 = search + icon controls, Row 2 = mode/filter buttons. Short labels always preferred ("Select", "Filters", not full phrases).
+- **Separator logic in JS:** Use `.filter(Boolean).join(sep)` for conditional inline lists. Do not use CSS `::before` tricks.
+
+## Workflow & Communication Rules
+- **Pacing:** Maximum 2-3 steps per response.
+- **Pre-Flight Check:** Always ask clarifying questions before generating major code blocks.
+- **Status Updates:** Every `handoff` must include a "Learnings" section to update the model on Sean's preferences or new project logic.
+- **Role Definition:** Gemini (Web) is the **Architect/Planner** and **Prompt Author**. Claude Code (Terminal) is the **Builder/Executor**.
+- **Instruction Flow:** Gemini generates all structured prompt blocks; Sean copies them verbatim into Claude Code; Claude Code executes the diffs. This dual-model workflow remains in effect until Sean explicitly instructs Claude Code to operate solo.
+- **Prompt Authorship:** Claude Code must assume every incoming prompt was authored by Gemini. Execute faithfully and report results back so Gemini can plan the next step.
+- **Solo Mode:** If Sean says to switch to solo mode, Claude Code takes over full planning, prompting, and execution without Gemini involvement. Must be explicitly requested.
+- **Verification:** After Claude Code finishes, Sean reports results to Gemini for the next "Architectural" step.
+
+### Absolute Rules
+
+- **NEVER ask Sean to find/replace or edit code manually.** Always provide a fully-formed copy-paste prompt block for Claude Code to execute. Sean should never touch a file directly.
+
+- **`newchat` START-OF-SESSION PROTOCOL:** When `newchat` is invoked, the model MUST:
+  1. Read `CLAUDE.md` and summarize current session priorities.
+  2. Run `cat /Users/seanpiper/magilib/GEMINI_START.txt | pbcopy` to copy the Gemini prompt to clipboard.
+  3. Analyze overall project progress and current architectural direction.
+  4. Critique Gemini's prompting design and architectural input so far — flag anything vague, redundant, or structurally risky.
+  5. Suggest 2–3 concrete improvements to Gemini's "Project Manager" mode to maximize build efficiency this session.
+
+- **TECHNICAL GUARDRAILS (non-negotiable):**
+  - `b._id` is the **only** valid primary key for all book operations. Never use `b.id`. Supabase queries use `.eq('id', b._id)` or `.in('id', ids)`.
+  - ALL CSS lives in `assets/css/magilib.css`. No `<style>` blocks in `index.html`. No CSS injected via JS (except the bulk-edit IIFE marked "Injected by deploy tool").
+
+- **HANDOFF PROTOCOL:** Every session must end with `SESSION_HANDOFF.md` updated to include:
+  - What was built/changed this session (file-level summary)
+  - Any unresolved bugs or known regressions
+  - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
 ## Next Session Priority 🚀
-- **Implement Fuzzy Search:** Integrate a lightweight fuzzy search logic into `catalog.js`.
-- **UI Transition:** Create the "Ink-faint" transition for search results.
+- [ ] **Book Detail on Device:** Verify sheet close button position, cover proximity to handle, Delete link clearance from Home Indicator on physical iPhone.
+- [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly after the `toggleSold()` changes.
+- [ ] **Two-Row Toolbar on iPhone SE:** Confirm Row 2 buttons don't wrap on 320px viewport.
+- [ ] **Next Block 2 Feature:** Gemini to propose — candidates are Edit Form UX polish or Wishlist-to-Library flow.
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
-- **Styling:** Flexbox-first, mobile-responsive.
-- **Workflow:** Run `handoff` at end of session; `newchat` at start.
---- CLAUDE.MD CONTENT END ---
+- **Styling:** All CSS in `assets/css/magilib.css`. Flexbox-first, mobile-responsive.
+- **Workflow:** Run `handoff` at end; `newchat` at start.
+
+--- SESSION_HANDOFF.MD (Last Session Report) ---
+# SESSION HANDOFF — 2026-04-09 (Session 2)
+
+## Session Summary
+UI polish pass focused on layout symmetry, toolbar restructure, insights bar improvements, and book detail sheet cleanup. All changes are purely structural/CSS — no data model changes.
+
+## What We Built This Session
+
+### 1. Header Symmetry Fix
+- `.nav` changed from `display:grid; grid-template-columns:1fr auto 1fr` → `display:flex; justify-content:space-between`
+- New `.nav-actions-group { display:flex; gap:12px; align-items:center; }` wraps hamburger + avatar button
+- Both logo and actions group are direct flex children — identical 16px margins from `padding:14px 16px`
+- Absolute-positioned dropdowns (`#navMenu`, `#userDropdown`) remain inside `.nav-right` for correct anchoring
+- `auth.js`: `toggleNavMenu()` + `closeNavMenu()` added; click-outside listener extended
+
+### 2. Two-Row Toolbar Restructure
+- **Row 1:** `search-bar` (flex:1 1 auto; min-width:0) + `toolbar-btn-group` (View Toggle + Refresh, flex-shrink:0)
+- **Row 2:** `#selectModeBtn` (`toggleSelectMode()`) + `#filterMenuBtn` (`openFilterSheet()`), both `flex:1`
+- New `.toolbar-btn-group { display:flex; gap:6px; flex-shrink:0; }` prevents search bar width competition
+- No orphan buttons in Row 1. Select label = "Select".
+
+### 3. Insights Bar — Centered + Conditional
+- `.insights-bar`: `justify-content:center; gap:12px; width:100%; text-align:center; margin:8px 0`
+- Each stat wrapped in `<span class="stat-item">` (white-space:nowrap)
+- `renderStatsRow()`: checks `el.checked && settings.statX !== false` per stat; `.filter(Boolean).join(sep)` — no trailing dots
+- `.stat-item { white-space:nowrap }` added to CSS
+
+### 4. Book Detail Sheet — Whitespace + Close Button
+- Entire `.modal-header` div removed from `#modalOverlay`
+- ✕ replaced with `<button class="sheet-close-btn">` — `position:absolute; top:14px; right:14px`
+- `.magi-sheet` gets `position:relative`; `.sheet-close-btn`: 32px circle, z-index:10
+- Handle bar still present (~28px) vs old header (~60px) — significant whitespace reduction
+
+### 5. CLAUDE.md + Workflow Updates
+- Absolute Rules section added (no manual edits, newchat 5-step, guardrails, handoff protocol)
+- Gemini role clarified as Prompt Author; Solo Mode defined as opt-in
+
+## b._id Confirmation
+No regressions. Verified: card `data-id`, `deleteBook`, `toggleSold`, `toggleWishlistStatus`, `bulkMarkSold`, `bulkDelete`, local `S.books` sync — all use `b._id` / `.eq('id', b._id)` / `.in('id', ids)`. No `b.id` usage found.
+
+## Unresolved / Edge Cases
+1. **Batch bar overlap on short viewports** — `#batchActionsBar` may obscure Row 2 on iPhone SE landscape. Needs device test.
+2. **Filter count badge wrapping** — `#filterCount` may wrap at 2 digits on narrow screens.
+3. **Tablet-width toolbar** — two-row layout untested at 600–900px; may benefit from single-row at wider breakpoints.
+4. **`#showSoldChip` filter accuracy** — still unverified post-`toggleSold()` changes.
+
+## Model Learnings
+- **Shorthand labels are preferred:** "Select" not "Select Books", "Filters" not "Filter Library".
+- **Two-row toolbar is the canonical mobile-first pattern:** Row 1 = content interaction, Row 2 = mode/filter. Do not collapse.
+- **Absolute-positioned chrome over layout-consuming headers:** Remove headers from sheets; float close buttons.
+- **Separator logic belongs in JS:** `.filter(Boolean).join(sep)` over CSS pseudo-element tricks.
+- **Gemini prompts are most effective when single-concern:** One prompt per file/feature reduces missed edits.
+
+## Key Files Changed
+| File | Change Summary |
+|------|----------------|
+| `index.html` | Nav → flex + nav-actions-group; toolbar → two-row + toolbar-btn-group; sheet header removed, sheet-close-btn added |
+| `assets/css/magilib.css` | .nav flex; .nav-actions-group; .toolbar-btn-group; .insights-bar centered; .stat-item; .magi-sheet position:relative; .sheet-close-btn |
+| `catalog.js` | renderStatsRow() rewritten — conditional stat-item spans, separator joining |
+| `auth.js` | toggleNavMenu(), closeNavMenu() added; click-outside listener extended |
+| `CLAUDE.md` | Absolute Rules added; Gemini/solo workflow clarified |
+| `SESSION_HANDOFF.md` | Full session 2 report written |
+
+## GitHub Push Status
+**NOT PUSHED.** All changes are local only. Recommend device-testing sheet close button + toolbar Row 2 before pushing.
+
+## Next Session Starting Point
+1. Device test: book detail sheet (✕ position, cover gap, Delete clearance from Home Indicator)
+2. Device test: toolbar Row 2 on iPhone SE (320px) — confirm no wrapping
+3. Verify `#showSoldChip` filter with a sold book
+4. Ask Gemini to propose next Block 2 feature
+
+--- ACTION ---
+Please acknowledge you understand the current state: two-row toolbar, centered insights bar, sheet-close-btn pattern, b._id guardrail, and the dual-model (Gemini → Claude Code) workflow.
+Then propose the next session priorities based on the unresolved items and Next Session Starting Point above.

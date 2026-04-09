@@ -136,8 +136,11 @@ function updateUserMenu() {
 
 function toggleUserMenu() { document.getElementById('userDropdown').classList.toggle('open'); }
 function closeUserMenu() { document.getElementById('userDropdown').classList.remove('open'); }
+function toggleNavMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+function closeNavMenu() { document.getElementById('navMenu').classList.remove('open'); }
 document.addEventListener('click', function(e) {
   if (!e.target.closest('#userMenuBtn') && !e.target.closest('#userDropdown')) closeUserMenu();
+  if (!e.target.closest('#hamburgerBtn') && !e.target.closest('#navMenu')) closeNavMenu();
 });
 
 async function signOut() {
