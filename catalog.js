@@ -1125,8 +1125,13 @@ async function bulkAutofill() {
 window.bulkAutofill = bulkAutofill;
 
 async function bulkPriceUpdate() {
+  showToast('DBG: called, n=' + S.selectedBooks.size, 'info', 5000);
   if (S.selectedBooks.size === 0) { showToast('No books selected', 'error'); return; }
-  openPriceReviewSheet([...S.selectedBooks]);
+  try {
+    openPriceReviewSheet([...S.selectedBooks]);
+  } catch(e) {
+    showToast('DBG ERR: ' + e.message, 'error', 8000);
+  }
 }
 window.bulkPriceUpdate = bulkPriceUpdate;
 
