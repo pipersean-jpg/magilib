@@ -1125,34 +1125,22 @@ async function bulkAutofill() {
 window.bulkAutofill = bulkAutofill;
 
 async function bulkPriceUpdate() {
-  showToast('DBG: called, n=' + S.selectedBooks.size, 'info', 5000);
   if (S.selectedBooks.size === 0) { showToast('No books selected', 'error'); return; }
-  try {
-    openPriceReviewSheet([...S.selectedBooks]);
-  } catch(e) {
-    showToast('DBG ERR: ' + e.message, 'error', 8000);
-  }
+  openPriceReviewSheet([...S.selectedBooks]);
 }
 window.bulkPriceUpdate = bulkPriceUpdate;
 
 function openPriceReviewSheet(ids) {
-  console.log('[PriceReview] ids received:', ids);
-  // Inject shell into DOM on first use
-  if (!document.getElementById('priceReviewOverlay')) {
-    const el = document.createElement('div');
-    el.className = 'magi-sheet-overlay';
-    el.id = 'priceReviewOverlay';
-    el.onclick = function(e) { if (e.target === el) closePriceReviewSheet(); };
-    el.innerHTML = `
-      <div class="magi-sheet" id="priceReviewSheet" style="background:var(--ink);color:#fff;">
-        <div class="magi-sheet-handle" style="background:rgba(255,255,255,0.2);"></div>
-        <button class="sheet-close-btn" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff;" onclick="closePriceReviewSheet()">✕</button>
-        <div id="priceReviewBody" style="padding:0 20px 20px;"></div>
-      </div>`;
-    document.body.appendChild(el);
-  }
+  // Always recreate overlay so getElementById never returns stale/detached elements
+  const existing = document.getElementById('priceReviewOverlay');
+  if (existing) existing.remove();
 
-  // Populate rows
+  const el = document.createElement('div');
+  el.className = 'magi-sheet-overlay';
+  el.id = 'priceReviewOverlay';
+  el.onclick = function(e) { if (e.target === el) closePriceReviewSheet(); };
+
+  // Build rows inline so we never need a secondary getElementById lookup
   const rows = ids.map(id => {
     const b = S.books.find(x => x._id === id);
     if (!b) return '';
@@ -1166,21 +1154,32 @@ function openPriceReviewSheet(ids) {
     </div>`;
   }).join('');
 
-  document.getElementById('priceReviewBody').innerHTML = `
-    <div style="text-align:center;padding:16px 0 20px;">
-      <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:4px;">Price Review</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.5);">${ids.length} book${ids.length > 1 ? 's' : ''} selected</div>
-    </div>
-    <div>${rows}</div>
-    <button onclick="applyManualPrices()" style="width:100%;margin-top:20px;padding:14px;background:var(--accent-mid);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;min-height:48px;">Apply Manual Prices</button>`;
+  el.innerHTML = `
+    <div class="magi-sheet" id="priceReviewSheet" style="background:var(--ink);color:#fff;">
+      <div class="magi-sheet-handle" style="background:rgba(255,255,255,0.2);"></div>
+      <button class="sheet-close-btn" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff;" onclick="closePriceReviewSheet()">✕</button>
+      <div style="padding:0 20px 20px;">
+        <div style="text-align:center;padding:16px 0 20px;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:4px;">Price Review</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);">${ids.length} book${ids.length > 1 ? 's' : ''} selected</div>
+        </div>
+        <div>${rows}</div>
+        <button onclick="applyManualPrices()" style="width:100%;margin-top:20px;padding:14px;background:var(--accent-mid);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;min-height:48px;touch-action:manipulation;">Apply Manual Prices</button>
+      </div>
+    </div>`;
 
-  const ov = document.getElementById('priceReviewOverlay');
-  ov.classList.add('is-active');
-  ov.style.pointerEvents = 'none';
-  document.body.classList.add('sheet-open');
-  const bar = document.getElementById('batchActionsBar');
-  if (bar) bar.classList.add('sheet-hidden');
-  setTimeout(() => { ov.style.pointerEvents = ''; }, 400);
+  document.body.appendChild(el);
+
+  // Suppress ghost-click for 400ms so the tap that opened this doesn't close it
+  el.style.pointerEvents = 'none';
+  setTimeout(() => { el.style.pointerEvents = ''; }, 400);
+
+  requestAnimationFrame(() => {
+    el.classList.add('is-active');
+    document.body.classList.add('sheet-open');
+    const bar = document.getElementById('batchActionsBar');
+    if (bar) bar.classList.add('sheet-hidden');
+  });
 }
 window.openPriceReviewSheet = openPriceReviewSheet;
 
