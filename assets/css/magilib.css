@@ -226,6 +226,8 @@ input[type=file].file-input{display:none;}
 .flag-btn.active{background:var(--ink);color:white;border-color:var(--ink);}
 .flags-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;}
 .book-meta-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.card-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wishlist-status{color:#3b82f6;font-weight:600;margin:10px 20px;font-size:0.9rem;text-align:center;}
 .book-condition-badge{font-size:9px;font-weight:500;padding:2px 7px;border-radius:4px;flex-shrink:0;}
 .cond-fine{background:#e8f5ee;color:#2d6a4f;}
 .cond-vg{background:#e6f1fb;color:#185fa5;}
@@ -293,6 +295,7 @@ input[type=file].file-input{display:none;}
 }
 .sheet-close-btn{position:absolute;top:20px;right:14px;width:32px;height:32px;border-radius:50%;border:0.5px solid var(--border-med);background:var(--paper-warm);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--ink-light);z-index:10;line-height:1;padding:0;}
 .magi-sheet-overlay.is-active .magi-sheet{transform:translateY(0);}
+.magi-sheet.is-fading{opacity:0.4;transition:opacity 0.3s;}
 .magi-sheet-handle{width:40px;height:4px;background:var(--border-med);border-radius:2px;margin:12px auto 0;}
 @media(min-width:600px){
   .magi-sheet-overlay{align-items:center;padding:20px;}
@@ -445,7 +448,10 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
   text-align: center;
 }
 .magi-dialog h3 { font-family: 'Playfair Display', serif; margin-bottom: 8px; font-size: 1.2rem; }
-.magi-dialog p { font-size: 14px; color: #666; margin-bottom: 24px; line-height: 1.4; }
+.magi-dialog p { font-size: 14px; color: #666; margin-bottom: 16px; line-height: 1.4; }
+.magi-dialog input[type="number"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 0.5px solid var(--border-med); border-radius: 7px; font-size: 20px; font-family: 'DM Sans', sans-serif; color: var(--ink); background: var(--paper); outline: none; text-align: center; -moz-appearance: textfield; }
+.magi-dialog input[type="number"]::-webkit-outer-spin-button,
+.magi-dialog input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .ms-actions-primary, .ms-actions-secondary {
   display: grid;
@@ -596,3 +602,8 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
   .batch-btn{min-height:34px;padding:6px 12px;}
 }
 .batch-btn--cancel{background:transparent;color:rgba(255,255,255,0.6);border:0.5px solid rgba(255,255,255,0.2);}
+.is-poofing{transform:scale(0.85);opacity:0;filter:blur(4px);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);pointer-events:none;}
+.review-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.1);}
+.review-price-input{width:90px;background:rgba(0,0,0,0.3);border:1px solid var(--accent);color:#fff;border-radius:6px;padding:6px;text-align:right;font-family:monospace;font-size:14px;-moz-appearance:textfield;}
+.review-price-input::-webkit-outer-spin-button,.review-price-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.review-price-input::placeholder{color:rgba(255,255,255,0.3);}

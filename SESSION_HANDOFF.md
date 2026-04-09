@@ -1,113 +1,126 @@
-# SESSION HANDOFF — 2026-04-09 (Session 3)
+# SESSION HANDOFF — 2026-04-09 (Session 4)
 
 ## Session Summary
-Completed Phase 1 (Mobile Polish) and Phase 2 (Edit/Move Batch Split). All changes are CSS, JS, and HTML — no Supabase schema changes.
+Heavy feature session. Built the full bulk action suite, Price Review Queue, Poof animations, Book Detail action hierarchy, Wishlist→Library move, and fixed a critical Settings crash. All changes are CSS and JS — no Supabase schema changes this session.
 
 ---
 
 ## What We Built This Session
 
-### Phase 1: Mobile Polish
-**Files:** `assets/css/magilib.css`
+### 1. Book Detail — Action Hierarchy Fix
+**Files:** `catalog.js`, `assets/css/magilib.css`
 
-- `.toolbar-row-btn`: added `min-width:0`, `font-size:0.9rem` — prevents label wrapping at 320px (iPhone SE)
-- `.magi-sheet`: added `padding-bottom:calc(20px + env(safe-area-inset-bottom))` — Home Indicator clearance for Delete link
-- `.sheet-close-btn`: moved from `top:14px` → `top:20px` — clears the 16px handle bar on high-density displays
-- `@media(max-height:500px)`: batch bar padding/bottom reduced for landscape viewports
-- Sold filter verified: `b.sold === 'Sold'` (line ~527) is correct. Gemini's reference to `is_sold` was a naming error — no change needed.
+- `openEditFromModal(id)` implemented (was called but never defined — would have thrown ReferenceError)
+- Adds `.is-fading` to `.magi-sheet`, calls `closeModal()`, then `openEditForm(id)` after 350ms
+- Button labels updated: "Edit Book" + "Check eBay" (both branches: wishlist + library)
+- `.is-fading { opacity:0.4; transition:opacity 0.3s }` added to magilib.css
+- Both Edit buttons now pass `b._id` explicitly: `onclick="openEditFromModal('${b._id}')"`
 
-### Phase 2: Edit/Move Batch Mode Split
-**Files:** `index.html`, `assets/css/magilib.css`, `catalog.js`
+### 2. Poof Transition — Bulk Actions
+**Files:** `catalog.js`, `assets/css/magilib.css`
 
-#### Toolbar Row 2 — Three Buttons
-- `#editModeBtn` (✓ Edit) → `toggleEditMode()` → `S.selectMode = 'edit'`
-- `#moveModeBtn` (Move) → `toggleMoveMode()` → `S.selectMode = 'move'`
-- `#filterMenuBtn` (⊿ Filters) — unchanged
-- Button text toggles: "✓ Edit" ↔ "Exit Edit", "Move" ↔ "Exit Move"
+- `triggerPoof(ids, callback)` — queries `.book-card[data-id]`, adds `.is-poofing`, fires callback after 300ms
+- `.is-poofing { transform:scale(0.85); opacity:0; filter:blur(4px); transition:all 0.3s cubic-bezier(0.4,0,0.2,1); pointer-events:none }`
+- Applied to: `bulkMarkSold`, `bulkDelete`, `bulkWishlist`, `bulkDraft`
+- Callback pattern: `triggerPoof(ids, () => { exitSelectMode(); })` — NOT `exitSelectMode(); renderCatalog()` since `exitSelectMode` already calls `renderCatalog`
 
-#### S.selectMode Dual-Mode Logic
-- Was: `S.selectMode = false` (bool)
-- Now: `S.selectMode = null | 'edit' | 'move'`
-- All truthy checks (`if (S.selectMode)`, `S.selectMode && ...`) still work — non-null strings are truthy
+### 3. Price Review Queue
+**Files:** `catalog.js`, `assets/css/magilib.css`
 
-#### Batch Bar — Vertical Stack
-- `.batch-actions-bar`: `flex-direction:column`, `align-items:stretch`, `width:min(280px,90vw)`, `max-height:40vh`, `overflow-y:auto`
-- `#batchActionsStack`: empty shell in HTML; `updateBatchBar()` injects mode-specific buttons
-- **Edit mode:** [Auto-fill] [Price Update] [danger-separator] [Delete]
-- **Move mode:** [Mark Sold] [Wishlist] [Draft]
-- `.danger-separator`: `margin-top:12px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px`
-- `#batchCloseBtn`: `position:absolute; top:10px; right:10px` — 32px circle, calls `exitSelectMode()`
+- `bulkPriceUpdate()` → now opens `openPriceReviewSheet(ids)` instead of `magiPrompt`
+- `openPriceReviewSheet(ids)` — injects `#priceReviewOverlay` into DOM on first call (dark sheet: `background:var(--ink)`)
+- Per-book row: Title, Author, "No update found. Enter new price?", number input
+- `applyManualPrices()` — parallel `Promise.all` Supabase updates (`market_price` column), in-memory sync, then `triggerPoof → exitSelectMode`
+- `magiPrompt({ title, message, placeholder, onConfirm })` — reusable number input dialog (still in codebase, can be used elsewhere)
+- **DB confirmed:** `price_master` does not exist. `price_db` exists but has 0 rows. Built manual-only mode. Market sync lookup can be wired in later.
 
-#### New Bulk Functions
-| Function | Behavior |
-|---|---|
-| `bulkAutofill()` | Mirrors `_bkFill()` logic on `S.selectedBooks` — fills year/publisher/cover from Conjuring DB |
-| `bulkPriceUpdate()` | **Stub** — shows "coming soon" toast; no price-update infrastructure yet |
-| `bulkWishlist()` | Updates `sold_status: 'Wishlist'` via Supabase `.in('id', ids)` |
-| `bulkDraft()` | Updates `draft_status: 'Draft'` via Supabase `.in('id', ids)` |
+### 4. Wishlist Status — Card → Modal
+**Files:** `catalog.js`, `assets/css/magilib.css`
+
+- `wishlist-badge` removed from grid card `.book-meta-row` (line ~689)
+- `wishlist-badge` removed from copies sheet list view
+- `★ In Wishlist` status row added at bottom of `#modalBody` for wishlist items: `<div class="wishlist-status">★ In Wishlist</div>`
+- `.wishlist-status { color:#3b82f6; font-weight:600; margin:10px 20px; font-size:0.9rem; text-align:center }`
+- `.card-meta { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }` added to `.book-meta-row`
+
+### 5. Settings Crash — Fixed
+**Files:** `catalog.js`
+
+- **Root cause:** `showView('settings')` crashed with `TypeError: Cannot read properties of undefined (reading 'classList')` because `tabs['settings'] = 3` but only 3 tab buttons exist (indices 0–2)
+- **Fix (line 250):** `const _tabBtn = document.querySelectorAll('.tab-btn')[tabs[v]]; if (_tabBtn) _tabBtn.classList.add('active');`
+- Settings HTML is fully present in `index.html` (Account, Security, Preferences panels) — was never blank, just crashing before activation
+
+### 6. Wishlist → Library (Move Mode)
+**Files:** `catalog.js`
+
+- `updateBatchBar()` — Move mode now sniffs selected books: if ALL are `sold === 'Wishlist'`, shows "Move to Library" instead of "Wishlist"
+- `bulkMoveToLibrary()` — updates `sold_status: null` via Supabase `.in('id', ids)`, sets `b.sold = ''` in-memory, then `triggerPoof → exitSelectMode`
+- After poof + re-render on Wishlist view, moved books are absent (correct — they no longer have `sold === 'Wishlist'`)
+
+### 7. Legacy "Select" Button — Removed
+**Files:** `catalog.js`
+
+- The old IIFE-injected `☑ Select` button was being re-injected on every `renderCatalog` call
+- Removed the injection call from the `renderCatalog` wrapper (lines 2233–2234)
+- Added cleanup on IIFE startup: `var _oldSel = document.getElementById('_bkSelBtn'); if(_oldSel) _oldSel.remove();`
+- The `_injectSelBtn` function body is preserved (non-destructive) but is no longer called
 
 ---
 
-## b._id Guardrail — Verified Clean
-- `bulkAutofill()`: `.eq('id', b._id)` ✅
-- `bulkWishlist()`, `bulkDraft()`, `bulkMarkSold()`: `.in('id', ids)` where `ids` from `S.selectedBooks` ✅
-- No `b.id` introduced anywhere ✅
+## Supabase Schema — Confirmed This Session
+| Table | Rows | Notes |
+|-------|------|-------|
+| `books` | 3,209 | Active. Column for price = `market_price` (numeric) |
+| `price_db` | 0 | Exists but empty. Schema: `norm_key`, `source`, `price`, `currency`, `url`, `raw` |
+| `price_master` | — | Does NOT exist (was referenced in a prompt — stale name) |
 
 ---
 
 ## Gemini Prompt Accuracy Issues (Flagged This Session)
 
-1. **Phase 2.1 "Remove middle button from toolbar-btn-group"** — Gemini described a button that didn't exist. The `toolbar-btn-group` in Row 1 has only View Toggle + Refresh. The ✓ Edit/Move buttons are in Row 2. Gemini's model was stale from before Phase 2. Net work: just the `#batchCloseBtn`.
-
-2. **Phase 2 duplicate prompt** — Phase 2 and "Phase 2: Refactor" were near-identical prompts. The second only added `max-height:40vh; overflow-y:auto`. Gemini should consolidate before sending.
-
-3. **`is_sold` property name** — Gemini referenced `is_sold` in Phase 1. Actual property is `b.sold` (maps from `sold_status`). No change was needed.
-
-4. **`status === 'Draft'`** — Gemini used `status` as the draft property name. Actual: `b.draft` (maps from `draft_status`). Already excluded from `priceSrc` filter at line ~549.
+1. **`price_master` table name** — Table is actually `price_db` (0 rows, no title/author columns). Entire Market Sync feature was blocked until confirmed via Supabase MCP.
+2. **`b.wishlist` property** — Used in prompt for modal wishlist status. Actual property is `b.sold === 'Wishlist'`. Used `isWishlist` (already in scope).
+3. **`{ price: newPrice }`** — Used in price update prompt. Actual Supabase column is `market_price`. Corrected to `{ market_price: newPrice }`.
+4. **`closeModal()` in poof callback** — Referenced in Price Review spec. `closeModal()` closes `#modalOverlay` (book detail), not the price review sheet. Used `closePriceReviewSheet()` instead.
+5. **`selectModeBtn` removal** — Prompt said to remove from Row 1. Button didn't exist in HTML — it was being injected by the legacy IIFE. Required finding the injection site in the IIFE, not the static HTML.
 
 ---
 
 ## Unresolved / Pending
 
-1. **Device test — Phase 1 Mobile Polish:** The `.sheet-close-btn` position, two-row toolbar on iPhone SE (320px), and batch bar landscape behavior have NOT been verified on a physical device.
-
-2. **"Poof" transition logic for Move mode:** When a book is bulk-moved (sold/wishlist/draft), it should animate out of the current view. No "poof" animation exists yet.
-
-3. **Draft visual badge:** `bulkDraft()` updates Supabase correctly, but there's no visual confirmation in the batch bar that Draft was applied (beyond the toast). Possibly a card re-render with draft badge is sufficient — verify on device.
-
-4. **`bulkPriceUpdate()` stub:** Needs a price-entry UI (likely a dialog prompt). Deferred.
-
-5. **Sold Filter Accuracy:** `#showSoldChip` filter pill still unverified after `toggleSold()` changes from Session 1.
+1. **Device test:** Full UI on physical iPhone still needed — toolbar Row 2, batch bar, poof animation timing, price review sheet dark styling.
+2. **`price_db` population:** The Market Sync Review Queue UI is built (manual mode). The lookup layer needs `price_db` to be populated and `norm_key` strategy defined before it can be wired.
+3. **Sold Filter Accuracy:** `#showSoldChip` still unverified with a real sold book.
+4. **Draft visual badge on card:** `draft-badge` still renders on cards (correctly kept). Verify it's visible and styled correctly on device.
+5. **`magiPrompt` unused path:** `magiPrompt` was built but `bulkPriceUpdate` now uses the Review Sheet instead. `magiPrompt` is available for future use (e.g. any single-input confirmation flow).
 
 ---
 
 ## Model Learnings
 
-- **Gemini prompt drift:** Gemini's mental model of the toolbar lagged by one full session during Phase 2.1. Before acting on "remove X button", always read the current HTML state — don't trust the prompt's description of what's there.
-- **Duplicate prompt detection:** When a second Phase 2 prompt arrived with near-identical content, the right move was to run a delta analysis and only apply what was net-new. This avoided duplicate CSS blocks and redundant JS.
-- **`S.selectMode` truthy pattern:** Changing from `bool` to `null/string` is safe as long as all callers use truthy checks (not `=== true`). Verified clean.
-- **`_bkFill()` is IIFE-scoped:** The existing auto-fill function uses `_sel` (the IIFE's internal selection). `bulkAutofill()` correctly uses `S.selectedBooks` instead. These are parallel, not the same.
-- **Gemini property naming errors:** Two instances this session (`is_sold`, `status`). When Gemini names a JS/DB property, verify against the actual `loadCatalog()` mapping before touching any filter logic.
+- **Always pre-flight Supabase before building:** Queried `price_master` → doesn't exist. Saved an entire wasted build cycle. Use Supabase MCP at session start for any feature touching new tables.
+- **IIFE injection pattern:** The legacy bulk-edit IIFE re-injects DOM elements on every `renderCatalog`. "It's not in the HTML" doesn't mean it's not in the page — always check the IIFE wrapper for injectors.
+- **Settings tab has no nav button:** `showView('settings')` is called from the user dropdown, not a `.tab-btn`. The `tabs` map index 3 is always undefined. Guard with `if (_tabBtn)` is now permanent.
+- **`exitSelectMode` already calls `renderCatalog`:** Do not add `renderCatalog()` to `triggerPoof` callbacks — it would double-render. Consistent pattern: `triggerPoof(ids, () => { exitSelectMode(); })`.
+- **`market_price` vs `price`:** The Supabase column is `market_price` (numeric). The in-memory property is `b.price` (string). When writing bulk updates, always use `{ market_price: value }` not `{ price: value }`.
 
 ---
 
 ## Key Files Changed This Session
 | File | Change Summary |
 |------|----------------|
-| `assets/css/magilib.css` | Phase 1 polish: sheet padding, close btn offset, landscape media query; Phase 2: batch bar column layout, .danger-separator, .batch-close-btn, max-height |
-| `catalog.js` | S.selectMode → null/edit/move; toggleEditMode/toggleMoveMode; updateBatchBar() with mode HTML injection; bulkAutofill, bulkWishlist, bulkDraft, bulkPriceUpdate stub |
-| `index.html` | Toolbar Row 2: Edit + Move + Filters; batchActionsBar: shell + batchCloseBtn |
-| `CLAUDE.md` | Completed tasks + Learnings updated |
+| `catalog.js` | openEditFromModal; triggerPoof; bulkMarkSold/Delete/Wishlist/Draft with poof; bulkPriceUpdate → openPriceReviewSheet; magiPrompt; openPriceReviewSheet/closePriceReviewSheet/applyManualPrices; wishlist-badge removal; wishlist-status in modal; Settings tab crash fix; updateBatchBar Wishlist→Library sniff; bulkMoveToLibrary; Select button IIFE removal |
+| `assets/css/magilib.css` | .is-fading; .is-poofing; .review-row; .review-price-input; .wishlist-status; .card-meta; number input spinner suppression |
 
 ---
 
 ## GitHub Push Status
-**Pushed this session.** Commit: "UI: Refactor Edit/Move workflows, vertical batch bar ergonomics, and mobile polish"
+**Not pushed this session.** Recommend pushing before next session.
 
 ---
 
 ## Next Session Starting Point
-1. **Device test (priority):** Phase 1 + Phase 2 UI on physical iPhone — confirm toolbar Row 2 three-button layout, sheet close button position, batch bar vertical stack
-2. **"Poof" animation:** Define transition when books leave current view via Move mode actions
-3. **`bulkPriceUpdate()`:** Design price-entry dialog (likely `magiConfirm` variant with an input field)
-4. **Sold filter smoke test:** Verify `#showSoldChip` with at least one sold book before building on top of it
+1. **Device test (priority):** Poof animation, price review dark sheet, "Move to Library" in Move mode, Settings page rendering
+2. **Sold filter smoke test:** Verify `#showSoldChip` with at least one sold book
+3. **`price_db` strategy:** Define `norm_key` format and how/when it gets populated (manual import? eBay scrape? Conjuring DB prices?)
+4. **CLAUDE.md update:** Learnings from this session should be promoted to CLAUDE.md before next `newchat`

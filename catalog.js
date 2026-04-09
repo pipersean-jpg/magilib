@@ -247,7 +247,8 @@ function showView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
   const tabs={entry:0,catalog:1,wishlist:2,settings:3};
-  document.querySelectorAll('.tab-btn')[tabs[v]].classList.add('active');
+  const _tabBtn = document.querySelectorAll('.tab-btn')[tabs[v]];
+  if (_tabBtn) _tabBtn.classList.add('active');
   const catH2=document.querySelector('.catalog-header h2');
   if(v==='wishlist'){
     document.getElementById('view-catalog').classList.add('active');
@@ -686,7 +687,7 @@ function renderStatsRow() {
           <div class="book-author-text">${b.author}</div>
           <div style="font-size:9px;color:var(--ink-faint);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.publisher||''} ${b.year?'· '+b.year:''}</div>
         </div>
-        <div class="book-meta-row"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.sold==='Wishlist'?'<span class="wishlist-badge">Wishlist</span>':''}${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}${dupBadge}</div>
+        <div class="book-meta-row card-meta"><span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span><span class="book-price-text">${(b.price&&!isNaN(parseFloat(b.price)))?sym+parseFloat(b.price).toFixed(0):'—'}</span>${!isGrouped&&b.draft==='Draft'?'<span class="draft-badge">Draft</span>':''}${dupBadge}</div>
         ${b.star&&parseInt(b.star)>0&&!isGrouped?`<div class="star-row">${[1,2,3,4,5].map(n=>`<span class="star${parseInt(b.star)>=n?' lit':''}">★</span>`).join('')}</div>`:''}
       </div>
     </div>`;
@@ -786,7 +787,6 @@ function openCopiesSheet(key) {
           <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'—'}</span>
           ${b.price&&!isNaN(parseFloat(b.price))?`<span style="font-size:14px;font-weight:500;color:var(--ink);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
           ${isSold?'<span class="draft-badge" style="background:#fdecea;color:#a32d2d;margin-left:0;">Sold</span>':''}
-          ${isWishlist?'<span class="wishlist-badge" style="margin-left:0;">Wishlist</span>':''}
           ${isDraft?'<span class="draft-badge" style="margin-left:0;">Draft</span>':''}
         </div>
         <div style="font-size:12px;color:var(--ink-faint);">
@@ -856,6 +856,7 @@ function openModal(idx){
     </div>
     ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
     ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button onclick="window.open('${googleUrl}','_blank','noopener')" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
+    ${isWishlist?'<div class="wishlist-status">★ In Wishlist</div>':''}
 `;
   // Rewrite action buttons based on wishlist vs library
   const actionsArea = document.getElementById('modalActionsArea');
@@ -864,7 +865,7 @@ function openModal(idx){
     if (isWishlist) {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
+          <button class="btn-secondary" onclick="openEditFromModal('${b._id}')">Edit Book</button>
           <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} Check eBay</button>
         </div>
         <hr class="ms-separator">
@@ -874,8 +875,8 @@ function openModal(idx){
     } else {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
-          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} eBay</button>
+          <button class="btn-secondary" onclick="openEditFromModal('${b._id}')">Edit Book</button>
+          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} Check eBay</button>
         </div>
         <div class="ms-actions-secondary">
           <button class="btn-ghost" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
@@ -905,6 +906,12 @@ function openEbayModal(){
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) { window.location.href = S.currentModalUrl; }
   else { window.open(S.currentModalUrl, '_blank'); }
+}
+function openEditFromModal(id){
+  const sheet = document.querySelector('#modalOverlay .magi-sheet');
+  if (sheet) sheet.classList.add('is-fading');
+  closeModal();
+  setTimeout(() => { openEditForm(id); }, 350);
 }
 function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target){document.getElementById('modalOverlay').classList.remove('is-active');document.body.classList.remove('sheet-open');}}
 
@@ -978,12 +985,28 @@ function updateBatchBar() {
       '<button onclick="bulkPriceUpdate()" class="batch-btn">Price Update</button>' +
       '<div class="danger-separator"><button onclick="bulkDelete()" class="batch-btn batch-btn--danger">Delete</button></div>';
   } else if (S.selectMode === 'move') {
+    const allWishlist = S.selectedBooks.size > 0 && [...S.selectedBooks].every(id => {
+      const b = S.books.find(x => x._id === id);
+      return b && b.sold === 'Wishlist';
+    });
     stack.innerHTML =
       '<button onclick="bulkMarkSold()" class="batch-btn">Mark Sold</button>' +
-      '<button onclick="bulkWishlist()" class="batch-btn">Wishlist</button>' +
+      (allWishlist
+        ? '<button onclick="bulkMoveToLibrary()" class="batch-btn">Move to Library</button>'
+        : '<button onclick="bulkWishlist()" class="batch-btn">Wishlist</button>') +
       '<button onclick="bulkDraft()" class="batch-btn">Draft</button>';
   }
 }
+
+function triggerPoof(ids, callback) {
+  const arr = [...ids];
+  arr.forEach(id => {
+    const el = document.querySelector(`.book-card[data-id="${id}"]`);
+    if (el) el.classList.add('is-poofing');
+  });
+  setTimeout(callback, 300);
+}
+window.triggerPoof = triggerPoof;
 
 async function bulkMarkSold() {
   const ids = [...S.selectedBooks];
@@ -992,7 +1015,7 @@ async function bulkMarkSold() {
   if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
   ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Sold'; });
   showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as sold.`, 'success', 2500);
-  exitSelectMode();
+  triggerPoof(ids, () => { exitSelectMode(); });
 }
 window.bulkMarkSold = bulkMarkSold;
 
@@ -1009,7 +1032,7 @@ async function bulkDelete() {
       if (error) { showToast('Delete failed. Please try again.', 'error', 3000); return; }
       S.books = S.books.filter(b => !ids.includes(b._id));
       showToast(`${n} book${n > 1 ? 's' : ''} removed from your collection.`, 'success', 2500);
-      exitSelectMode();
+      triggerPoof(ids, () => { exitSelectMode(); });
     }
   });
 }
@@ -1045,9 +1068,89 @@ async function bulkAutofill() {
 window.bulkAutofill = bulkAutofill;
 
 async function bulkPriceUpdate() {
-  showToast('Price Update: coming in a future update.', 'info', 2500);
+  if (S.selectedBooks.size === 0) { showToast('No books selected', 'error'); return; }
+  openPriceReviewSheet([...S.selectedBooks]);
 }
 window.bulkPriceUpdate = bulkPriceUpdate;
+
+function openPriceReviewSheet(ids) {
+  console.log('[PriceReview] ids received:', ids);
+  // Inject shell into DOM on first use
+  if (!document.getElementById('priceReviewOverlay')) {
+    const el = document.createElement('div');
+    el.className = 'magi-sheet-overlay';
+    el.id = 'priceReviewOverlay';
+    el.onclick = function(e) { if (e.target === el) closePriceReviewSheet(); };
+    el.innerHTML = `
+      <div class="magi-sheet" id="priceReviewSheet" style="background:var(--ink);color:#fff;">
+        <div class="magi-sheet-handle" style="background:rgba(255,255,255,0.2);"></div>
+        <button class="sheet-close-btn" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff;" onclick="closePriceReviewSheet()">✕</button>
+        <div id="priceReviewBody" style="padding:0 20px 20px;"></div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+
+  // Populate rows
+  const rows = ids.map(id => {
+    const b = S.books.find(x => x._id === id);
+    if (!b) return '';
+    return `<div class="review-row">
+      <div style="flex:1;min-width:0;padding-right:12px;">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.title}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">${b.author || '—'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;">No update found. Enter new price?</div>
+      </div>
+      <input type="number" class="review-price-input" data-id="${id}" placeholder="0.00" step="0.01" min="0">
+    </div>`;
+  }).join('');
+
+  document.getElementById('priceReviewBody').innerHTML = `
+    <div style="text-align:center;padding:16px 0 20px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:4px;">Price Review</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);">${ids.length} book${ids.length > 1 ? 's' : ''} selected</div>
+    </div>
+    <div>${rows}</div>
+    <button onclick="applyManualPrices()" style="width:100%;margin-top:20px;padding:14px;background:var(--accent-mid);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;min-height:48px;">Apply Manual Prices</button>`;
+
+  document.getElementById('priceReviewOverlay').classList.add('is-active');
+  document.body.classList.add('sheet-open');
+}
+window.openPriceReviewSheet = openPriceReviewSheet;
+
+function closePriceReviewSheet() {
+  const overlay = document.getElementById('priceReviewOverlay');
+  if (overlay) overlay.classList.remove('is-active');
+  document.body.classList.remove('sheet-open');
+}
+window.closePriceReviewSheet = closePriceReviewSheet;
+
+async function applyManualPrices() {
+  const inputs = document.querySelectorAll('.review-price-input');
+  const updates = [];
+  inputs.forEach(input => {
+    const val = parseFloat(input.value);
+    const id = input.dataset.id;
+    if (id && val > 0) updates.push({ id, price: val });
+  });
+  if (!updates.length) { showToast('No prices entered.', 'error'); return; }
+
+  const results = await Promise.all(
+    updates.map(({ id, price }) =>
+      _supa.from('books').update({ market_price: price, updated_at: new Date().toISOString() }).eq('id', id)
+    )
+  );
+  const failed = results.filter(r => r.error).length;
+  const succeeded = updates.length - failed;
+
+  if (succeeded > 0) {
+    updates.forEach(({ id, price }) => { const b = S.books.find(x => x._id === id); if (b) b.price = String(price); });
+    showToast(`Updated prices for ${succeeded} book${succeeded > 1 ? 's' : ''}.`, 'success', 2500);
+    closePriceReviewSheet();
+    triggerPoof(updates.map(u => u.id), () => { exitSelectMode(); });
+  }
+  if (failed > 0) { showToast(`${failed} update${failed > 1 ? 's' : ''} failed.`, 'error', 3000); }
+}
+window.applyManualPrices = applyManualPrices;
 
 async function bulkWishlist() {
   const ids = [...S.selectedBooks];
@@ -1056,9 +1159,20 @@ async function bulkWishlist() {
   if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
   ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Wishlist'; });
   showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} moved to Wishlist.`, 'success', 2500);
-  exitSelectMode();
+  triggerPoof(ids, () => { exitSelectMode(); });
 }
 window.bulkWishlist = bulkWishlist;
+
+async function bulkMoveToLibrary() {
+  const ids = [...S.selectedBooks];
+  if (!ids.length) return;
+  const { error } = await _supa.from('books').update({ sold_status: null }).in('id', ids);
+  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = ''; });
+  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} moved to Library.`, 'success', 2500);
+  triggerPoof(ids, () => { exitSelectMode(); });
+}
+window.bulkMoveToLibrary = bulkMoveToLibrary;
 
 async function bulkDraft() {
   const ids = [...S.selectedBooks];
@@ -1067,7 +1181,7 @@ async function bulkDraft() {
   if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
   ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.draft = 'Draft'; });
   showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as Draft.`, 'success', 2500);
-  exitSelectMode();
+  triggerPoof(ids, () => { exitSelectMode(); });
 }
 window.bulkDraft = bulkDraft;
 
@@ -2116,12 +2230,13 @@ setTimeout(function(){
     _orig.apply(this,arguments);
     setTimeout(function(){
       _css();_buildDOM();
-      // Inject Select button — resets tries each render so it keeps trying
-      if(!document.getElementById('_bkSelBtn')){_injTries=0;_injectSelBtn();}
       if(_on)_stamp();
       _sync();
     },0);
   };
+  // Remove legacy Select button if it exists in the DOM
+  var _oldSel=document.getElementById('_bkSelBtn');
+  if(_oldSel)_oldSel.remove();
   _watchSettings();
   // Try settings inject immediately in case already on that tab
   _settTries=0;_injectSettingsBtn();
@@ -2154,6 +2269,33 @@ function magiConfirm({ title, message, confirmText, onConfirm }) {
 function closeDialog() {
   document.getElementById('dialogOverlay').classList.remove('is-active');
 }
+
+function magiPrompt({ title, message, placeholder = '0.00', onConfirm }) {
+  const overlay = document.getElementById('dialogOverlay');
+  overlay.innerHTML = `
+    <div class="magi-dialog">
+      <h3>${title}</h3>
+      <p>${message}</p>
+      <input type="number" id="magiPromptInput" step="0.01" min="0" placeholder="${placeholder}">
+      <div class="magi-dialog-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
+        <button onclick="closeDialog()" class="btn-ghost">Cancel</button>
+        <button id="magiPromptBtn" class="btn-primary">Confirm</button>
+      </div>
+    </div>
+  `;
+  overlay.classList.add('is-active');
+  const input = document.getElementById('magiPromptInput');
+  setTimeout(() => input.focus(), 50);
+  const submit = () => {
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val < 0) { input.style.borderColor = '#a32d2d'; return; }
+    onConfirm(val);
+    closeDialog();
+  };
+  document.getElementById('magiPromptBtn').onclick = submit;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+}
+window.magiPrompt = magiPrompt;
 
 /**
  * Enhanced Delete Logic (Brand Safe)

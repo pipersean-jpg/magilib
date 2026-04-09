@@ -1,8 +1,8 @@
-# MagiLib Project Status - 2026-04-09
+# MagiLib Project Status - 2026-04-09 (Session 4)
 
 ## Current Project Status
 - **Phase:** Block 2 (Search & Catalog Functionality) + Global Design System - **IN PROGRESS**
-- **Current Focus:** Move mode "Poof" transition logic, Draft visual badge, device verification of Phase 1 + 2 UI changes.
+- **Current Focus:** Device verification of all Session 4 UI; `price_db` population strategy; Sold filter smoke test.
 
 ## Completed Tasks ✅
 - [x] Header Reordering (Add > Library > Wishlist > Settings)
@@ -32,6 +32,14 @@
 - [x] Batch Dual-Mode: `S.selectMode` → `null/'edit'/'move'`; Edit shows Auto-fill/Price Update/Delete; Move shows Mark Sold/Wishlist/Draft
 - [x] Batch ergonomics: Absolute `×` close button (`#batchCloseBtn`) on batch bar wired to `exitSelectMode()`
 - [x] Bulk functions: `bulkAutofill()`, `bulkWishlist()`, `bulkDraft()` implemented; `bulkPriceUpdate()` stubbed
+- [x] `openEditFromModal(id)` implemented (was missing — would throw ReferenceError)
+- [x] Poof transition: `triggerPoof(ids, callback)` + `.is-poofing` CSS applied to all bulk move/delete actions
+- [x] Price Review Queue: `openPriceReviewSheet(ids)` — dark Magi-Sheet, per-book price inputs, `applyManualPrices()` with parallel Supabase updates
+- [x] `magiPrompt({ title, message, placeholder, onConfirm })` — reusable number-input dialog
+- [x] Wishlist badge removed from cards; `★ In Wishlist` status shown in Book Detail modal instead
+- [x] Settings page crash fixed: `showView('settings')` no longer crashes on missing tab button index
+- [x] `bulkMoveToLibrary()`: Move mode sniffs if all selected are Wishlist → shows "Move to Library"; updates `sold_status: null`
+- [x] Legacy `☑ Select` button removed from IIFE injection (was re-injecting on every renderCatalog)
 
 ## Learnings
 - **Search algorithm:** Fuse.js with `threshold: 0.3`. Keys are `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse is not loaded.
@@ -50,6 +58,13 @@
 - **Batch state:** `S.selectMode` (`null | 'edit' | 'move'`) + `S.selectedBooks` (Set of `_id` strings). Cards get `data-id="${b._id}"`. Click handler branches on truthy `S.selectMode`.
 - **Batch bar visibility:** `#batchActionsBar` uses `.batch-actions-bar` + `.is-visible` toggle (translateY animation from bottom). Bar is a vertical column stack; `#batchActionsStack` innerHTML is injected by `updateBatchBar()` based on mode.
 - **Batch close:** `#batchCloseBtn` (absolute top-right of bar) calls `exitSelectMode()` — identical cleanup to toolbar "Exit Edit"/"Exit Move" buttons.
+- **`triggerPoof` callback rule:** NEVER add `renderCatalog()` to the callback — `exitSelectMode()` already calls it. Pattern: `triggerPoof(ids, () => { exitSelectMode(); })`.
+- **`market_price` vs `b.price`:** Supabase column = `market_price` (numeric). In-memory = `b.price` (string). All bulk price updates use `{ market_price: value }`. Never use `{ price: value }`.
+- **Settings tab index:** `showView('settings')` maps to tab index 3, but only 3 tab buttons exist (0–2). Always guard: `const _tabBtn = querySelectorAll('.tab-btn')[tabs[v]]; if (_tabBtn) _tabBtn.classList.add('active')`.
+- **IIFE injection pattern:** The bulk-edit IIFE re-injects DOM elements on every `renderCatalog`. Removing a button means finding and disabling the injector in the IIFE wrapper, not just the static HTML.
+- **`price_db` table:** Exists (0 rows). Schema: `norm_key`, `source`, `price`, `currency`, `url`, `raw`. No `title`/`author` columns. `price_master` does NOT exist. Market Sync lookup deferred until `price_db` is populated.
+- **`openEditForm(id)`:** Defined in `books.js:27` (not catalog.js). Takes `b._id`, populates and opens `#editModalOverlay`.
+- **`closeModal()` scope:** Only closes `#modalOverlay` (book detail sheet). Does NOT close price review sheet or edit modal. Use dedicated close functions for other sheets.
 - **Draft exclusion:** `priceSrc` filter (line ~549 in catalog.js) already excludes `b.draft === 'Draft'` from value/avg stats — no separate renderStatsRow change needed.
 - **Cover zoom:** `zoomCover(imgSrc)` creates a `.ms-zoom-overlay` appended to `document.body` — NOT a static DOM element. Legacy `openZoom()` / `#zoomOverlay` removed.
 - **Insights bar:** `renderStatsRow()` outputs inline compact stats: total books · total value · avg · top publisher — all in `.insights-bar` with `<span>` ids.
@@ -86,12 +101,10 @@
   - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
 ## Next Session Priority 🚀
-- [x] **Magi-Sheet Animation:** iOS transition updated to `cubic-bezier(0.32, 0.72, 0, 1)` + `body.sheet-open` lock added.
-- [ ] **Book Detail on Device:** Verify Primary/Secondary/Danger button layout renders correctly on physical device. Adjust sizing/spacing if needed.
-- [x] **Edit Book from Modal:** `openEditFromModal()` now calls `closeModal()` then waits 350ms before `openEditForm(b._id)`.
-- [x] **Wishlist Tab Sync:** `toggleWishlistStatus()` confirmed calling `renderCatalog()` after successful Supabase update.
-- [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly after the `toggleSold()` changes.
-- [x] **Batch Mode Edge Cases:** `bulkDelete()` now alerts "No books selected" when `S.selectedBooks.size === 0`.
+- [ ] **Device Test (priority):** Poof animation timing, price review dark sheet, "Move to Library" in Move mode, Settings page rendering on physical iPhone.
+- [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly with a real sold book.
+- [ ] **`price_db` Strategy:** Define `norm_key` format and how the table gets populated before building Market Sync lookup layer.
+- [ ] **Push to GitHub:** Session 4 changes not yet pushed.
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
