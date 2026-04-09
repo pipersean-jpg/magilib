@@ -805,6 +805,61 @@ function closeCopiesSheet(e) {
     document.getElementById('copiesOverlay').classList.add('hidden');
   }
 }
+// ── MARKET SYNC ──────────────────────────────────────────────────────
+function normKey(title, author) {
+  const clean = s => (s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+  return clean(title) + ':' + clean(author);
+}
+
+async function loadMarketSync(b) {
+  const el = document.getElementById('marketSyncSection');
+  if (!el) return;
+
+  const key = normKey(b.title, b.author);
+  const { data, error } = await _supa
+    .from('price_db')
+    .select('source, price, currency, created_at')
+    .eq('norm_key', key)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  if (error || !data || !data.length) { el.style.display = 'none'; return; }
+
+  const sym = currSym();
+  const avg = data.reduce((s, r) => s + parseFloat(r.price), 0) / data.length;
+  const rows = data.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('en-AU', { month:'short', year:'numeric' });
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);">
+      <span style="font-size:12px;color:var(--ink-light);">${r.source}</span>
+      <span style="font-size:12px;color:var(--ink-faint);">${date}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--ink);">${sym}${parseFloat(r.price).toFixed(0)}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);">
+      <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Market Price Evidence</div>
+      ${rows}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <span style="font-size:12px;color:var(--ink-faint);">Suggested avg</span>
+        <span style="font-size:15px;font-weight:700;color:var(--ink);">${sym}${avg.toFixed(0)}</span>
+        <button onclick="acceptMarketPrice('${b._id}',${avg.toFixed(2)})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Accept</button>
+      </div>
+    </div>`;
+  el.style.display = '';
+}
+
+async function acceptMarketPrice(id, price) {
+  const { error } = await _supa.from('books').update({ market_price: price, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) { showToast('Price update failed', 'error', 2000); return; }
+  const b = S.books.find(x => x._id === id);
+  if (b) { b.price = String(price); }
+  showToast('Market price updated ✓', 'success', 2000);
+  // Refresh the price badge in the open modal
+  openModal(S.currentModalIdx);
+}
+// ─────────────────────────────────────────────────────────────────────
+
 function openModal(idx){
   S.currentModalIdx=idx;
   const b=S.books[idx];if(!b)return;
@@ -857,6 +912,7 @@ function openModal(idx){
     ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${b.collectorNote}</div></div>`:''}
     ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button onclick="window.open('${googleUrl}','_blank','noopener')" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
     ${isWishlist?'<div class="wishlist-status">★ In Wishlist</div>':''}
+    <div id="marketSyncSection" style="display:none;"></div>
 `;
   // Rewrite action buttons based on wishlist vs library
   const actionsArea = document.getElementById('modalActionsArea');
@@ -900,6 +956,7 @@ function openModal(idx){
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
   document.getElementById('modalOverlay').classList.add('is-active');
+  if (!isWishlist) loadMarketSync(b);
 }
 function openEbayModal(){
   // Use location.href on mobile to avoid white-screen-on-back issue
