@@ -1,8 +1,8 @@
-# MagiLib Project Status - 2026-04-09 (Session 4)
+# MagiLib Project Status - 2026-04-09 (Session 5)
 
 ## Current Project Status
-- **Phase:** Block 2 (Search & Catalog Functionality) + Global Design System - **IN PROGRESS**
-- **Current Focus:** Device verification of all Session 4 UI; `price_db` population strategy; Sold filter smoke test.
+- **Phase:** Block 3 (Pricing & Admin Infrastructure) - **IN PROGRESS**
+- **Current Focus:** price_db population (CSV ready to build); Market Sync wired and live; Admin portal deployed.
 
 ## Completed Tasks ✅
 - [x] Header Reordering (Add > Library > Wishlist > Settings)
@@ -101,10 +101,9 @@
   - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
 ## Next Session Priority 🚀
-- [ ] **Device Test (priority):** Poof animation timing, price review dark sheet, "Move to Library" in Move mode, Settings page rendering on physical iPhone.
 - [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly with a real sold book.
-- [ ] **`price_db` Strategy:** Define `norm_key` format and how the table gets populated before building Market Sync lookup layer.
-- [ ] **Push to GitHub:** Session 4 changes not yet pushed.
+- [ ] **Price CSV:** Build first real price CSV and upload via admin portal to populate `price_db` and test Market Sync end-to-end.
+- [ ] **Small UX fixes:** Login frustrations, book status moves, settings — deferred from Session 5.
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).

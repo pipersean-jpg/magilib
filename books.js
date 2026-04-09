@@ -419,10 +419,16 @@ async function toggleSold() {
 
 function toggleShowSold(btn) {
   S.showSold = !S.showSold;
+  S.showWishlist = false;
+  S.showDrafts = false;
   btn.classList.toggle('active', S.showSold);
   btn.style.background = S.showSold ? '#a32d2d' : 'transparent';
   btn.style.color = S.showSold ? 'white' : '#a32d2d';
   btn.style.borderColor = S.showSold ? '#a32d2d' : '#f5b7b5';
+  const wishChip = document.getElementById('showWishlistChip');
+  const draftsChip = document.getElementById('showDraftsChip');
+  if (wishChip) { wishChip.classList.remove('active'); wishChip.style.background = 'transparent'; wishChip.style.color = '#185fa5'; }
+  if (draftsChip) { draftsChip.classList.remove('active'); draftsChip.style.background = 'transparent'; draftsChip.style.color = '#5f5e5a'; }
   renderCatalog();
 }
 
