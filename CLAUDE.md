@@ -100,6 +100,22 @@
   - Any unresolved bugs or known regressions
   - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
+## Session 9 Completed (2026-04-10) ✅
+- Built `getEstimatedValue(book)` — full pricing engine (in-print MSRP×condition% vs OOP eBay median×scarcity)
+- Built `loadMarketSync` + Market Price Evidence UI — source rows, confidence stars, est. value, Accept button
+- 2×2 modal button grid: Market Value / Check eBay / Edit Details / Mark Sold — removed +Wishlist
+- `.btn-action` class: paper-warm bg, dark fill on :active, depress animation
+- `toggleMarketSync`: lazy-loads pricing panel on demand (no auto-load on modal open)
+- Fixed QTTE cross-boundary regex → per-`<li>` parsing
+- Fixed word-boundary matching across all scrapers (replaced 8-char prefix with startsWith + ratio)
+- Murphy's URL fix: `murphysmagic.com/product.aspx?id={key}` (was wrong domain+format)
+- Murphy's norm_key mismatch fix: strip "by Author Book" suffixes from map keys → 671 matches (was 1)
+- Murphy's upsert now includes `in_print: 'likely_inprint'`
+- Jump bug fix: `toggleMarketSync` no longer shows section until data confirmed
+- Manually scraped eBay CSV imported → 2,021 `ebay_sold` rows in price_db
+- `fx_rates` + `in_print` column migrations applied
+- Cache-bust: `?v=s5` → `?v=s6`
+
 ## Session 7 Completed (2026-04-10) ✅
 - Built `scripts/scrape-prices.js` — quarterly price scraper
 - Murphy's source: live Daily Products CSV (7,603 products, filtered to 569 books via `Product Type === 'Book'`), 845 rows in price_db
@@ -130,13 +146,18 @@
 - Credentials: `.env` has `SUPABASE_SERVICE_KEY`, `EBAY_APP_ID`, `MURPHYS_CSV_URL`
 
 ## Next Session Priority 🚀
-- [ ] **Rerun scrapers:** `--source=ebay` (quota reset), verify `--source=qtte` and `--source=penguin` completed
-- [ ] **Add `in_print` column** to `price_db` (migration), populate from Murphy's + Penguin `raw` field
-- [ ] **Add `fx_rates` table** — seed with USD/GBP/AUD/EUR, weekly refresh
-- [ ] **Build `getEstimatedValue(book)`** — pure JS valuation function
-- [ ] **Price range bar + condition slider UI** in Book Detail sheet
+- [ ] **Run `--source=ebay`** when eBay API quota resets (midnight UTC) — 921 books, ~80 min
+- [ ] **Run `--source=qtte --force`** and `--source=penguin --force` to refresh with improved matching
+- [ ] **Condition slider UI** in Book Detail sheet (condition% presets → est. value updates live)
+- [ ] **Price range bar** (low–high span from all sources)
+- [ ] **newchat/handoff protocol audit** — tighten session open/close for max build velocity
 - [ ] **Small UX fixes:** Login frustrations, book status moves, settings — still deferred
-- [ ] **Cache-bust:** bump script tags from `?v=s5` to `?v=s6`
+
+## price_db Status (2026-04-10 end of Session 9)
+- `murphys_msrp`: 671 rows (correctly matched to user's books) — re-scraped this session
+- `qtte_secondary`: ~148+ rows — may have stale/wrong matches, rerun with --force
+- `penguin_retail`: ~23+ rows — may be incomplete, rerun with --force
+- `ebay_sold`: 2,021 rows from manual CSV import; API scrape pending quota reset
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
