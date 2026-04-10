@@ -26,6 +26,7 @@ const EBAY_APP_ID         = process.env.EBAY_APP_ID || 'SeanPipe-ArcanaBo-PRD-46
 const MURPHYS_CSV_URL     = process.env.MURPHYS_CSV_URL || 'https://developer.murphysmagic.com/CSV/CSV_files/MurphysProductList-New_v20.csv?233ec264071945d39a2a584b7d346117';
 
 const DRY_RUN     = process.argv.includes('--dry-run');
+const FORCE       = process.argv.includes('--force'); // bypass freshness check for SOURCE_ONLY
 const SOURCE_ONLY = (process.argv.find(a => a.startsWith('--source=')) || '').replace('--source=', '') || null;
 const STALE_DAYS  = 90;
 const DELAY_MS    = 1500; // ms between requests per source
@@ -282,11 +283,23 @@ async function scrapeQTTE(book) {
 
     if (!matches.length) return;
 
-    // Take lowest price (most accessible copy)
-    const prices = matches.map(m => ({
-      price: parseFloat(m[2].replace(',', '')),
-      url: 'https://quickerthantheeye.com' + m[1],
-    })).filter(m => m.price >= 1).sort((a, b) => a.price - b.price);
+    const normT = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    const bookTitle = normT(book.title);
+
+    // Filter by title match using URL slug (QTTE uses descriptive slugs: /p/cat/Title_Words-12345)
+    // Same startsWith logic as Penguin — prevents unrelated results at lower prices winning.
+    const prices = matches.map(m => {
+      const slug = m[1].split('/').pop().replace(/-\d+$/, '').replace(/_/g, ' ');
+      return {
+        price: parseFloat(m[2].replace(',', '')),
+        url: 'https://quickerthantheeye.com' + m[1],
+        resultTitle: normT(slug),
+      };
+    }).filter(m => {
+      if (m.price < 1) return false;
+      return m.resultTitle.startsWith(bookTitle.slice(0, 8)) ||
+             bookTitle.startsWith(m.resultTitle.slice(0, 8));
+    }).sort((a, b) => a.price - b.price);
 
     if (!prices.length) return;
     const best = prices[0];
@@ -340,9 +353,11 @@ async function scrapePenguin(book) {
       if (!titleM || !priceM || !stockM) continue;
 
       const resultTitle = normT(titleM[1]);
-      // Must be a close title match — first 8 chars overlap
-      const isMatch = resultTitle.includes(bookTitle.slice(0, 8)) ||
-                      bookTitle.includes(resultTitle.slice(0, 8));
+      // Must be a close title match — both titles must START with the same prefix.
+      // Using includes() here is wrong: "conjuror at the table".includes("at the t")
+      // would incorrectly match "At The Table Live Lecture - ..." results.
+      const isMatch = resultTitle.startsWith(bookTitle.slice(0, 8)) ||
+                      bookTitle.startsWith(resultTitle.slice(0, 8));
       if (!isMatch) continue;
 
       const price = parseFloat(priceM[1]);
@@ -385,6 +400,7 @@ async function main() {
 
   log(DRY_RUN ? '=== DRY RUN MODE ===' : '=== LIVE MODE ===');
   if (SOURCE_ONLY) log(`Source filter: ${SOURCE_ONLY}`);
+  if (FORCE) log('FORCE mode: bypassing freshness check for all entries');
 
   const books    = await fetchBooks();
   const freshSet = await fetchExistingKeys();
@@ -426,7 +442,7 @@ async function main() {
       const book = books[i];
       const freshKey = `${book.norm_key}::${sourceKeyMap[source.name]}`;
 
-      if (!source.alwaysRefresh && freshSet.has(freshKey)) {
+      if (!source.alwaysRefresh && !FORCE && freshSet.has(freshKey)) {
         skipped++;
         continue;
       }
