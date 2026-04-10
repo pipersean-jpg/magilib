@@ -397,7 +397,8 @@ async function scrapePenguin(book) {
       price:    best.price,
       currency: 'USD',
       url:      best.url,
-      raw:      best.raw, // "in_stock" or "out_of_stock"
+      raw:      best.raw,
+      in_print: best.inStock ? 'confirmed_inprint' : 'confirmed_oop',
     });
     log(`  Penguin: ${book.norm_key} → USD${best.price.toFixed(2)} (${best.raw})`);
   } catch (e) {
