@@ -301,8 +301,11 @@ async function scrapeQTTE(book) {
       };
     }).filter(m => {
       if (m.price < 1) return false;
-      return m.resultTitle.startsWith(bookTitle.slice(0, 8)) ||
-             bookTitle.startsWith(m.resultTitle.slice(0, 8));
+      // Word-boundary match: titles must be equal OR one must start with the other
+      // followed by a space (not mid-word). Prevents "Card College Light" matching
+      // "Card College Lighter" since "lighter" doesn't start with "light ".
+      const a = bookTitle, b = m.resultTitle;
+      return a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
     }).sort((a, b) => a.price - b.price);
 
     if (!prices.length) return;
@@ -360,8 +363,8 @@ async function scrapePenguin(book) {
       // Must be a close title match — both titles must START with the same prefix.
       // Using includes() here is wrong: "conjuror at the table".includes("at the t")
       // would incorrectly match "At The Table Live Lecture - ..." results.
-      const isMatch = resultTitle.startsWith(bookTitle.slice(0, 8)) ||
-                      bookTitle.startsWith(resultTitle.slice(0, 8));
+      const a = bookTitle, b = resultTitle;
+      const isMatch = a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
       if (!isMatch) continue;
 
       const price = parseFloat(priceM[1]);
