@@ -1,8 +1,8 @@
-# MagiLib Project Status - 2026-04-09 (Session 5)
+# MagiLib Project Status - 2026-04-10 (Session 7)
 
 ## Current Project Status
 - **Phase:** Block 3 (Pricing & Admin Infrastructure) - **IN PROGRESS**
-- **Current Focus:** price_db population (CSV ready to build); Market Sync wired and live; Admin portal deployed.
+- **Current Focus:** price_db population in progress; scraper infrastructure built; Pricing Engine architecture planned.
 
 ## Completed Tasks ✅
 - [x] Header Reordering (Add > Library > Wishlist > Settings)
@@ -100,10 +100,43 @@
   - Any unresolved bugs or known regressions
   - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
+## Session 7 Completed (2026-04-10) ✅
+- Built `scripts/scrape-prices.js` — quarterly price scraper
+- Murphy's source: live Daily Products CSV (7,603 products, filtered to 569 books via `Product Type === 'Book'`), 845 rows in price_db
+- QTTE source: HTML scraper, secondary market prices + listing count, ~148+ rows
+- Penguin Magic source: HTML scraper, retail price + `in_stock`/`out_of_stock` signal in `raw` column
+- eBay Finding API: credentials live (PRD), quota exhausted during testing — restart next session
+- CMB (CollectingMagicBooks): dropped — fully JS-rendered (Wix), not scrapeable
+- Vanishing Inc: dropped — bot-blocked on every request
+- Comprehensive Pricing Engine architecture designed (see below)
+- In-print detection strategy designed: Murphy's → Penguin in-stock → QTTE new listings → eBay volume → user prompt
+
+## Pricing Engine Architecture (Session 7 Design) 📐
+- **Two modes:** In-Print (MSRP × condition%) vs Out-of-Print (eBay median × scarcity factor)
+- **In-print detection hierarchy:** Murphy's row → Penguin `in_stock` → secondary sources → user prompt
+- **`in_print` field values:** `confirmed_inprint` / `confirmed_oop` / `likely_inprint` / `likely_oop` / `unknown`
+- **Confidence score:** ★1–5 based on source count + data freshness
+- **UI components planned:** Est. Value badge, price range bar, condition slider, source breakdown, OOP flag
+- **Settings:** condition % presets per grade, home currency, valuation mode (conservative/market/optimistic)
+- **New DB needed:** `fx_rates` table (weekly FX), `in_print` + `edition_type` columns on `price_db`
+- **Build order:** FX rates → `getEstimatedValue()` fn → price range bar + condition slider → condition settings UI → OOP scarcity → edition premiums
+
+## price_db Status (2026-04-10)
+- `murphys_msrp`: 845 rows (universal — all Murphy's books, not just your collection)
+- `qtte_secondary`: ~148+ rows (may be incomplete — rerun `--source=qtte` if needed)
+- `penguin_retail`: ~23+ rows (may be incomplete — rerun `--source=penguin` if needed)
+- `ebay_sold`: 0 rows — rerun `--source=ebay` after quota reset (midnight UTC)
+- Scraper: `scripts/scrape-prices.js` — run with `--source=ebay|murphys|qtte|penguin`
+- Credentials: `.env` has `SUPABASE_SERVICE_KEY`, `EBAY_APP_ID`, `MURPHYS_CSV_URL`
+
 ## Next Session Priority 🚀
-- [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly with a real sold book.
-- [ ] **Price CSV:** Build first real price CSV and upload via admin portal to populate `price_db` and test Market Sync end-to-end.
-- [ ] **Small UX fixes:** Login frustrations, book status moves, settings — deferred from Session 5.
+- [ ] **Rerun scrapers:** `--source=ebay` (quota reset), verify `--source=qtte` and `--source=penguin` completed
+- [ ] **Add `in_print` column** to `price_db` (migration), populate from Murphy's + Penguin `raw` field
+- [ ] **Add `fx_rates` table** — seed with USD/GBP/AUD/EUR, weekly refresh
+- [ ] **Build `getEstimatedValue(book)`** — pure JS valuation function
+- [ ] **Price range bar + condition slider UI** in Book Detail sheet
+- [ ] **Small UX fixes:** Login frustrations, book status moves, settings — still deferred
+- [ ] **Cache-bust:** bump script tags from `?v=s5` to `?v=s6`
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
