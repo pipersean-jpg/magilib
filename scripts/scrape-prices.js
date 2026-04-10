@@ -204,9 +204,9 @@ async function buildMurphysMap() {
     if (!title || msrp < 1) continue;
 
     const titleClean = clean(title);
-    // Product Key is a numeric Shopify ID — not usable as a storefront URL.
-    // Use a search URL instead so the link reliably finds the product.
-    const url = `https://www.murphysmagicsupplies.com/search?q=${encodeURIComponent(title)}`;
+    const url = key
+      ? `https://www.murphysmagic.com/product.aspx?id=${key}`
+      : null;
 
     _murphysMap.set(titleClean, { price: msrp, url, artist: clean(artist) });
   }
