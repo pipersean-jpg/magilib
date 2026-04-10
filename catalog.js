@@ -199,33 +199,53 @@ async function importFromCSV(event) {
   showToast(msg, failed > 0 ? 'error' : 'success', 4000);
   loadCatalog();
 }
+function updatePriceLabels(cur) {
+  const c = cur || (S.settings && S.settings.currency) || 'AUD';
+  const el = id => document.getElementById(id);
+  if(el('priceLabelAdd'))  el('priceLabelAdd').textContent  = 'Market price (' + c + ') *';
+  if(el('costLabelAdd'))   el('costLabelAdd').textContent   = 'Purchase price (' + c + ')';
+  if(el('priceLabelEdit')) el('priceLabelEdit').textContent = 'Market Price (' + c + ')';
+  if(el('costLabelEdit'))  el('costLabelEdit').textContent  = 'Purchase Price (' + c + ')';
+}
 function loadSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
     S.settings=s;
-    const setField = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
     if(s.currency){const el=document.getElementById('s-currency');if(el)el.value=s.currency;const cl=document.getElementById('currencyLabel');if(cl)cl.textContent=s.currency;}
     if(s.marketplace){ const el=document.getElementById('s-marketplace'); if(el) el.value=s.marketplace; }
+    const condDefs = { fine:100, vg:80, good:60, fair:40 };
+    for(const [k,def] of Object.entries(condDefs)){
+      const el=document.getElementById('s-cond-'+k);
+      if(el) el.value = s['condPct_'+k] !== undefined ? s['condPct_'+k] : def;
+    }
+    updatePriceLabels(s.currency);
   }catch(e){ console.warn('loadSettings error:', e); }
 }
 function saveSettings(){
   let existing = {};
   try { existing = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}'); } catch(e){}
-  const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
+  const getVal   = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
   const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
+  const getNum   = (id, def) => { const el=document.getElementById(id); return el && el.value !== '' ? parseInt(el.value, 10) : def; };
+  const currency = getVal('s-currency') || existing.currency || 'AUD';
   const s = {
-    currency: getVal('s-currency') || existing.currency || 'AUD',
-    marketplace: getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
-    statTotal: getCheck('s-stat-total'),
-    statValue: getCheck('s-stat-value'),
-    statAvg:   getCheck('s-stat-avg'),
-    statTop:   getCheck('s-stat-top'),
-    welcomeSeen: existing.welcomeSeen || false,
+    currency,
+    marketplace:  getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
+    statTotal:    getCheck('s-stat-total'),
+    statValue:    getCheck('s-stat-value'),
+    statAvg:      getCheck('s-stat-avg'),
+    statTop:      getCheck('s-stat-top'),
+    welcomeSeen:  existing.welcomeSeen || false,
+    condPct_fine: getNum('s-cond-fine', 100),
+    condPct_vg:   getNum('s-cond-vg',   80),
+    condPct_good: getNum('s-cond-good',  60),
+    condPct_fair: getNum('s-cond-fair',  40),
   };
   S.settings = s;
   try { localStorage.setItem('arcana_books_v2', JSON.stringify(s)); } catch(e){}
   const cl = document.getElementById('currencyLabel');
-  if(cl) cl.textContent = s.currency || 'AUD';
+  if(cl) cl.textContent = currency;
+  updatePriceLabels(currency);
 }
 function showView(v){
   // Safety lock: block leaving Add tab if queue or key fields have content
@@ -819,7 +839,17 @@ async function getFxRates() {
 }
 
 // ── Condition % presets ───────────────────────────────────────────────────
-const CONDITION_PCT = { Mint:1.0, New:1.0, Fine:0.90, 'VG+':0.80, VG:0.70, Good:0.60, Fair:0.50, Poor:0.30 };
+function getConditionPct(condition) {
+  const s = S.settings || {};
+  const map = {
+    'Fine':       (s.condPct_fine !== undefined ? s.condPct_fine : 100) / 100,
+    'Very Good':  (s.condPct_vg   !== undefined ? s.condPct_vg   : 80)  / 100,
+    'Good':       (s.condPct_good !== undefined ? s.condPct_good : 60)  / 100,
+    'Fair':       (s.condPct_fair !== undefined ? s.condPct_fair : 40)  / 100,
+    'Mint': 1.0, 'New': 1.0, 'VG+': 0.80, 'VG': 0.70, 'Poor': 0.30,
+  };
+  return map[condition] !== undefined ? map[condition] : 0.70;
+}
 
 // ── getEstimatedValue ─────────────────────────────────────────────────────
 async function getEstimatedValue(book) {
@@ -843,7 +873,7 @@ async function getEstimatedValue(book) {
   const inPrint = best.in_print || 'unknown';
   const isInPrint = inPrint === 'confirmed_inprint' || inPrint === 'likely_inprint';
 
-  const condPct = CONDITION_PCT[book.condition] ?? 0.70;
+  const condPct = getConditionPct(book.condition);
   let value, low, high, mode, usedSources;
 
   if (isInPrint) {

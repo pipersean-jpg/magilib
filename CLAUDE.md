@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 12
+# MagiLib Project Status — Session 13
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -28,18 +28,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 11)
-- ### 1. `index.html` — multiple removals + welcome screen rewrite
-- Book detail sheet: 6 buttons (2×3) → 4 buttons (2×2): Edit | eBay / Mark Sold | Delete. Removed + Wishlist and Close buttons (✕ at top is the only close now)
-- Nav dropdown: removed duplicate "Account" item, kept single "Settings" link
-- Cloudinary: removed 3 settings rows (Cloud Name, Upload Preset, Test button + status div)
-- Cloudinary: removed entire "Cloudinary setup" error panel section
-- Google Sheets: updated Setup panel description text
+## Last Session (Session 12)
+- ### 1. `index.html` — settings restructure + label IDs
+- "Preferences" panel renamed → "Currency & Marketplace"
+- Standalone "Setup" panel removed — wizard button folded into Help & Feedback as a secondary row button ("Setup Wizard / Revisit the onboarding tour →")
+- New "Condition Presets" panel added (between Currency & Marketplace and Library Settings): 4 rows (Fine/Very Good/Good/Fair) with condition badge colors and editable % number inputs (`s-cond-fine`, `s-cond-vg`, `s-cond-good`, `s-cond-fair`)
+- Add page price labels given IDs: `priceLabelAdd`, `costLabelAdd`
+- Edit modal price labels given IDs: `priceLabelEdit`, `costLabelEdit`
 
 **Known issues carried forward:**
-- **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, but 2,021 manual CSV rows in price_db
+- **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
 - **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
-- **FX rates**: still hardcoded in 3 files — Phase 2 migration
+- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js — Phase 2 migration
 
 ---
 
@@ -56,11 +56,17 @@ Before running `handoff`, Claude Code MUST:
 - [ ] **Settings simplified**: Account · Security · Currency+Marketplace · Library prefs (stat cards, CSV) · Condition presets
 - [ ] **Condition % presets**: Fine 100% / Very Good 80% / Good 60% / Fair 40% — stored in settings, used by pricing
 
-### Session 12 — Settings + Beta QA
-- [ ] **Settings simplified**: restructure settings view — Account · Security · Currency+Marketplace · Library prefs · Condition presets
-- [ ] **Condition % presets**: Fine 100% / VG 80% / Good 60% / Fair 40% stored in settings, consumed by `getEstimatedValue()` in pricing.js
+### Session 12 — Settings + Beta QA ✅ (partial)
+- [x] **Settings simplified**: restructure settings view — Account · Security · Currency+Marketplace · Condition Presets · Library prefs · Help & Feedback
+- [x] **Condition % presets**: Fine 100% / VG 80% / Good 60% / Fair 40% stored in settings, consumed by `getEstimatedValue()`
+- [x] **Dynamic price labels**: Add + Edit modal price labels update to match selected currency
 - [ ] **Library detail pricing**: remove Market Sync panel. Replace with: stored price display + tap-to-edit + "Check eBay" link
 - [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings
+
+### Session 13 — Beta QA
+- [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
+- [ ] **Library detail pricing**: remove Market Sync panel. Replace with: stored price display + tap-to-edit + "Check eBay" link
+- [ ] **Wishlist price label**: check if wishlist price input needs currency label update
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -132,6 +138,9 @@ Before running `handoff`, Claude Code MUST:
 - **QTTE slug:** `/p/category/Title_Words_Here-NNNNN` — strip `-NNNNN`, replace `_` with spaces.
 - **Title matching:** Use `startsWith()` not `includes()` — `includes()` causes false positives on short common phrases.
 - **Market Sync reads from Supabase `price_db`**, not the static `MARKET_DB` JS object.
+- **`getConditionPct(condition)`**: replaces `CONDITION_PCT` constant. Reads from `S.settings.condPct_fine/vg/good/fair`, divides by 100. Defaults 100/80/60/40. Keys match app condition labels: `'Fine'`, `'Very Good'`, `'Good'`, `'Fair'`.
+- **`updatePriceLabels(cur)`**: updates `priceLabelAdd`, `costLabelAdd`, `priceLabelEdit`, `costLabelEdit` — call on both `loadSettings` and `saveSettings`.
+- **Settings panel order**: Account → Security → Currency & Marketplace → Condition Presets → Library Settings → Price Refresh → Help & Feedback.
 - **eBay Finding API fetch-failed** = network block (not quota). Quota exhaustion returns a structured error response.
 - **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
 
@@ -168,6 +177,9 @@ Before running `handoff`, Claude Code MUST:
 - QTTE cross-boundary regex fix + word-boundary matching
 - eBay CSV import → 2,021 `ebay_sold` rows
 - `fx_rates` table + `in_print` column migrations
+- Settings restructure: Currency & Marketplace, Condition Presets, wizard folded into Help & Feedback
+- `getConditionPct()` — user-configurable condition % presets, fixes 'Very Good'/'VG' mismatch
+- `updatePriceLabels()` — dynamic price labels on Add + Edit modal tied to currency setting
 
 ---
 
