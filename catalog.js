@@ -946,6 +946,24 @@ async function loadMarketSync(b) {
   el.style.display = '';
 }
 
+async function toggleMarketSync(bookId) {
+  const el = document.getElementById('marketSyncSection');
+  if (!el) return;
+  const btn = document.getElementById('btnMarketValue');
+  if (el.style.display !== 'none') {
+    el.style.display = 'none';
+    if (btn) btn.classList.remove('is-active');
+    return;
+  }
+  const b = S.books.find(x => x._id === bookId);
+  if (!b) return;
+  el.style.display = '';
+  el.innerHTML = `<div style="padding:14px 20px;border-top:0.5px solid var(--border);text-align:center;font-size:12px;color:var(--ink-faint);">Loading…</div>`;
+  await loadMarketSync(b);
+  if (el.style.display !== 'none' && btn) btn.classList.add('is-active');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 async function acceptMarketPrice(id, price) {
   const { error } = await _supa.from('books').update({ market_price: price, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) { showToast('Price update failed', 'error', 2000); return; }
@@ -1018,8 +1036,8 @@ function openModal(idx){
     if (isWishlist) {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-secondary" onclick="openEditFromModal('${b._id}')">Edit Book</button>
-          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} Check eBay</button>
+          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
+          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
@@ -1028,12 +1046,10 @@ function openModal(idx){
     } else {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-secondary" onclick="openEditFromModal('${b._id}')">Edit Book</button>
-          <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;">${ebayIcon} Check eBay</button>
-        </div>
-        <div class="ms-actions-secondary">
-          <button class="btn-ghost" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
-          <button class="btn-ghost" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
+          <button class="btn-action" id="btnMarketValue" onclick="toggleMarketSync('${b._id}')">Market Value</button>
+          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
+          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
+          <button class="btn-action" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
@@ -1041,19 +1057,16 @@ function openModal(idx){
         </div>`;
     }
   }
-  // Set sold/wishlist button labels (only present for library items)
+  // Set sold button label
   if (!isWishlist) {
     const soldBtn = document.getElementById('modalSoldBtn');
     if (soldBtn) soldBtn.textContent = (b.sold === 'Sold') ? 'Return to Library' : 'Mark Sold';
-    const wishBtn = document.getElementById('modalWishlistBtn');
-    if (wishBtn) wishBtn.textContent = (b.sold === 'Wishlist') ? 'In Wishlist ✓' : '+ Wishlist';
   }
   // Render star rating only for non-wishlist items
   if (!isWishlist) renderModalStars(b);
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
   document.getElementById('modalOverlay').classList.add('is-active');
-  if (!isWishlist) loadMarketSync(b);
 }
 function openEbayModal(){
   // Use location.href on mobile to avoid white-screen-on-back issue
