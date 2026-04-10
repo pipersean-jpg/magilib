@@ -957,11 +957,15 @@ async function toggleMarketSync(bookId) {
   }
   const b = S.books.find(x => x._id === bookId);
   if (!b) return;
-  el.style.display = '';
+  // Show loading inline without revealing the section yet — avoids jump if no data found
   el.innerHTML = `<div style="padding:14px 20px;border-top:0.5px solid var(--border);text-align:center;font-size:12px;color:var(--ink-faint);">Loading…</div>`;
+  el.style.display = '';
   await loadMarketSync(b);
-  if (el.style.display !== 'none' && btn) btn.classList.add('is-active');
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // loadMarketSync hides el if no data — only activate button and scroll if still visible
+  if (el.style.display !== 'none') {
+    if (btn) btn.classList.add('is-active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 async function acceptMarketPrice(id, price) {

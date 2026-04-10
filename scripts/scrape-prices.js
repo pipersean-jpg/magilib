@@ -208,7 +208,25 @@ async function buildMurphysMap() {
       ? `https://www.murphysmagic.com/product.aspx?id=${key}`
       : null;
 
-    _murphysMap.set(titleClean, { price: msrp, url, artist: clean(artist) });
+    // Strip Murphy's "by Author Book" suffix that appears in many CSV titles.
+    // e.g. "Card College Lighter by Roberto Giobbi Book" → "card college lighter"
+    // This ensures exact-match lookups succeed against the user's book titles.
+    let mapKey = titleClean;
+    if (mapKey.endsWith(' book')) {
+      const byIdx = mapKey.lastIndexOf(' by ');
+      if (byIdx > 0) {
+        mapKey = mapKey.slice(0, byIdx).trim();
+      } else {
+        mapKey = mapKey.slice(0, -5).trim();
+      }
+    }
+
+    // Store under stripped key (primary) and original key (fallback for books
+    // whose actual title genuinely includes "Book" as a suffix word).
+    _murphysMap.set(mapKey, { price: msrp, url, artist: clean(artist) });
+    if (mapKey !== titleClean) {
+      _murphysMap.set(titleClean, { price: msrp, url, artist: clean(artist) });
+    }
   }
 
   log(`  Murphy's map built: ${_murphysMap.size} books (${skippedNonBook} non-book products skipped).`);
@@ -259,6 +277,7 @@ async function scrapeMurphys(book) {
     currency: 'USD',
     url:      match.url,
     raw:      null,
+    in_print: 'likely_inprint',
   });
   log(`  Murphy's: ${book.norm_key} → USD${match.price.toFixed(2)}`);
 }
