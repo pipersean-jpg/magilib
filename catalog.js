@@ -811,39 +811,136 @@ function normKey(title, author) {
   return clean(title) + ':' + clean(author);
 }
 
+// ── FX cache ──────────────────────────────────────────────────────────────
+let _fxCache = null;
+async function getFxRates() {
+  if (_fxCache) return _fxCache;
+  const { data } = await _supa.from('fx_rates').select('from_cur,to_cur,rate');
+  _fxCache = {};
+  if (data && data.length) {
+    data.forEach(r => { (_fxCache[r.from_cur] = _fxCache[r.from_cur] || {})[r.to_cur] = parseFloat(r.rate); });
+  } else {
+    _fxCache = { USD:{AUD:1.55,GBP:0.645,EUR:0.92}, GBP:{AUD:2.02,USD:1.55,EUR:1.17} };
+  }
+  return _fxCache;
+}
+
+// ── Condition % presets ───────────────────────────────────────────────────
+const CONDITION_PCT = { Mint:1.0, New:1.0, Fine:0.90, 'VG+':0.80, VG:0.70, Good:0.60, Fair:0.50, Poor:0.30 };
+
+// ── getEstimatedValue ─────────────────────────────────────────────────────
+async function getEstimatedValue(book) {
+  const key = normKey(book.title, book.author);
+  const userCur = (S.settings && S.settings.currency) || 'AUD';
+
+  const [{ data: rows }, fx] = await Promise.all([
+    _supa.from('price_db').select('source,price,currency,url,in_print,created_at').eq('norm_key', key),
+    getFxRates(),
+  ]);
+  if (!rows || !rows.length) return null;
+
+  const toLocal = (price, srcCur) => {
+    if (!srcCur || srcCur === userCur) return parseFloat(price);
+    return parseFloat(price) * ((fx[srcCur] || {})[userCur] || 1);
+  };
+
+  // Determine in_print status by highest-confidence row
+  const RANK = { confirmed_inprint:5, confirmed_oop:4, likely_inprint:3, likely_oop:2, unknown:1 };
+  const best = rows.reduce((a, r) => (RANK[r.in_print]||0) > (RANK[a.in_print]||0) ? r : a, rows[0]);
+  const inPrint = best.in_print || 'unknown';
+  const isInPrint = inPrint === 'confirmed_inprint' || inPrint === 'likely_inprint';
+
+  const condPct = CONDITION_PCT[book.condition] ?? 0.70;
+  let value, low, high, mode, usedSources;
+
+  if (isInPrint) {
+    mode = 'inprint';
+    const msrp = rows.find(r => r.source === 'murphys_msrp') || rows.find(r => r.source === 'penguin_retail');
+    if (!msrp) return null;
+    const base = toLocal(msrp.price, msrp.currency || 'USD');
+    value = base * condPct;
+    low   = base * Math.max(0, condPct - 0.10);
+    high  = base * (condPct + 0.10);
+    usedSources = [msrp];
+  } else {
+    mode = 'oop';
+    const secondary = rows.filter(r => r.source === 'ebay_sold' || r.source === 'qtte_secondary');
+    const pool = secondary.length ? secondary : rows;
+    const prices = pool.map(r => toLocal(r.price, r.currency || 'USD')).sort((a, b) => a - b);
+    const median = prices[Math.floor(prices.length / 2)];
+    const scarcity = pool.length === 1 ? 1.1 : 1.0;
+    value = median * scarcity;
+    low   = prices[0] * 0.9;
+    high  = prices[prices.length - 1] * 1.1;
+    usedSources = pool;
+  }
+
+  // Confidence ★1–5
+  const freshDays = Math.min(...rows.map(r => (Date.now() - new Date(r.created_at)) / 86400000));
+  const sourceCnt = new Set(rows.map(r => r.source)).size;
+  let confidence = 1;
+  if (inPrint.startsWith('confirmed')) confidence += 2;
+  else if (inPrint.startsWith('likely')) confidence += 1;
+  if (sourceCnt >= 2) confidence += 1;
+  if (freshDays < 90) confidence += 1;
+  confidence = Math.min(5, confidence);
+
+  return { value, low, high, mode, confidence, currency: userCur, sources: rows, usedSources, inPrint };
+}
+
+// ── SOURCE_LABELS (shared) ────────────────────────────────────────────────
+const SOURCE_LABELS = {
+  qtte_secondary: 'QTTE (Pre-Owned)',
+  murphys_msrp:   "Murphy's Magic (New)",
+  penguin_retail: 'Penguin Magic (New)',
+  ebay_sold:      'eBay (Used)',
+};
+
 async function loadMarketSync(b) {
   const el = document.getElementById('marketSyncSection');
   if (!el) return;
 
-  const key = normKey(b.title, b.author);
-  const { data, error } = await _supa
-    .from('price_db')
-    .select('source, price, currency, created_at')
-    .eq('norm_key', key)
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  if (error || !data || !data.length) { el.style.display = 'none'; return; }
+  const [est, fxRates] = await Promise.all([getEstimatedValue(b), getFxRates()]);
+  if (!est) { el.style.display = 'none'; return; }
 
   const sym = currSym();
-  const avg = data.reduce((s, r) => s + parseFloat(r.price), 0) / data.length;
-  const rows = data.map(r => {
-    const date = new Date(r.created_at).toLocaleDateString('en-AU', { month:'short', year:'numeric' });
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);">
-      <span style="font-size:12px;color:var(--ink-light);">${r.source}</span>
-      <span style="font-size:12px;color:var(--ink-faint);">${date}</span>
-      <span style="font-size:13px;font-weight:600;color:var(--ink);">${sym}${parseFloat(r.price).toFixed(0)}</span>
+  const userCur = (S.settings && S.settings.currency) || 'AUD';
+  const toLocal = (price, srcCur) => {
+    if (!srcCur || srcCur === userCur) return parseFloat(price);
+    return parseFloat(price) * ((fxRates[srcCur] || {})[userCur] || 1);
+  };
+
+  const sourceRows = est.sources.map(r => {
+    const date  = new Date(r.created_at).toLocaleDateString('en-AU', { month:'short', year:'numeric' });
+    const label = SOURCE_LABELS[r.source] || r.source;
+    const nameEl = r.url
+      ? `<a href="${r.url}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;">${label} ↗</a>`
+      : `<span style="font-size:13px;font-weight:600;color:var(--ink);">${label}</span>`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);">
+      <div>${nameEl}<div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">${date}</div></div>
+      <span style="font-size:15px;font-weight:700;color:var(--ink);">${sym}${toLocal(r.price, r.currency||'USD').toFixed(0)}</span>
     </div>`;
   }).join('');
 
+  const modeLabel = est.mode === 'inprint' ? 'In-Print' : 'Out-of-Print';
+  const modeColor = est.mode === 'inprint' ? 'var(--green,#2a9d5c)' : 'var(--gold)';
+  const stars = '★'.repeat(est.confidence) + '☆'.repeat(5 - est.confidence);
+  const rangeStr = est.low > 0 ? `${sym}${est.low.toFixed(0)} – ${sym}${est.high.toFixed(0)}` : '';
+
   el.innerHTML = `
     <div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);">
-      <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Market Price Evidence</div>
-      ${rows}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-        <span style="font-size:12px;color:var(--ink-faint);">Suggested avg</span>
-        <span style="font-size:15px;font-weight:700;color:var(--ink);">${sym}${avg.toFixed(0)}</span>
-        <button onclick="acceptMarketPrice('${b._id}',${avg.toFixed(2)})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Accept</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;">Market Price Evidence</div>
+        <div style="font-size:9px;font-weight:600;color:${modeColor};text-transform:uppercase;letter-spacing:0.06em;">${modeLabel}</div>
+      </div>
+      ${sourceRows}
+      <div style="display:flex;align-items:center;margin-top:12px;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-size:12px;color:var(--ink-faint);">Est. value <span style="color:var(--gold);letter-spacing:0.05em;">${stars}</span></div>
+          ${rangeStr ? `<div style="font-size:10px;color:var(--ink-faint);margin-top:1px;">${rangeStr}</div>` : ''}
+        </div>
+        <span style="font-size:19px;font-weight:700;color:var(--ink);">${sym}${est.value.toFixed(0)}</span>
+        <button onclick="acceptMarketPrice('${b._id}',${est.value.toFixed(2)})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Accept</button>
       </div>
     </div>`;
   el.style.display = '';
