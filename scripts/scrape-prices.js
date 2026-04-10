@@ -305,7 +305,12 @@ async function scrapeQTTE(book) {
       // followed by a space (not mid-word). Prevents "Card College Light" matching
       // "Card College Lighter" since "lighter" doesn't start with "light ".
       const a = bookTitle, b = m.resultTitle;
-      return a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
+      const wordMatch = a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
+      if (!wordMatch) return false;
+      // Reject if result title has too many extra words (e.g. "murray" matching
+      // "murray last of the great showman plate"). Ratio must be >= 0.6.
+      const wa = a.split(' ').length, wb = m.resultTitle.split(' ').length;
+      return Math.min(wa, wb) / Math.max(wa, wb) >= 0.6;
     }).sort((a, b) => a.price - b.price);
 
     if (!prices.length) return;
@@ -364,7 +369,9 @@ async function scrapePenguin(book) {
       // Using includes() here is wrong: "conjuror at the table".includes("at the t")
       // would incorrectly match "At The Table Live Lecture - ..." results.
       const a = bookTitle, b = resultTitle;
-      const isMatch = a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
+      const wordMatch = a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
+      const wa = a.split(' ').length, wb = b.split(' ').length;
+      const isMatch = wordMatch && Math.min(wa, wb) / Math.max(wa, wb) >= 0.6;
       if (!isMatch) continue;
 
       const price = parseFloat(priceM[1]);
