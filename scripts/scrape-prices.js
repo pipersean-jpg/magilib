@@ -237,13 +237,16 @@ async function scrapeMurphys(book) {
   // Exact match on cleaned title
   let match = map.get(titleClean);
 
-  // Prefix fallback (handles subtitle variations)
-  if (!match && titleClean.length >= 10) {
+  // Word-boundary fallback (handles subtitle variations).
+  // Requires one title to start with the other at a word boundary,
+  // and word count ratio >= 0.6 to prevent short titles matching long ones.
+  if (!match) {
     for (const [k, v] of map) {
-      if (k.startsWith(titleClean.slice(0, 10)) || titleClean.startsWith(k.slice(0, 10))) {
-        match = v;
-        break;
-      }
+      const a = titleClean, b = k;
+      const wordMatch = a === b || a.startsWith(b + ' ') || b.startsWith(a + ' ');
+      if (!wordMatch) continue;
+      const wa = a.split(' ').length, wb = b.split(' ').length;
+      if (Math.min(wa, wb) / Math.max(wa, wb) >= 0.6) { match = v; break; }
     }
   }
 
