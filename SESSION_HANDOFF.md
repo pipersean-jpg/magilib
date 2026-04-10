@@ -1,80 +1,80 @@
-# SESSION HANDOFF — 2026-04-09 (Session 6)
+# SESSION HANDOFF — 2026-04-10 (Session 10)
 
 ## Session Summary
-Solo mode (no Gemini). Device test session — physical iPhone 13 Pro Max. Fixed a cluster of iOS-specific bugs discovered during hands-on testing.
+Infrastructure + planning session. Rewrote handoff/Notion sync pipeline, removed Gemini from workflow, and agreed Phase 1 beta launch plan (3-session sprint).
 
 ---
 
-## What Was Fixed This Session
+## What Was Built/Changed This Session
 
-### 1. Sold Filter State Bug (`books.js`)
-`toggleShowSold()` was not resetting `S.showWishlist` or `S.showDrafts`. If Drafts was active and user tapped the Sold chip, `S.showDrafts` stayed `true` and took precedence in the filter (line order: wishlist → drafts → sold). Fixed: now resets both flags and clears the other chips' visual state.
+### 1. `scripts/handoff.js` — full rewrite
+- Parses `SESSION_HANDOFF.md` for session number + summary → smart git commit message (e.g. `Session 10 handoff: Infrastructure + planning session`)
+- Auto-injects "Last Session" summary section into `CLAUDE.md` before committing — so it's always in auto-loaded context at session start
+- Correct order: CLAUDE.md updated → git add/commit/push → Notion sync
+- Staleness check: warns if SESSION_HANDOFF.md hasn't been modified in 6+ hours
 
-### 2. PWA Launch Viewport Scale (`index.html`)
-App opened at wrong proportions when launched from homescreen — required manual pinch-to-zoom. Fixed by updating viewport meta:
-```
-width=device-width, initial-scale=1.0, shrink-to-fit=no, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover
-```
+### 2. `scripts/sync-claude-to-notion.js` — full rewrite
+- **Replaces not appends** — clears all existing page blocks before writing (fixes long-standing duplicate accumulation bug)
+- Structured living report: Status → Next Session Priorities → Last Session → Known Issues → Price DB → Architecture → Completed
+- Pulls from both `CLAUDE.md` and `SESSION_HANDOFF.md` for a complete picture
+- Uses Sydney timezone for "Last synced" timestamp
 
-### 3. Toast Z-Index (`magilib.css`)
-Toast was rendering behind the batch bar (both at z-index 999). Raised toast to `var(--z-dialog)` (2000).
+### 3. `CLAUDE.md` — restructured
+- Gemini + dual-model workflow rules completely removed
+- `newchat` protocol simplified to 3 steps (read SESSION_HANDOFF.md, git status, confirm plan)
+- `handoff` protocol clarified (write SESSION_HANDOFF.md → update CLAUDE.md → run `handoff`)
+- Phase 1 beta sprint plan added: 3-session checklist (Session 10/11/12)
+- Pricing Engine section replaced with "Beta Scope (simplified)" — scraper/Market Sync deferred to Phase 2
+- Dead code removal list added (Cloudinary, Google Sheets, Market Sync panel)
+- Stale session content cleaned up; duplicate price_db sections merged
 
-### 4. Batch Bar Hides When Price Review Sheet Opens (`catalog.js` + `magilib.css`)
-Added `sheet-hidden` class that sets `opacity:0; pointer-events:none` on `#batchActionsBar` when price review opens. Restored on close.
+### 4. `~/.zshrc` — `newchat` alias removed
+Was only used to copy GEMINI_START.txt to clipboard for Gemini. No longer needed.
 
-### 5. Price Update Button — Ghost-Click Closing Sheet Immediately (iOS) (`catalog.js`)
-Root cause: iOS fires a deferred click event at the tap position after `touchend`. When the overlay gained `pointer-events:auto` (immediately on `is-active`), that ghost click landed on the backdrop (`e.target === el`) and called `closePriceReviewSheet()`. Fix: suppress `pointer-events` on the overlay for 400ms after open.
+### 5. `.gitignore` — `GEMINI_START.txt` added
+Dead file, no longer committed.
 
-### 6. Price Review Sheet — `getElementById('priceReviewBody')` Null on iOS (`catalog.js`)
-Root cause: the old two-step approach (create shell → separate `getElementById` to populate body) returned null on iOS. Rebuilt `openPriceReviewSheet` to build all content inline in a single `el.innerHTML` assignment before `appendChild`. No secondary `getElementById` needed.
-
-### 7. Cache-Busting (`index.html`)
-Added `?v=s5` query strings to all script tags so PWA HTTP cache doesn't serve stale JS after deploys.
-
-### 8. Batch Button Tap Delay (iOS) (`magilib.css`)
-Added `touch-action: manipulation` to `.batch-btn` to prevent 300ms tap delay from iOS scroll-activation heuristic.
-
----
-
-## Supabase Schema — No changes this session.
-
----
-
-## Architecture / Learnings
-
-- **iOS ghost-click pattern:** Any overlay that gains `pointer-events:auto` synchronously (via class toggle) can receive the deferred click event from the tap that triggered it. Always suppress `pointer-events` for 300–400ms on newly-opened overlays.
-- **iOS `getElementById` after `appendChild`:** Two-step DOM construction (create → append → getElementById to populate) is fragile on iOS. Build all content inline before appending.
-- **PWA HTTP cache:** Without cache-busting query strings on script tags, iOS PWA can serve stale JS across deploys. Bump `?v=` each session.
-- **Toast z-index:** Must be above all overlays and bars. Assigned `var(--z-dialog)` (2000) as the floor.
-- **Sold filter chip:** `toggleShowSold` must reset competing filter state (`showWishlist`, `showDrafts`) just like the other chip toggles do.
+### 6. Memory system updated
+- Added `feedback_solo_mode.md` — Gemini permanently out, Claude Code is sole planner/builder
+- Added `project_phase1_direction.md` — Phase 1 is beta launch sprint, no more pricing engine work
+- Removed stale `project_notion_cleanup.md` (bug now fixed)
+- Updated `MEMORY.md` index
 
 ---
 
-## Key Files Changed This Session
-| File | Change |
-|------|--------|
-| `books.js` | `toggleShowSold()` resets competing filter state |
-| `index.html` | Viewport meta fix + `?v=s5` cache-busting on all scripts |
-| `catalog.js` | `openPriceReviewSheet` rebuilt inline; ghost-click fix; batch bar hide/show |
-| `assets/css/magilib.css` | Toast z-index → 2000; `.batch-actions-bar.sheet-hidden`; `touch-action:manipulation` on `.batch-btn` |
+## Key Decisions Made This Session
+
+| Decision | Detail |
+|---|---|
+| Gemini removed | Claude Code solo mode, permanently |
+| Phase 1 scope | Beta launch readiness, not pricing engine depth |
+| Pricing for beta | "Fetch Price Estimate" (Add page) + manual price + eBay link (detail card) |
+| Cloudinary | Removed — users don't need cloud image setup |
+| Google Sheets | Removed — app runs on Supabase only |
+| Setup Wizard | Replace with feature tour (how to add/search/price), no technical config |
+| Market Sync | Hidden/commented for beta, revived in Phase 2 |
 
 ---
 
-## GitHub Push Status
-**Pushed.** Latest commit: `3af502b`
+## Known Issues / Still Pending
+
+- **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, but 2,021 manual CSV rows in price_db
+- **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
+- **FX rates**: still hardcoded in 3 files — Phase 2 migration
+- **Notion Build Tracker DB** (`NOTION_ROADMAP_DB_ID`): sync removed from new script (was broken anyway). If needed in future, re-add with proper upsert logic.
 
 ---
 
-## Unresolved / Pending
-
-1. **price_db empty:** Market Sync UI wired but invisible until first CSV uploaded.
-2. **price_db strategy:** norm_key format + population approach — deferred from this session.
-3. **Small UX frustrations:** Login flow, book status moves, settings — still deferred.
-4. **RLS on admin_users:** Security advisory still open from Session 3.
+## Next Session Priorities (Session 11 = Session 10 work)
+1. **Book detail sheet**: 6 buttons → 4 (Edit · Mark Sold · eBay · Delete); remove duplicate ✕/Close
+2. **Nav dropdown**: merge "Account" + "Settings" into single Settings link
+3. **Strip Cloudinary**: remove `s-cloudName`, `s-cloudPreset`, `testCloudinaryUpload()`, settings panel section
+4. **Strip Google Sheets**: remove `appsScriptOverlay`, `getScriptUrl()`, all Sheets/Apps Script references
 
 ---
 
-## Next Session Starting Point
-1. price_db strategy: define norm_key format and population approach
-2. Build first price CSV → upload via admin portal → verify Market Sync renders
-3. Small UX fixes (login, status moves, settings frustrations)
+## Model Learnings
+- **Session numbering**: CLAUDE.md header `# MagiLib Project Status — Session N` should be bumped each session at handoff. handoff.js does NOT auto-bump — that's a manual step in the protocol.
+- **Notion `NOTION_ROADMAP_DB_ID`**: env var exists but the Build Tracker DB sync was removed (it was broken + adds noise). Don't re-add without a proper upsert-by-title strategy.
+- **`sync-claude-to-notion.js` section parsing**: uses `## HeadingPattern\n(content)(?=\n---\n|\n## |$)` — requires the new CLAUDE.md section separator style (`---`) to work correctly.
+- **Phase 1 is NOT pricing engine**: any time a session starts drifting toward scraper work, price ranges, or condition sliders — redirect to the beta checklist first.

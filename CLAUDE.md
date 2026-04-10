@@ -1,165 +1,176 @@
-# MagiLib Project Status - 2026-04-10 (Session 7)
+# MagiLib Project Status — Session 11
 
 ## Current Project Status
-- **Phase:** Block 3 (Pricing & Admin Infrastructure) - **IN PROGRESS**
-- **Current Focus:** price_db population in progress; scraper infrastructure built; Pricing Engine architecture planned.
+- **Phase:** Phase 1 → Beta Launch — IN PROGRESS
+- **Current Focus:** 3-session sprint to beta readiness. Redundancy cleanup → Settings/Onboarding overhaul → Pricing simplification + QA.
 
-## Completed Tasks ✅
-- [x] Header Reordering (Add > Library > Wishlist > Settings)
-- [x] Avatar Menu implementation (Display Name, Account Settings)
-- [x] Version Popup & Application Branding
-- [x] Scroll-to-top fix for the 'Add' page
-- [x] Terminal Automation (Magic words: `handoff` and `newchat`)
-- [x] Notion Hub Sync Integration
-- [x] Implement Fuzzy Search (Fuse.js, threshold 0.3, keys: title/author/publisher/year)
-- [x] Global Design System: Created `assets/css/magilib.css` (all styles consolidated)
-- [x] Magi-Sheet pattern: `.magi-sheet-overlay` / `.magi-sheet` / `.magi-sheet-handle`
-- [x] Book Detail View: Bottom sheet, typography hierarchy, pill badges, button restructure
-- [x] Magi-Sheet Typography Utilities: `.ms-title`, `.ms-subtitle`, `.ms-metadata-row`, `.ms-image`
-- [x] Z-index scale: `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` in `:root`
-- [x] Action Button Hierarchy: Primary (Edit+eBay), Secondary ghost (Mark Sold + Wishlist), Danger text link (Delete)
-- [x] Book detail open fixed (removed EMERGENCY OVERRIDE block in catalog.js)
-- [x] Delete Book wired to Supabase (uses `b._id`)
-- [x] `toggleSold()` and `toggleWishlistStatus()` implemented + wired to Supabase
-- [x] Search UX: 250ms debounce on `#catalogSearch`, Clear (X) button in search bar
-- [x] Empty State: "Clear search" button in `.empty-search-container`
-- [x] Mobile UX Audit: fluid typography via `clamp()`, overflow-x fix, 48px touch targets, safe-area-inset-bottom
-- [x] Library Layout Consolidation: `.catalog-toolbar` + `.filter-bar` + `.insights-bar` (replaced 4-row layout)
-- [x] Batch Select Mode: `#selectModeBtn`, `#batchActionsBar`, bulk Mark Sold + Delete via Supabase
-- [x] Mobile CSS: `.magi-sheet` gets `padding-bottom: calc(20px + env(safe-area-inset-bottom))` for Home Indicator clearance
-- [x] Batch Bar: Vertical stack layout (`flex-direction:column`) with `.danger-separator` above Delete; `max-height:40vh; overflow-y:auto`
-- [x] Toolbar: Row 1 = [Search][View Toggle][Refresh]; Row 2 = [✓ Edit][Move][⊿ Filters]
-- [x] Batch Dual-Mode: `S.selectMode` → `null/'edit'/'move'`; Edit shows Auto-fill/Price Update/Delete; Move shows Mark Sold/Wishlist/Draft
-- [x] Batch ergonomics: Absolute `×` close button (`#batchCloseBtn`) on batch bar wired to `exitSelectMode()`
-- [x] Bulk functions: `bulkAutofill()`, `bulkWishlist()`, `bulkDraft()` implemented; `bulkPriceUpdate()` stubbed
-- [x] `openEditFromModal(id)` implemented (was missing — would throw ReferenceError)
-- [x] Poof transition: `triggerPoof(ids, callback)` + `.is-poofing` CSS applied to all bulk move/delete actions
-- [x] Price Review Queue: `openPriceReviewSheet(ids)` — dark Magi-Sheet, per-book price inputs, `applyManualPrices()` with parallel Supabase updates
-- [x] `magiPrompt({ title, message, placeholder, onConfirm })` — reusable number-input dialog
-- [x] Wishlist badge removed from cards; `★ In Wishlist` status shown in Book Detail modal instead
-- [x] Settings page crash fixed: `showView('settings')` no longer crashes on missing tab button index
-- [x] `bulkMoveToLibrary()`: Move mode sniffs if all selected are Wishlist → shows "Move to Library"; updates `sold_status: null`
-- [x] Legacy `☑ Select` button removed from IIFE injection (was re-injecting on every renderCatalog)
+---
 
-## Learnings
-- **Search algorithm:** Fuse.js with `threshold: 0.3`. Keys are `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse is not loaded.
-- **Data source:** Catalog data lives in `S.books` (state object). There is no `window.allBooks`. Supabase fetch populates `S.books` in `loadCatalog()`.
-- **Performance pattern:** Fuse results are stored in a `Set` so the filter pass uses O(1) `.has()` lookups.
-- **Environment guard:** Always ignore `node_modules` during file/content searches to prevent terminal overflows.
-- **CSS architecture:** ALL styles live in `assets/css/magilib.css`. Do NOT add `<style>` blocks to index.html. Do NOT inject CSS via JS (except the bulk-edit IIFE which is managed by a deploy tool).
-- **Magi-Sheet pattern:** `.magi-sheet-overlay` uses `opacity` + `pointer-events` (NOT `display:none`) for animation. `.magi-sheet` slides via `transform: translateY(100%) → translateY(0)`. Toggle by adding/removing `.is-active` on the overlay.
-- **Book detail open/close:** `openModal()` adds `.is-active` to `#modalOverlay`. `closeModal()` removes it. Do not use `.hidden`.
-- **Legacy modals** (support, changelog, wizard, etc.) still use `.modal-overlay` + `.hidden` — do NOT touch them.
-- **Bulk-edit IIFE:** The `_CSS` block and `_css()` function in catalog.js are marked "Injected by deploy tool" — leave them in place, do not move to magilib.css.
-- **Button hierarchy (Book Detail):** Primary row = Edit + eBay. Secondary row = Mark Sold + Wishlist (ghost style). Danger = "Delete Book" text link. No Close button.
-- **Critical ID bug:** `loadCatalog()` maps Supabase rows to `_id: row.id`. ALWAYS use `b._id`, never `b.id` — `b.id` is undefined and causes silent failures everywhere (Supabase queries, find(), delete, toggles).
-- **Z-index scale:** `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` defined in single `:root` block. Never duplicate `:root` blocks.
-- **debounce utility:** `debounce(fn, delay)` defined in catalog.js. `filterCatalog` = `debounce(renderCatalog, 250)`. Direct calls (clearSearch) bypass debounce.
-- **Batch state:** `S.selectMode` (`null | 'edit' | 'move'`) + `S.selectedBooks` (Set of `_id` strings). Cards get `data-id="${b._id}"`. Click handler branches on truthy `S.selectMode`.
-- **Batch bar visibility:** `#batchActionsBar` uses `.batch-actions-bar` + `.is-visible` toggle (translateY animation from bottom). Bar is a vertical column stack; `#batchActionsStack` innerHTML is injected by `updateBatchBar()` based on mode.
-- **Batch close:** `#batchCloseBtn` (absolute top-right of bar) calls `exitSelectMode()` — identical cleanup to toolbar "Exit Edit"/"Exit Move" buttons.
-- **`triggerPoof` callback rule:** NEVER add `renderCatalog()` to the callback — `exitSelectMode()` already calls it. Pattern: `triggerPoof(ids, () => { exitSelectMode(); })`.
-- **`market_price` vs `b.price`:** Supabase column = `market_price` (numeric). In-memory = `b.price` (string). All bulk price updates use `{ market_price: value }`. Never use `{ price: value }`.
-- **Settings tab index:** `showView('settings')` maps to tab index 3, but only 3 tab buttons exist (0–2). Always guard: `const _tabBtn = querySelectorAll('.tab-btn')[tabs[v]]; if (_tabBtn) _tabBtn.classList.add('active')`.
-- **IIFE injection pattern:** The bulk-edit IIFE re-injects DOM elements on every `renderCatalog`. Removing a button means finding and disabling the injector in the IIFE wrapper, not just the static HTML.
-- **`price_db` table:** Exists (0 rows). Schema: `norm_key`, `source`, `price`, `currency`, `url`, `raw`. No `title`/`author` columns. `price_master` does NOT exist. Market Sync lookup deferred until `price_db` is populated.
-- **`openEditForm(id)`:** Defined in `books.js:27` (not catalog.js). Takes `b._id`, populates and opens `#editModalOverlay`.
-- **`closeModal()` scope:** Only closes `#modalOverlay` (book detail sheet). Does NOT close price review sheet or edit modal. Use dedicated close functions for other sheets.
-- **Draft exclusion:** `priceSrc` filter (line ~549 in catalog.js) already excludes `b.draft === 'Draft'` from value/avg stats — no separate renderStatsRow change needed.
-- **Cover zoom:** `zoomCover(imgSrc)` creates a `.ms-zoom-overlay` appended to `document.body` — NOT a static DOM element. Legacy `openZoom()` / `#zoomOverlay` removed.
-- **Insights bar:** `renderStatsRow()` outputs inline compact stats: total books · total value · avg · top publisher — all in `.insights-bar` with `<span>` ids.
-- **`magiConfirm` / `closeDialog`:** Custom dialog system on `window`. Used for destructive confirmations (delete, bulk delete). Replace any `window.confirm()` usage.
+## Workflow
 
-## Workflow & Communication Rules
-- **Pacing:** Maximum 2-3 steps per response.
-- **Pre-Flight Check:** Always ask clarifying questions before generating major code blocks.
-- **Status Updates:** Every `handoff` must include a "Learnings" section to update the model on Sean's preferences or new project logic.
-- **Role Definition:** Gemini (Web) is the **Architect/Planner** and **Prompt Author**. Claude Code (Terminal) is the **Builder/Executor**.
-- **Instruction Flow:** Gemini generates all structured prompt blocks; Sean copies them verbatim into Claude Code; Claude Code executes the diffs. This dual-model workflow remains in effect until Sean explicitly instructs Claude Code to operate solo.
-- **Prompt Authorship:** Claude Code must assume every incoming prompt was authored by Gemini. Do not second-guess the prompt's structure or reframe the task — execute it faithfully and report results back so Gemini can plan the next step.
-- **Solo Mode:** If Sean says to switch to solo mode, Claude Code takes over full planning, prompting, and execution without Gemini involvement. This must be explicitly requested.
-- **Verification:** After Claude Code finishes, Sean reports results to Gemini for the next "Architectural" step.
+### Session Start — `newchat`
+When `newchat` is invoked, Claude Code MUST:
+1. Read `SESSION_HANDOFF.md` in full (CLAUDE.md is auto-loaded). Confirm the last session's outcomes and any carried issues.
+2. Run `git status` — report uncommitted changes or unexpected state.
+3. State the top 1–2 priorities for this session and confirm with Sean before writing any code.
+
+### Session End — `handoff`
+Before running `handoff`, Claude Code MUST:
+1. Write `SESSION_HANDOFF.md` covering: what was built/changed (file-level), unresolved bugs, Model Learnings.
+2. Update `CLAUDE.md`: bump session number in the header, move completed items into the Completed Tasks list, update Next Session Priorities.
+3. Run `handoff` in the terminal. The script commits everything, pushes to GitHub, and syncs Notion.
 
 ### Absolute Rules
+- **NEVER ask Sean to edit code manually.** Claude Code makes all file changes directly.
+- **`b._id` only.** Never use `b.id`. Supabase queries: `.eq('id', b._id)` or `.in('id', ids)`.
+- **All CSS in `assets/css/magilib.css`.** No `<style>` blocks in `index.html`. No CSS injected via JS except the bulk-edit IIFE marked "Injected by deploy tool".
+- **Pacing:** Max 2–3 steps per response. Ask a clarifying question before writing major code blocks.
 
-- **NEVER ask Sean to find/replace or edit code manually.** Always provide a fully-formed copy-paste prompt block for Claude Code to execute. Sean should never touch a file directly.
+---
 
-- **`newchat` START-OF-SESSION PROTOCOL:** When `newchat` is invoked, the model MUST:
-  1. Read `CLAUDE.md` and summarize current session priorities.
-  2. Run `cat /Users/seanpiper/magilib/GEMINI_START.txt | pbcopy` to copy the Gemini prompt to clipboard.
-  3. Analyze overall project progress and current architectural direction.
-  4. Critique Gemini's prompting design and architectural input so far — flag anything vague, redundant, or structurally risky.
-  5. Suggest 2–3 concrete improvements to Gemini's "Project Manager" mode to maximize build efficiency this session.
+## Last Session (Session 10)
+- ### 1. `scripts/handoff.js` — full rewrite
+- Parses `SESSION_HANDOFF.md` for session number + summary → smart git commit message (e.g. `Session 10 handoff: Infrastructure + planning session`)
+- Auto-injects "Last Session" summary section into `CLAUDE.md` before committing — so it's always in auto-loaded context at session start
+- Correct order: CLAUDE.md updated → git add/commit/push → Notion sync
+- Staleness check: warns if SESSION_HANDOFF.md hasn't been modified in 6+ hours
+- ### 2. `scripts/sync-claude-to-notion.js` — full rewrite
 
-- **TECHNICAL GUARDRAILS (non-negotiable):**
-  - `b._id` is the **only** valid primary key for all book operations. Never use `b.id`. Supabase queries use `.eq('id', b._id)` or `.in('id', ids)`.
-  - ALL CSS lives in `assets/css/magilib.css`. No `<style>` blocks in `index.html`. No CSS injected via JS (except the bulk-edit IIFE marked "Injected by deploy tool").
+**Known issues carried forward:**
+- **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, but 2,021 manual CSV rows in price_db
+- **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
+- **FX rates**: still hardcoded in 3 files — Phase 2 migration
 
-- **HANDOFF PROTOCOL:** Every session must end with `SESSION_HANDOFF.md` updated to include:
-  - What was built/changed this session (file-level summary)
-  - Any unresolved bugs or known regressions
-  - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
+---
 
-## Session 9 Completed (2026-04-10) ✅
-- Built `getEstimatedValue(book)` — full pricing engine (in-print MSRP×condition% vs OOP eBay median×scarcity)
-- Built `loadMarketSync` + Market Price Evidence UI — source rows, confidence stars, est. value, Accept button
-- 2×2 modal button grid: Market Value / Check eBay / Edit Details / Mark Sold — removed +Wishlist
-- `.btn-action` class: paper-warm bg, dark fill on :active, depress animation
-- `toggleMarketSync`: lazy-loads pricing panel on demand (no auto-load on modal open)
-- Fixed QTTE cross-boundary regex → per-`<li>` parsing
-- Fixed word-boundary matching across all scrapers (replaced 8-char prefix with startsWith + ratio)
-- Murphy's URL fix: `murphysmagic.com/product.aspx?id={key}` (was wrong domain+format)
-- Murphy's norm_key mismatch fix: strip "by Author Book" suffixes from map keys → 671 matches (was 1)
-- Murphy's upsert now includes `in_print: 'likely_inprint'`
-- Jump bug fix: `toggleMarketSync` no longer shows section until data confirmed
-- Manually scraped eBay CSV imported → 2,021 `ebay_sold` rows in price_db
-- `fx_rates` + `in_print` column migrations applied
-- Cache-bust: `?v=s5` → `?v=s6`
+## Phase 1 Beta Launch — 3-Session Sprint
 
-## Session 7 Completed (2026-04-10) ✅
-- Built `scripts/scrape-prices.js` — quarterly price scraper
-- Murphy's source: live Daily Products CSV (7,603 products, filtered to 569 books via `Product Type === 'Book'`), 845 rows in price_db
-- QTTE source: HTML scraper, secondary market prices + listing count, ~148+ rows
-- Penguin Magic source: HTML scraper, retail price + `in_stock`/`out_of_stock` signal in `raw` column
-- eBay Finding API: credentials live (PRD), quota exhausted during testing — restart next session
-- CMB (CollectingMagicBooks): dropped — fully JS-rendered (Wix), not scrapeable
-- Vanishing Inc: dropped — bot-blocked on every request
-- Comprehensive Pricing Engine architecture designed (see below)
-- In-print detection strategy designed: Murphy's → Penguin in-stock → QTTE new listings → eBay volume → user prompt
+### Session 10 — Cleanup & Redundancy
+- [ ] **Book detail sheet**: reduce 6 buttons → 4 (Edit · Mark Sold · eBay · Delete); remove duplicate ✕/Close buttons
+- [ ] **Nav dropdown**: merge duplicate "Account" + "Settings" items into one Settings link
+- [ ] **Strip Cloudinary**: remove all Cloudinary config fields from Settings + all references in HTML/JS
+- [ ] **Strip Google Sheets**: remove all Google Sheets / Apps Script references from wizard, settings, HTML, JS
 
-## Pricing Engine Architecture (Session 7 Design) 📐
-- **Two modes:** In-Print (MSRP × condition%) vs Out-of-Print (eBay median × scarcity factor)
-- **In-print detection hierarchy:** Murphy's row → Penguin `in_stock` → secondary sources → user prompt
-- **`in_print` field values:** `confirmed_inprint` / `confirmed_oop` / `likely_inprint` / `likely_oop` / `unknown`
-- **Confidence score:** ★1–5 based on source count + data freshness
-- **UI components planned:** Est. Value badge, price range bar, condition slider, source breakdown, OOP flag
-- **Settings:** condition % presets per grade, home currency, valuation mode (conservative/market/optimistic)
-- **New DB needed:** `fx_rates` table (weekly FX), `in_print` + `edition_type` columns on `price_db`
-- **Build order:** FX rates → `getEstimatedValue()` fn → price range bar + condition slider → condition settings UI → OOP scarcity → edition premiums
+### Session 11 — Settings & Onboarding
+- [ ] **New Setup Wizard**: OAuth → display name → 3-slide feature tour (how to add / search / price) — zero technical config
+- [ ] **Settings simplified**: Account · Security · Currency+Marketplace · Library prefs (stat cards, CSV) · Condition presets
+- [ ] **Condition % presets**: Fine 100% / Very Good 80% / Good 60% / Fair 40% — stored in settings, used by pricing
 
-## price_db Status (2026-04-10)
-- `murphys_msrp`: 845 rows (universal — all Murphy's books, not just your collection)
-- `qtte_secondary`: ~148+ rows (may be incomplete — rerun `--source=qtte` if needed)
-- `penguin_retail`: ~23+ rows (may be incomplete — rerun `--source=penguin` if needed)
-- `ebay_sold`: 0 rows — rerun `--source=ebay` after quota reset (midnight UTC)
-- Scraper: `scripts/scrape-prices.js` — run with `--source=ebay|murphys|qtte|penguin`
-- Credentials: `.env` has `SUPABASE_SERVICE_KEY`, `EBAY_APP_ID`, `MURPHYS_CSV_URL`
+### Session 12 — Pricing & Beta QA
+- [ ] **Library detail pricing**: remove Market Sync panel. Replace with: price display + tap-to-edit + "Check eBay" link
+- [ ] **Add page pricing**: keep "Fetch Price Estimate" as-is (working, backed by price_db data)
+- [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings
 
-## Next Session Priority 🚀
-- [ ] **Run `--source=ebay`** when eBay API quota resets (midnight UTC) — 921 books, ~80 min
-- [ ] **Run `--source=qtte --force`** and `--source=penguin --force` to refresh with improved matching
-- [ ] **Condition slider UI** in Book Detail sheet (condition% presets → est. value updates live)
-- [ ] **Price range bar** (low–high span from all sources)
-- [ ] **newchat/handoff protocol audit** — tighten session open/close for max build velocity
-- [ ] **Small UX fixes:** Login frustrations, book status moves, settings — still deferred
+### Beta Launch Checklist
+- [ ] Auth: sign up (OAuth), sign in, forgot password, change password
+- [ ] Add: scan/photo, manual entry, batch queue, save
+- [ ] Library: search, filter, sort, view detail
+- [ ] Edit: all fields, cover update
+- [ ] Status: Mark Sold, + Wishlist, Move to Library
+- [ ] Pricing: Fetch estimate (Add) + stored price display + eBay link (Library)
+- [ ] Settings: profile, security, currency, condition presets, stat cards, CSV export/import
+- [ ] Onboarding: welcome + feature tour for new users
+- [ ] No dead code: Cloudinary, Google Sheets, Apps Script all removed
 
-## price_db Status (2026-04-10 end of Session 9)
-- `murphys_msrp`: 671 rows (correctly matched to user's books) — re-scraped this session
-- `qtte_secondary`: ~148+ rows — may have stale/wrong matches, rerun with --force
-- `penguin_retail`: ~23+ rows — may be incomplete, rerun with --force
-- `ebay_sold`: 2,021 rows from manual CSV import; API scrape pending quota reset
+---
+
+## price_db Status (end of Session 9)
+- `murphys_msrp`: 671 rows — matched to user's collection
+- `qtte_secondary`: ~148+ rows — may have stale matches, rerun `--force`
+- `penguin_retail`: ~23+ rows — may be incomplete, rerun `--force`
+- `ebay_sold`: 2,021 rows from manual CSV import; API scrape pending (fetch-failed last session — network issue, not quota)
+- Scraper: `scripts/scrape-prices.js --source=ebay|murphys|qtte|penguin [--force]`
+- Credentials: `.env` — `SUPABASE_SERVICE_KEY`, `EBAY_APP_ID`, `MURPHYS_CSV_URL`
+
+---
+
+## Pricing Model — Beta Scope (simplified)
+- **Add page**: "Fetch Price Estimate" button uses `pricing.js` → looks up `price_db` (2,021 eBay sold rows + Murphy's MSRP + QTTE + Penguin) → returns estimate. Working. Keep as-is.
+- **Library detail**: stored `market_price` field, tap-to-edit, "Check eBay" link. No live scraping in UI.
+- **Condition %**: user-set presets (Fine 100% / VG 80% / Good 60% / Fair 40%) stored in settings — used by estimate function.
+- **Phase 2 (post-beta)**: full scraper-backed Market Sync panel, price range bar, condition slider, OOP scarcity, FX rates table.
+
+---
+
+## Dead Code to Remove (Phase 1 cleanup)
+- **Cloudinary**: `s-cloudName`, `s-cloudPreset`, `testCloudinaryUpload()`, all Cloudinary upload logic — users no longer need this
+- **Google Sheets / Apps Script**: `getScriptUrl()` (already a stub), `appsScriptOverlay`, wizard steps referencing Sheets setup, any `SHEET_URL` / Apps Script references
+- **Setup Wizard content**: replace with feature tour (no technical config). `openWizard()` / `#wizardOverlay` stays, content inside changes.
+- **Market Sync panel in detail sheet**: `toggleMarketSync()`, `loadMarketSync()`, `.btn-action` grid in modal — remove from beta, keep in code as Phase 2 (comment out rather than delete)
+- **`magilib_market_db.js`**: large static JS file loaded on every page — can be deferred or removed from `<head>` if Market Sync is hidden
+- **Auth**: check if `authSwitchMode()` / `authUsernameField` still needed once OAuth is primary signup path
+
+## Technical Learnings
+- **Search algorithm:** Fuse.js `threshold: 0.3`. Keys: `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse not loaded.
+- **Data source:** Catalog lives in `S.books`. No `window.allBooks`. Supabase populates via `loadCatalog()`.
+- **Performance pattern:** Fuse results stored in a `Set` → O(1) `.has()` in filter pass.
+- **Environment guard:** Always exclude `node_modules` from file/content searches.
+- **CSS architecture:** ALL styles in `assets/css/magilib.css`. Bulk-edit IIFE `_CSS` block is deploy-tool managed — leave in place.
+- **Magi-Sheet:** `.magi-sheet-overlay` uses `opacity` + `pointer-events` (not `display:none`). Toggle `.is-active`. `.magi-sheet` slides via `transform: translateY`.
+- **Book detail open/close:** `openModal()` adds `.is-active` to `#modalOverlay`. `closeModal()` removes it. Never `.hidden`.
+- **Legacy modals** (support, changelog, wizard): use `.modal-overlay` + `.hidden` — do NOT touch.
+- **Button hierarchy (Book Detail):** Primary = Edit + eBay. Secondary ghost = Mark Sold + Wishlist. Danger text link = Delete Book.
+- **Critical ID:** `_id: row.id` set in `loadCatalog()`. Always `b._id`. Never `b.id`.
+- **Z-index scale:** `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` in single `:root`. Never duplicate.
+- **debounce:** `debounce(fn, delay)` in catalog.js. `filterCatalog` = debounced `renderCatalog`. Direct calls (e.g. clearSearch) bypass it.
+- **Batch state:** `S.selectMode` (`null | 'edit' | 'move'`) + `S.selectedBooks` (Set of `_id` strings).
+- **Batch bar:** `#batchActionsBar` — `.is-visible` toggle. `#batchActionsStack` innerHTML injected by `updateBatchBar()`.
+- **`triggerPoof` rule:** Never add `renderCatalog()` to the callback — `exitSelectMode()` already calls it.
+- **`market_price` vs `b.price`:** Supabase column = `market_price` (numeric). In-memory = `b.price` (string). Bulk updates: `{ market_price: value }`.
+- **Settings tab guard:** `const _tabBtn = querySelectorAll('.tab-btn')[tabs[v]]; if (_tabBtn) _tabBtn.classList.add('active')`.
+- **IIFE injection:** Removing a button means disabling its injector in the IIFE wrapper, not just the static HTML.
+- **`price_db` schema:** `norm_key`, `source`, `price`, `currency`, `url`, `raw`, `in_print`. No `title`/`author`. `price_master` does not exist.
+- **`openEditForm(id)`:** In `books.js:27`. Takes `b._id`.
+- **`closeModal()` scope:** Only closes `#modalOverlay`. Use dedicated close functions for other sheets.
+- **Cover zoom:** `zoomCover(imgSrc)` creates `.ms-zoom-overlay` on `document.body` — not static DOM.
+- **Insights bar:** `renderStatsRow()` → `.insights-bar` inline compact stats.
+- **`magiConfirm` / `closeDialog`:** Custom dialog for all destructive confirmations. Replace any `window.confirm()`.
+- **iOS ghost-click:** Any overlay gaining `pointer-events:auto` synchronously can receive the deferred tap. Suppress `pointer-events` for 300–400ms on newly-opened overlays.
+- **iOS `getElementById` after `appendChild`:** Build all content inline before appending — two-step construction is fragile on iOS.
+- **PWA cache-busting:** Bump `?v=sN` on script tags each session to prevent stale JS.
+- **QTTE slug:** `/p/category/Title_Words_Here-NNNNN` — strip `-NNNNN`, replace `_` with spaces.
+- **Title matching:** Use `startsWith()` not `includes()` — `includes()` causes false positives on short common phrases.
+- **Market Sync reads from Supabase `price_db`**, not the static `MARKET_DB` JS object.
+- **eBay Finding API fetch-failed** = network block (not quota). Quota exhaustion returns a structured error response.
+- **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
+
+---
+
+## Completed Tasks ✅
+- Header Reordering (Add > Library > Wishlist > Settings)
+- Avatar Menu (Display Name, Account Settings)
+- Version Popup & Branding
+- Scroll-to-top on Add page
+- Terminal automation (`handoff` / `newchat` magic words)
+- Notion Hub Sync Integration
+- Fuzzy Search (Fuse.js, threshold 0.3)
+- Global Design System (`assets/css/magilib.css`)
+- Magi-Sheet pattern + Typography Utilities
+- Z-index scale
+- Book Detail View (bottom sheet, hierarchy, pill badges)
+- Delete / toggleSold / toggleWishlistStatus wired to Supabase
+- Search UX: 250ms debounce + Clear button + Empty State
+- Mobile UX audit: fluid typography, overflow-x fix, 48px targets, safe-area-inset
+- Library Layout Consolidation (toolbar + filter-bar + insights-bar)
+- Batch Select Mode (dual mode: edit / move) + poof transition
+- Price Review Queue (dark Magi-Sheet, per-book inputs)
+- `magiPrompt` reusable dialog
+- Settings page crash fix
+- `bulkMoveToLibrary()`, `openEditFromModal()`, `bulkAutofill()`, `bulkWishlist()`, `bulkDraft()`
+- iOS bug fixes: ghost-click, viewport scale, toast z-index, batch tap delay
+- `scripts/scrape-prices.js` — Murphy's, QTTE, Penguin, eBay scrapers
+- `getEstimatedValue(book)` — full pricing engine
+- Market Price Evidence UI — source rows, confidence stars, est. value, Accept button
+- 2×2 modal button grid: Market Value / Check eBay / Edit Details / Mark Sold
+- `.btn-action` class + `toggleMarketSync` lazy-load
+- Murphy's scraper fixes (URL format, norm_key suffix stripping, in_print field)
+- QTTE cross-boundary regex fix + word-boundary matching
+- eBay CSV import → 2,021 `ebay_sold` rows
+- `fx_rates` table + `in_print` column migrations
+
+---
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
 - **Styling:** All CSS in `assets/css/magilib.css`. Flexbox-first, mobile-responsive.
-- **Workflow:** Run `handoff` at end; `newchat` at start.
+- **Workflow:** `handoff` at end of session. `newchat` at start of session.

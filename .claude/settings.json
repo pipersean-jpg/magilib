@@ -41,10 +41,13 @@
       "Bash(pbcopy)",
       "Bash(ipconfig getifaddr:*)",
       "Bash(python3 -m http.server 8000 --bind 0.0.0.0)",
-      "Bash(node ~/magilib/scripts/handoff.js)"
+      "Bash(node ~/magilib/scripts/handoff.js)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "Bash(node sync-claude-to-notion.js)"
     ],
     "additionalDirectories": [
-      "/Applications/ClaudeUsageBar.app"
+      "/Applications/ClaudeUsageBar.app",
+      "/Users/seanpiper"
     ]
   }
 }

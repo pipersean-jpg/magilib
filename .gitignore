@@ -2,3 +2,5 @@ scripts/.env
 scripts/node_modules/
 node_modules/
 .env
+.vercel
+GEMINI_START.txt

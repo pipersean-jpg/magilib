@@ -1,14 +1,14 @@
-I am Sean. We are working on MagiLib.
+I am Sean. We are working on MagiLib. 
 
 I am pasting our project "Blueprint" (CLAUDE.md) and the "Last Session Report" (SESSION_HANDOFF.md) below.
-Please read both carefully. They explain our workflow, the Magi-Sheet framework, and all current project rules.
+Please read both carefully. They explain our new Global Design System and the 'Magi-Sheet' framework.
 
 --- CLAUDE.MD (Blueprint) ---
-# MagiLib Project Status - 2026-04-09
+# MagiLib Project Status - 2026-04-10 (Session 7)
 
 ## Current Project Status
-- **Phase:** Block 2 (Search & Catalog Functionality) + Global Design System - **IN PROGRESS**
-- **Current Focus:** Device testing, Sold filter accuracy, and next Block 2 feature.
+- **Phase:** Block 3 (Pricing & Admin Infrastructure) - **IN PROGRESS**
+- **Current Focus:** price_db population in progress; scraper infrastructure built; Pricing Engine architecture planned.
 
 ## Completed Tasks ✅
 - [x] Header Reordering (Add > Library > Wishlist > Settings)
@@ -32,11 +32,20 @@ Please read both carefully. They explain our workflow, the Magi-Sheet framework,
 - [x] Mobile UX Audit: fluid typography via `clamp()`, overflow-x fix, 48px touch targets, safe-area-inset-bottom
 - [x] Library Layout Consolidation: `.catalog-toolbar` + `.filter-bar` + `.insights-bar` (replaced 4-row layout)
 - [x] Batch Select Mode: `#selectModeBtn`, `#batchActionsBar`, bulk Mark Sold + Delete via Supabase
-- [x] Header Symmetry: `.nav` flex + `.nav-actions-group` (hamburger + avatar) symmetric with logo
-- [x] Two-Row Toolbar: Row 1 = search + icon group; Row 2 = Select + Filters (each flex:1)
-- [x] Insights Bar: centered, conditional per settings, separator-joined with no trailing dots
-- [x] Book Detail Sheet: `.modal-header` removed, `.sheet-close-btn` absolute-positioned, zero whitespace above cover
-- [x] CLAUDE.md Absolute Rules: no manual edits, newchat 5-step protocol, b._id guardrail, handoff protocol
+- [x] Mobile CSS: `.magi-sheet` gets `padding-bottom: calc(20px + env(safe-area-inset-bottom))` for Home Indicator clearance
+- [x] Batch Bar: Vertical stack layout (`flex-direction:column`) with `.danger-separator` above Delete; `max-height:40vh; overflow-y:auto`
+- [x] Toolbar: Row 1 = [Search][View Toggle][Refresh]; Row 2 = [✓ Edit][Move][⊿ Filters]
+- [x] Batch Dual-Mode: `S.selectMode` → `null/'edit'/'move'`; Edit shows Auto-fill/Price Update/Delete; Move shows Mark Sold/Wishlist/Draft
+- [x] Batch ergonomics: Absolute `×` close button (`#batchCloseBtn`) on batch bar wired to `exitSelectMode()`
+- [x] Bulk functions: `bulkAutofill()`, `bulkWishlist()`, `bulkDraft()` implemented; `bulkPriceUpdate()` stubbed
+- [x] `openEditFromModal(id)` implemented (was missing — would throw ReferenceError)
+- [x] Poof transition: `triggerPoof(ids, callback)` + `.is-poofing` CSS applied to all bulk move/delete actions
+- [x] Price Review Queue: `openPriceReviewSheet(ids)` — dark Magi-Sheet, per-book price inputs, `applyManualPrices()` with parallel Supabase updates
+- [x] `magiPrompt({ title, message, placeholder, onConfirm })` — reusable number-input dialog
+- [x] Wishlist badge removed from cards; `★ In Wishlist` status shown in Book Detail modal instead
+- [x] Settings page crash fixed: `showView('settings')` no longer crashes on missing tab button index
+- [x] `bulkMoveToLibrary()`: Move mode sniffs if all selected are Wishlist → shows "Move to Library"; updates `sold_status: null`
+- [x] Legacy `☑ Select` button removed from IIFE injection (was re-injecting on every renderCatalog)
 
 ## Learnings
 - **Search algorithm:** Fuse.js with `threshold: 0.3`. Keys are `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse is not loaded.
@@ -52,14 +61,20 @@ Please read both carefully. They explain our workflow, the Magi-Sheet framework,
 - **Critical ID bug:** `loadCatalog()` maps Supabase rows to `_id: row.id`. ALWAYS use `b._id`, never `b.id` — `b.id` is undefined and causes silent failures everywhere (Supabase queries, find(), delete, toggles).
 - **Z-index scale:** `--z-sheet:1000`, `--z-dialog:2000`, `--z-fullscreen:3000` defined in single `:root` block. Never duplicate `:root` blocks.
 - **debounce utility:** `debounce(fn, delay)` defined in catalog.js. `filterCatalog` = `debounce(renderCatalog, 250)`. Direct calls (clearSearch) bypass debounce.
-- **Batch state:** `S.selectMode` (bool) + `S.selectedBooks` (Set of `_id` strings). Cards get `data-id="${b._id}"`. Click handler branches on `S.selectMode`.
-- **Batch bar visibility:** `#batchActionsBar` uses `.batch-actions-bar` + `.is-visible` toggle (translateY animation from bottom).
+- **Batch state:** `S.selectMode` (`null | 'edit' | 'move'`) + `S.selectedBooks` (Set of `_id` strings). Cards get `data-id="${b._id}"`. Click handler branches on truthy `S.selectMode`.
+- **Batch bar visibility:** `#batchActionsBar` uses `.batch-actions-bar` + `.is-visible` toggle (translateY animation from bottom). Bar is a vertical column stack; `#batchActionsStack` innerHTML is injected by `updateBatchBar()` based on mode.
+- **Batch close:** `#batchCloseBtn` (absolute top-right of bar) calls `exitSelectMode()` — identical cleanup to toolbar "Exit Edit"/"Exit Move" buttons.
+- **`triggerPoof` callback rule:** NEVER add `renderCatalog()` to the callback — `exitSelectMode()` already calls it. Pattern: `triggerPoof(ids, () => { exitSelectMode(); })`.
+- **`market_price` vs `b.price`:** Supabase column = `market_price` (numeric). In-memory = `b.price` (string). All bulk price updates use `{ market_price: value }`. Never use `{ price: value }`.
+- **Settings tab index:** `showView('settings')` maps to tab index 3, but only 3 tab buttons exist (0–2). Always guard: `const _tabBtn = querySelectorAll('.tab-btn')[tabs[v]]; if (_tabBtn) _tabBtn.classList.add('active')`.
+- **IIFE injection pattern:** The bulk-edit IIFE re-injects DOM elements on every `renderCatalog`. Removing a button means finding and disabling the injector in the IIFE wrapper, not just the static HTML.
+- **`price_db` table:** Exists (0 rows). Schema: `norm_key`, `source`, `price`, `currency`, `url`, `raw`. No `title`/`author` columns. `price_master` does NOT exist. Market Sync lookup deferred until `price_db` is populated.
+- **`openEditForm(id)`:** Defined in `books.js:27` (not catalog.js). Takes `b._id`, populates and opens `#editModalOverlay`.
+- **`closeModal()` scope:** Only closes `#modalOverlay` (book detail sheet). Does NOT close price review sheet or edit modal. Use dedicated close functions for other sheets.
+- **Draft exclusion:** `priceSrc` filter (line ~549 in catalog.js) already excludes `b.draft === 'Draft'` from value/avg stats — no separate renderStatsRow change needed.
 - **Cover zoom:** `zoomCover(imgSrc)` creates a `.ms-zoom-overlay` appended to `document.body` — NOT a static DOM element. Legacy `openZoom()` / `#zoomOverlay` removed.
-- **Insights bar:** `renderStatsRow()` outputs conditional inline stats in `.insights-bar`. Each stat is a `<span class="stat-item">` joined with `·` via `.filter(Boolean).join(sep)` — no trailing dots.
+- **Insights bar:** `renderStatsRow()` outputs inline compact stats: total books · total value · avg · top publisher — all in `.insights-bar` with `<span>` ids.
 - **`magiConfirm` / `closeDialog`:** Custom dialog system on `window`. Used for destructive confirmations (delete, bulk delete). Replace any `window.confirm()` usage.
-- **Sheet close button:** `.sheet-close-btn` is `position:absolute; top:14px; right:14px` on `.magi-sheet` (position:relative). No `.modal-header` in the book detail sheet.
-- **Mobile-first toolbar:** Two-row layout is canonical — Row 1 = search + icon controls, Row 2 = mode/filter buttons. Short labels always preferred ("Select", "Filters", not full phrases).
-- **Separator logic in JS:** Use `.filter(Boolean).join(sep)` for conditional inline lists. Do not use CSS `::before` tricks.
 
 ## Workflow & Communication Rules
 - **Pacing:** Maximum 2-3 steps per response.
@@ -67,8 +82,8 @@ Please read both carefully. They explain our workflow, the Magi-Sheet framework,
 - **Status Updates:** Every `handoff` must include a "Learnings" section to update the model on Sean's preferences or new project logic.
 - **Role Definition:** Gemini (Web) is the **Architect/Planner** and **Prompt Author**. Claude Code (Terminal) is the **Builder/Executor**.
 - **Instruction Flow:** Gemini generates all structured prompt blocks; Sean copies them verbatim into Claude Code; Claude Code executes the diffs. This dual-model workflow remains in effect until Sean explicitly instructs Claude Code to operate solo.
-- **Prompt Authorship:** Claude Code must assume every incoming prompt was authored by Gemini. Execute faithfully and report results back so Gemini can plan the next step.
-- **Solo Mode:** If Sean says to switch to solo mode, Claude Code takes over full planning, prompting, and execution without Gemini involvement. Must be explicitly requested.
+- **Prompt Authorship:** Claude Code must assume every incoming prompt was authored by Gemini. Do not second-guess the prompt's structure or reframe the task — execute it faithfully and report results back so Gemini can plan the next step.
+- **Solo Mode:** If Sean says to switch to solo mode, Claude Code takes over full planning, prompting, and execution without Gemini involvement. This must be explicitly requested.
 - **Verification:** After Claude Code finishes, Sean reports results to Gemini for the next "Architectural" step.
 
 ### Absolute Rules
@@ -91,89 +106,133 @@ Please read both carefully. They explain our workflow, the Magi-Sheet framework,
   - Any unresolved bugs or known regressions
   - "Model Learnings" — non-obvious decisions made, why, and what to watch for next session
 
+## Session 7 Completed (2026-04-10) ✅
+- Built `scripts/scrape-prices.js` — quarterly price scraper
+- Murphy's source: live Daily Products CSV (7,603 products, filtered to 569 books via `Product Type === 'Book'`), 845 rows in price_db
+- QTTE source: HTML scraper, secondary market prices + listing count, ~148+ rows
+- Penguin Magic source: HTML scraper, retail price + `in_stock`/`out_of_stock` signal in `raw` column
+- eBay Finding API: credentials live (PRD), quota exhausted during testing — restart next session
+- CMB (CollectingMagicBooks): dropped — fully JS-rendered (Wix), not scrapeable
+- Vanishing Inc: dropped — bot-blocked on every request
+- Comprehensive Pricing Engine architecture designed (see below)
+- In-print detection strategy designed: Murphy's → Penguin in-stock → QTTE new listings → eBay volume → user prompt
+
+## Pricing Engine Architecture (Session 7 Design) 📐
+- **Two modes:** In-Print (MSRP × condition%) vs Out-of-Print (eBay median × scarcity factor)
+- **In-print detection hierarchy:** Murphy's row → Penguin `in_stock` → secondary sources → user prompt
+- **`in_print` field values:** `confirmed_inprint` / `confirmed_oop` / `likely_inprint` / `likely_oop` / `unknown`
+- **Confidence score:** ★1–5 based on source count + data freshness
+- **UI components planned:** Est. Value badge, price range bar, condition slider, source breakdown, OOP flag
+- **Settings:** condition % presets per grade, home currency, valuation mode (conservative/market/optimistic)
+- **New DB needed:** `fx_rates` table (weekly FX), `in_print` + `edition_type` columns on `price_db`
+- **Build order:** FX rates → `getEstimatedValue()` fn → price range bar + condition slider → condition settings UI → OOP scarcity → edition premiums
+
+## price_db Status (2026-04-10)
+- `murphys_msrp`: 845 rows (universal — all Murphy's books, not just your collection)
+- `qtte_secondary`: ~148+ rows (may be incomplete — rerun `--source=qtte` if needed)
+- `penguin_retail`: ~23+ rows (may be incomplete — rerun `--source=penguin` if needed)
+- `ebay_sold`: 0 rows — rerun `--source=ebay` after quota reset (midnight UTC)
+- Scraper: `scripts/scrape-prices.js` — run with `--source=ebay|murphys|qtte|penguin`
+- Credentials: `.env` has `SUPABASE_SERVICE_KEY`, `EBAY_APP_ID`, `MURPHYS_CSV_URL`
+
 ## Next Session Priority 🚀
-- [ ] **Book Detail on Device:** Verify sheet close button position, cover proximity to handle, Delete link clearance from Home Indicator on physical iPhone.
-- [ ] **Sold Filter Accuracy:** Confirm `#showSoldChip` filter pill still works correctly after the `toggleSold()` changes.
-- [ ] **Two-Row Toolbar on iPhone SE:** Confirm Row 2 buttons don't wrap on 320px viewport.
-- [ ] **Next Block 2 Feature:** Gemini to propose — candidates are Edit Form UX polish or Wishlist-to-Library flow.
+- [ ] **Rerun scrapers:** `--source=ebay` (quota reset), verify `--source=qtte` and `--source=penguin` completed
+- [ ] **Add `in_print` column** to `price_db` (migration), populate from Murphy's + Penguin `raw` field
+- [ ] **Add `fx_rates` table** — seed with USD/GBP/AUD/EUR, weekly refresh
+- [ ] **Build `getEstimatedValue(book)`** — pure JS valuation function
+- [ ] **Price range bar + condition slider UI** in Book Detail sheet
+- [ ] **Small UX fixes:** Login frustrations, book status moves, settings — still deferred
+- [ ] **Cache-bust:** bump script tags from `?v=s5` to `?v=s6`
 
 ## Technical Rules
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
 - **Styling:** All CSS in `assets/css/magilib.css`. Flexbox-first, mobile-responsive.
 - **Workflow:** Run `handoff` at end; `newchat` at start.
 
---- SESSION_HANDOFF.MD (Last Session Report) ---
-# SESSION HANDOFF — 2026-04-09 (Session 2)
+
+--- SESSION_HANDOFF.MD (Last Shift Report) ---
+# SESSION HANDOFF — 2026-04-09 (Session 6)
 
 ## Session Summary
-UI polish pass focused on layout symmetry, toolbar restructure, insights bar improvements, and book detail sheet cleanup. All changes are purely structural/CSS — no data model changes.
+Solo mode (no Gemini). Device test session — physical iPhone 13 Pro Max. Fixed a cluster of iOS-specific bugs discovered during hands-on testing.
 
-## What We Built This Session
+---
 
-### 1. Header Symmetry Fix
-- `.nav` changed from `display:grid; grid-template-columns:1fr auto 1fr` → `display:flex; justify-content:space-between`
-- New `.nav-actions-group { display:flex; gap:12px; align-items:center; }` wraps hamburger + avatar button
-- Both logo and actions group are direct flex children — identical 16px margins from `padding:14px 16px`
-- Absolute-positioned dropdowns (`#navMenu`, `#userDropdown`) remain inside `.nav-right` for correct anchoring
-- `auth.js`: `toggleNavMenu()` + `closeNavMenu()` added; click-outside listener extended
+## What Was Fixed This Session
 
-### 2. Two-Row Toolbar Restructure
-- **Row 1:** `search-bar` (flex:1 1 auto; min-width:0) + `toolbar-btn-group` (View Toggle + Refresh, flex-shrink:0)
-- **Row 2:** `#selectModeBtn` (`toggleSelectMode()`) + `#filterMenuBtn` (`openFilterSheet()`), both `flex:1`
-- New `.toolbar-btn-group { display:flex; gap:6px; flex-shrink:0; }` prevents search bar width competition
-- No orphan buttons in Row 1. Select label = "Select".
+### 1. Sold Filter State Bug (`books.js`)
+`toggleShowSold()` was not resetting `S.showWishlist` or `S.showDrafts`. If Drafts was active and user tapped the Sold chip, `S.showDrafts` stayed `true` and took precedence in the filter (line order: wishlist → drafts → sold). Fixed: now resets both flags and clears the other chips' visual state.
 
-### 3. Insights Bar — Centered + Conditional
-- `.insights-bar`: `justify-content:center; gap:12px; width:100%; text-align:center; margin:8px 0`
-- Each stat wrapped in `<span class="stat-item">` (white-space:nowrap)
-- `renderStatsRow()`: checks `el.checked && settings.statX !== false` per stat; `.filter(Boolean).join(sep)` — no trailing dots
-- `.stat-item { white-space:nowrap }` added to CSS
+### 2. PWA Launch Viewport Scale (`index.html`)
+App opened at wrong proportions when launched from homescreen — required manual pinch-to-zoom. Fixed by updating viewport meta:
+```
+width=device-width, initial-scale=1.0, shrink-to-fit=no, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover
+```
 
-### 4. Book Detail Sheet — Whitespace + Close Button
-- Entire `.modal-header` div removed from `#modalOverlay`
-- ✕ replaced with `<button class="sheet-close-btn">` — `position:absolute; top:14px; right:14px`
-- `.magi-sheet` gets `position:relative`; `.sheet-close-btn`: 32px circle, z-index:10
-- Handle bar still present (~28px) vs old header (~60px) — significant whitespace reduction
+### 3. Toast Z-Index (`magilib.css`)
+Toast was rendering behind the batch bar (both at z-index 999). Raised toast to `var(--z-dialog)` (2000).
 
-### 5. CLAUDE.md + Workflow Updates
-- Absolute Rules section added (no manual edits, newchat 5-step, guardrails, handoff protocol)
-- Gemini role clarified as Prompt Author; Solo Mode defined as opt-in
+### 4. Batch Bar Hides When Price Review Sheet Opens (`catalog.js` + `magilib.css`)
+Added `sheet-hidden` class that sets `opacity:0; pointer-events:none` on `#batchActionsBar` when price review opens. Restored on close.
 
-## b._id Confirmation
-No regressions. Verified: card `data-id`, `deleteBook`, `toggleSold`, `toggleWishlistStatus`, `bulkMarkSold`, `bulkDelete`, local `S.books` sync — all use `b._id` / `.eq('id', b._id)` / `.in('id', ids)`. No `b.id` usage found.
+### 5. Price Update Button — Ghost-Click Closing Sheet Immediately (iOS) (`catalog.js`)
+Root cause: iOS fires a deferred click event at the tap position after `touchend`. When the overlay gained `pointer-events:auto` (immediately on `is-active`), that ghost click landed on the backdrop (`e.target === el`) and called `closePriceReviewSheet()`. Fix: suppress `pointer-events` on the overlay for 400ms after open.
 
-## Unresolved / Edge Cases
-1. **Batch bar overlap on short viewports** — `#batchActionsBar` may obscure Row 2 on iPhone SE landscape. Needs device test.
-2. **Filter count badge wrapping** — `#filterCount` may wrap at 2 digits on narrow screens.
-3. **Tablet-width toolbar** — two-row layout untested at 600–900px; may benefit from single-row at wider breakpoints.
-4. **`#showSoldChip` filter accuracy** — still unverified post-`toggleSold()` changes.
+### 6. Price Review Sheet — `getElementById('priceReviewBody')` Null on iOS (`catalog.js`)
+Root cause: the old two-step approach (create shell → separate `getElementById` to populate body) returned null on iOS. Rebuilt `openPriceReviewSheet` to build all content inline in a single `el.innerHTML` assignment before `appendChild`. No secondary `getElementById` needed.
 
-## Model Learnings
-- **Shorthand labels are preferred:** "Select" not "Select Books", "Filters" not "Filter Library".
-- **Two-row toolbar is the canonical mobile-first pattern:** Row 1 = content interaction, Row 2 = mode/filter. Do not collapse.
-- **Absolute-positioned chrome over layout-consuming headers:** Remove headers from sheets; float close buttons.
-- **Separator logic belongs in JS:** `.filter(Boolean).join(sep)` over CSS pseudo-element tricks.
-- **Gemini prompts are most effective when single-concern:** One prompt per file/feature reduces missed edits.
+### 7. Cache-Busting (`index.html`)
+Added `?v=s5` query strings to all script tags so PWA HTTP cache doesn't serve stale JS after deploys.
 
-## Key Files Changed
-| File | Change Summary |
-|------|----------------|
-| `index.html` | Nav → flex + nav-actions-group; toolbar → two-row + toolbar-btn-group; sheet header removed, sheet-close-btn added |
-| `assets/css/magilib.css` | .nav flex; .nav-actions-group; .toolbar-btn-group; .insights-bar centered; .stat-item; .magi-sheet position:relative; .sheet-close-btn |
-| `catalog.js` | renderStatsRow() rewritten — conditional stat-item spans, separator joining |
-| `auth.js` | toggleNavMenu(), closeNavMenu() added; click-outside listener extended |
-| `CLAUDE.md` | Absolute Rules added; Gemini/solo workflow clarified |
-| `SESSION_HANDOFF.md` | Full session 2 report written |
+### 8. Batch Button Tap Delay (iOS) (`magilib.css`)
+Added `touch-action: manipulation` to `.batch-btn` to prevent 300ms tap delay from iOS scroll-activation heuristic.
+
+---
+
+## Supabase Schema — No changes this session.
+
+---
+
+## Architecture / Learnings
+
+- **iOS ghost-click pattern:** Any overlay that gains `pointer-events:auto` synchronously (via class toggle) can receive the deferred click event from the tap that triggered it. Always suppress `pointer-events` for 300–400ms on newly-opened overlays.
+- **iOS `getElementById` after `appendChild`:** Two-step DOM construction (create → append → getElementById to populate) is fragile on iOS. Build all content inline before appending.
+- **PWA HTTP cache:** Without cache-busting query strings on script tags, iOS PWA can serve stale JS across deploys. Bump `?v=` each session.
+- **Toast z-index:** Must be above all overlays and bars. Assigned `var(--z-dialog)` (2000) as the floor.
+- **Sold filter chip:** `toggleShowSold` must reset competing filter state (`showWishlist`, `showDrafts`) just like the other chip toggles do.
+
+---
+
+## Key Files Changed This Session
+| File | Change |
+|------|--------|
+| `books.js` | `toggleShowSold()` resets competing filter state |
+| `index.html` | Viewport meta fix + `?v=s5` cache-busting on all scripts |
+| `catalog.js` | `openPriceReviewSheet` rebuilt inline; ghost-click fix; batch bar hide/show |
+| `assets/css/magilib.css` | Toast z-index → 2000; `.batch-actions-bar.sheet-hidden`; `touch-action:manipulation` on `.batch-btn` |
+
+---
 
 ## GitHub Push Status
-**NOT PUSHED.** All changes are local only. Recommend device-testing sheet close button + toolbar Row 2 before pushing.
+**Pushed.** Latest commit: `3af502b`
+
+---
+
+## Unresolved / Pending
+
+1. **price_db empty:** Market Sync UI wired but invisible until first CSV uploaded.
+2. **price_db strategy:** norm_key format + population approach — deferred from this session.
+3. **Small UX frustrations:** Login flow, book status moves, settings — still deferred.
+4. **RLS on admin_users:** Security advisory still open from Session 3.
+
+---
 
 ## Next Session Starting Point
-1. Device test: book detail sheet (✕ position, cover gap, Delete clearance from Home Indicator)
-2. Device test: toolbar Row 2 on iPhone SE (320px) — confirm no wrapping
-3. Verify `#showSoldChip` filter with a sold book
-4. Ask Gemini to propose next Block 2 feature
+1. price_db strategy: define norm_key format and population approach
+2. Build first price CSV → upload via admin portal → verify Market Sync renders
+3. Small UX fixes (login, status moves, settings frustrations)
+
 
 --- ACTION ---
-Please acknowledge you understand the current state: two-row toolbar, centered insights bar, sheet-close-btn pattern, b._id guardrail, and the dual-model (Gemini → Claude Code) workflow.
-Then propose the next session priorities based on the unresolved items and Next Session Starting Point above.
+Please acknowledge you understand the new '.magi-sheet' pattern and the hierarchy of buttons we are building. 
+Then, let's start on the 'Action Hierarchy' for the Book Detail view.
