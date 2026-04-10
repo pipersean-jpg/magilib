@@ -204,9 +204,9 @@ async function buildMurphysMap() {
     if (!title || msrp < 1) continue;
 
     const titleClean = clean(title);
-    const url = key
-      ? `https://www.murphysmagicsupplies.com/products/${key}`
-      : 'https://www.murphysmagicsupplies.com';
+    // Product Key is a numeric Shopify ID — not usable as a storefront URL.
+    // Use a search URL instead so the link reliably finds the product.
+    const url = `https://www.murphysmagicsupplies.com/search?q=${encodeURIComponent(title)}`;
 
     _murphysMap.set(titleClean, { price: msrp, url, artist: clean(artist) });
   }
@@ -277,9 +277,13 @@ async function scrapeQTTE(book) {
     });
     const html = await resp.text();
 
-    // Extract all product listings: href + product-price div within each <li>
-    const listingRe = /<li>\s*<a href="(\/p\/[^"]+)"[\s\S]*?<div class="product-price">\$([\d,]+(?:\.\d{2})?)<\/div>/gi;
-    const matches = [...html.matchAll(listingRe)];
+    // Parse each <li>...</li> block independently to prevent cross-boundary matches.
+    const liRe = /<li>([\s\S]*?)<\/li>/gi;
+    const matches = [...html.matchAll(liRe)].map(li => {
+      const hrefM  = li[1].match(/<a href="(\/p\/[^"]+)"/);
+      const priceM = li[1].match(/<div class="product-price">\$([\d,]+(?:\.\d{2})?)<\/div>/);
+      return hrefM && priceM ? [null, hrefM[1], priceM[1]] : null;
+    }).filter(Boolean);
 
     if (!matches.length) return;
 
