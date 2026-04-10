@@ -609,8 +609,7 @@ async function addWishlistItem() {
   // Attach photo if one was selected
   const preview = document.getElementById('wl-photo-preview');
   if (preview && preview.src && preview.style.display !== 'none') {
-    const cloudUrl = await uploadToCloudinary(preview.src);
-    row.cover_url = cloudUrl || preview.src;
+    row.cover_url = preview.src;
   }
   const { error } = await _supa.from('books').insert(row);
   if (error) { showToast('Could not add: ' + error.message, 'error'); return; }
@@ -654,9 +653,6 @@ function clearFilters() {
   S.filterCondition = 'all';
   S.sortBy = 'dateAdded';
   S.sortDir = 'desc';
-function updateSheetBadge() { /* Legacy stub — Google Sheets removed */ }
-
-  updateSheetBadge();
   // Restore stat toggle checkboxes from settings
   ['total','value','avg','top'].forEach(k => {
     const el = document.getElementById('s-stat-' + k);
@@ -761,7 +757,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Why does the library show someone else's books?",
-    a: "MagiLib reads from a fixed demo sheet by default. After running the Setup Wizard and connecting your own Google Sheet, the library will load your books instead."
+    a: "If you're seeing demo data, make sure you're signed in. Once signed in, your library loads automatically from your account."
   },
   {
     q: "How do I add a book without a photo?",
@@ -773,7 +769,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "My cover image isn't showing — it shows a book icon instead.",
-    a: "This usually means the cover URL stored in the sheet has expired or is blocked. Open the book, tap Edit → Update Cover, and find a new cover using the Local Database or Google Images tab."
+    a: "This usually means the cover URL has expired or is blocked. Open the book, tap Edit → Update Cover, and find a new cover using the Local Database or Google Images tab."
   },
   {
     q: "How do I mark a book as sold?",
@@ -781,11 +777,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I use MagiLib on desktop?",
-    a: "Yes — MagiLib works in any modern browser. The Google Images cover search works best on desktop since you can right-click images to copy their URL directly."
+    a: "Yes — MagiLib works in any modern browser. The Google Images cover search works best on desktop since you can right-click images to copy their URL directly. On mobile, install it as a PWA for the full app experience."
   },
   {
     q: "Is my data safe? What happens if I lose access?",
-    a: "Your books live entirely in your own Google Sheet — MagiLib never stores your data on its own servers. As long as you have access to your Google account, your library is safe."
+    a: "Your books are stored securely in your MagiLib account. Your data is always accessible whenever you sign in."
   },
   {
     q: "How do I install MagiLib as an app on my phone?",
@@ -854,8 +850,6 @@ function openSupport(tab) {
     const diags = [
       ['App version', APP_VERSION],
       ['Books loaded', (window.S && S.books) ? S.books.length : '—'],
-      ['Script URL set', s.scriptUrl ? 'Yes' : 'No'],
-      ['Cloudinary set', s.cloudName ? 'Yes' : 'No'],
       ['Browser', navigator.userAgent.match(/(iPhone|iPad|Android|Chrome|Safari|Firefox)/g)?.join(', ') || 'Unknown'],
     ];
     document.getElementById('bugDiagnostics').innerHTML = diags.map(([k, v]) =>
@@ -881,91 +875,6 @@ function toggleFaq(i) {
   chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
-// ── APPS SCRIPT EMBED ──
-const MAGILIB_APPS_SCRIPT = `// MagiLib Apps Script v1.0
-// Paste this entire file into Extensions > Apps Script, then Deploy > New deployment > Web app
-// Set "Who has access" to Anyone, then copy the deployment URL into MagiLib Settings.
-
-const SHEET_NAME = 'Sheet1'; // Change if your sheet tab has a different name
-
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName(SHEET_NAME) || ss.getActiveSheet();
-
-    // Append a new row
-    if (data.row && !data.updateRow) {
-      sheet.appendRow(data.row);
-      return ok('Row appended');
-    }
-
-    // Overwrite an existing row (edit)
-    if (data.row && data.updateRow) {
-      const rowNum = parseInt(data.updateRow);
-      const range = sheet.getRange(rowNum, 1, 1, data.row.length);
-      range.setValues([data.row]);
-      return ok('Row updated');
-    }
-
-    // Delete a row
-    if (data.deleteRow) {
-      sheet.deleteRow(parseInt(data.deleteRow));
-      return ok('Row deleted');
-    }
-
-    // Update a single cell
-    if (data.updateCell) {
-      const { row, col, value } = data.updateCell;
-      sheet.getRange(parseInt(row), parseInt(col) + 1).setValue(value);
-      return ok('Cell updated');
-    }
-
-    return ok('No operation matched');
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function ok(msg) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, msg: msg }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  return ContentService
-    .createTextOutput('MagiLib Apps Script is running.')
-    .setMimeType(ContentService.MimeType.TEXT);
-}`;
-
-function showWizardScript() {
-  const el = document.getElementById('appsScriptCode');
-  if (el) el.textContent = MAGILIB_APPS_SCRIPT;
-  document.getElementById('appsScriptCopyStatus').style.display = 'none';
-  document.getElementById('appsScriptOverlay').classList.remove('hidden');
-}
-
-async function copyAppsScript() {
-  try {
-    await navigator.clipboard.writeText(MAGILIB_APPS_SCRIPT);
-    const status = document.getElementById('appsScriptCopyStatus');
-    status.style.display = 'block';
-    setTimeout(() => { status.style.display = 'none'; }, 2500);
-  } catch(e) {
-    // Fallback: select the pre element text
-    const el = document.getElementById('appsScriptCode');
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-    showToast('Text selected — use Copy to copy it', 'info');
-  }
-}
-
 // ── VERSION + CHANGELOG ──
 const APP_VERSION = 'v1.0 beta';
 
@@ -984,7 +893,6 @@ const CHANGELOG = [
           'Copies grouping — books with the same title stack into one card with a ×N badge',
           "Collector's Note and Where Acquired fields on every book",
           'Paste from Clipboard button in Cover Image finder',
-          'Cloudinary connection test in Settings',
         ]
       },
       {
@@ -1070,65 +978,55 @@ function closeWizard(markSeen) {
   }
 }
 
-function wizardNext() {
-  if (wizardStep === 1) {
-    // Save Sheet ID
-    const sid = (document.getElementById('wiz-sheetId') || {}).value?.trim() || '';
-    if (sid) {
-      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-      s.sheetId = sid;
-      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
-      S.settings.sheetId = sid;
-      const elSid = document.getElementById('s-sheetId');
-      if (elSid) elSid.value = sid;
-      updateSheetBadge();
-    }
-    // Validate Apps Script URL before proceeding
-    const url = document.getElementById('wiz-scriptUrl').value.trim();
-    if (url && !url.startsWith('https://script.google.com')) {
-      showWizardError("That doesn't look like an Apps Script URL — it should start with https://script.google.com/…");
-      return;
-    }
-    if (url) {
-      // Save it
-      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-      s.scriptUrl = url;
-      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
-      S.settings.scriptUrl = url;
-      const el = document.getElementById('s-scriptUrl');
-      if (el) el.value = url;
-    }
-  }
-  if (wizardStep === 2) {
-    // Save Cloudinary if filled
-    const cn = (document.getElementById('wiz-cloudName') || {}).value?.trim();
-    const cp = (document.getElementById('wiz-cloudPreset') || {}).value?.trim();
-    if (cn || cp) {
-      const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-      if (cn) s.cloudName = cn;
-      if (cp) s.cloudPreset = cp;
-      localStorage.setItem('arcana_books_v2', JSON.stringify(s));
-      S.settings.cloudName = cn;
-      S.settings.cloudPreset = cp;
-      const elCn = document.getElementById('s-cloudName');
-      const elCp = document.getElementById('s-cloudPreset');
-      if (elCn && cn) elCn.value = cn;
-      if (elCp && cp) elCp.value = cp;
+async function wizardNext() {
+  if (wizardStep === 0) {
+    // Username step — validate + save, allow skip
+    const input = document.getElementById('wiz-username');
+    const val = input ? input.value.trim() : '';
+    const errEl = document.getElementById('wiz-username-error');
+    if (val) {
+      if (val.length < 3) {
+        if (errEl) { errEl.textContent = 'Must be at least 3 characters.'; errEl.style.display = 'block'; }
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
+        if (errEl) { errEl.textContent = 'Letters, numbers, _ and - only.'; errEl.style.display = 'block'; }
+        return;
+      }
+      if (errEl) errEl.style.display = 'none';
+      const btn = document.getElementById('wizardNextBtn');
+      btn.disabled = true; btn.textContent = 'Checking…';
+      const { data: existing } = await _supa.from('profiles').select('id').eq('username', val).neq('id', _supaUser.id).maybeSingle();
+      if (existing) {
+        btn.disabled = false; btn.textContent = 'Next →';
+        if (errEl) { errEl.textContent = 'That name is already taken — try another.'; errEl.style.display = 'block'; }
+        return;
+      }
+      await _supa.from('profiles').update({ username: val }).eq('id', _supaUser.id);
+      if (!S.profile) S.profile = {};
+      S.profile.username = val;
+      updateUserMenu();
+      btn.disabled = false; btn.textContent = 'Next →';
     }
   }
   if (wizardStep < WIZARD_STEPS - 1) {
     wizardStep++;
     renderWizardStep();
   } else {
-    // Done
     closeWizard(true);
     showToast('All set! Welcome to MagiLib', 'success');
-    showView('entry');
+    showView('catalog');
   }
 }
 
 function wizardBack() {
   if (wizardStep > 0) { wizardStep--; renderWizardStep(); }
+}
+
+function wizardSkipUsername() {
+  const el = document.getElementById('wiz-username');
+  if (el) el.value = '';
+  wizardNext();
 }
 
 function wizardSkipToStep(n) {
@@ -1149,155 +1047,117 @@ function renderWizardStep() {
   const progress = document.getElementById('wizardProgress');
   const dots = document.getElementById('wizardDots');
 
-  // Progress bar
   progress.style.width = ((wizardStep / (WIZARD_STEPS - 1)) * 100) + '%';
-
-  // Dots
   dots.innerHTML = Array.from({length: WIZARD_STEPS}, (_, i) =>
     `<div style="width:${i===wizardStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===wizardStep?'var(--accent)':i<wizardStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
   ).join('');
-
-  // Back button
   backBtn.style.visibility = wizardStep > 0 ? 'visible' : 'hidden';
 
-  const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-
   if (wizardStep === 0) {
-    // Welcome
-    nextBtn.textContent = 'Get started →';
+    // Choose display name
+    nextBtn.textContent = 'Next →';
+    const suggested = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
     content.innerHTML = `
-      <div style="text-align:center;padding:12px 0 20px;">
-        <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="" style="height:52px;width:auto;display:block;margin:0 auto 12px;"></div>
-        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:var(--ink);margin-bottom:10px;">Welcome to MagiLib</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;max-width:380px;margin:0 auto;">
-          Your personal catalogue for magic and conjuring books.<br>
-          It takes about 5 minutes to get set up — let's walk through it together.
-        </div>
+      <div style="margin-bottom:22px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 1 of 4</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px;">Choose your name</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">This is how you'll appear in MagiLib. It must be unique.</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>
-          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Connect your Google Sheet</div><div style="font-size:12px;color:var(--ink-light);">Your books live in a free Google Sheet you control</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Set up cover storage <span style="font-size:11px;color:var(--ink-faint);font-weight:400;">(optional)</span></div><div style="font-size:12px;color:var(--ink-light);">Free Cloudinary account for high-res cover images</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--paper-warm);border-radius:10px;border:0.5px solid var(--border);">
-          <div style="flex-shrink:0;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-          <div><div style="font-size:13px;font-weight:500;color:var(--ink);">Start cataloguing</div><div style="font-size:12px;color:var(--ink-light);">Add books with AI-powered lookup and pricing</div></div>
-        </div>
+      <div style="margin-bottom:6px;">
+        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Display name</label>
+        <input type="text" id="wiz-username" value="${suggested}" placeholder="e.g. CardShark42"
+          style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
+          oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
+          maxlength="30"/>
+        <div id="wiz-username-error" style="display:none;font-size:12px;color:#a32d2d;margin-top:6px;padding:6px 10px;background:#fdf0f0;border-radius:6px;"></div>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:8px;">Letters, numbers, _ and - only. At least 3 characters. <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:0;color:var(--ink-faint);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit;">Skip for now</button></div>
       </div>
     `;
+    setTimeout(() => { const el = document.getElementById('wiz-username'); if (el) { el.focus(); el.select(); } }, 80);
   }
 
   else if (wizardStep === 1) {
-    // Google Sheet setup
-    nextBtn.textContent = stored.scriptUrl ? 'Next →' : 'Skip for now →';
-    const hasUrl = stored.scriptUrl || '';
+    // Feature tour: Add a book
+    nextBtn.textContent = 'Next →';
     content.innerHTML = `
-      <div style="margin-bottom:20px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 1 of 2</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:6px;">Connect Google Sheets</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">MagiLib saves your books to a Google Sheet you own. You'll need to create a sheet and deploy an Apps Script.</div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 2 of 4</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Adding a book</div>
       </div>
-      <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-        <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">Setup instructions</div>
-        <ol style="font-size:12px;color:var(--ink);line-height:2;margin:0;padding-left:18px;">
-          <li>Open <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);font-weight:500;">sheets.google.com</a> and create a new spreadsheet</li>
-          <li>Go to <strong>Extensions → Apps Script</strong></li>
-          <li>Replace all code with the MagiLib Apps Script — <button onclick="showWizardScript()" style="display:inline;background:none;border:none;padding:0;color:var(--accent);font-weight:500;cursor:pointer;font-family:inherit;font-size:inherit;text-decoration:underline;">tap to view it</button></li>
-          <li>Click <strong>Deploy → New deployment → Web app</strong></li>
-          <li>Set "Who has access" to <strong>Anyone</strong>, then Deploy</li>
-          <li>Copy the deployment URL and paste it below</li>
-        </ol>
+      <div style="background:var(--accent);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#fff;margin-bottom:8px;">Add in seconds</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.7;">Tap <strong style="color:#fff;">Add</strong> in the nav bar. Search by title or author — AI fills in the details. Snap a cover photo or find one from the database.</div>
       </div>
-      <div style="margin-bottom:14px;">
-        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Google Sheet ID <span style="color:#a32d2d;">*</span></label>
-        <input type="text" id="wiz-sheetId" value="${stored.sheetId||''}" placeholder="e.g. 1KRGofstm2eOgic-acTNKgUXTsaaSf3SCqFf0AddXOnk"
-          style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
-        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Found in your sheet URL: docs.google.com/spreadsheets/d/<b style="color:var(--accent);">[SHEET-ID]</b>/edit</div>
-      </div>
-      <div style="margin-bottom:6px;">
-        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Apps Script URL</label>
-        <input type="text" id="wiz-scriptUrl" value="${hasUrl}" placeholder="https://script.google.com/macros/s/…/exec"
-          style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
-          oninput="document.getElementById('wizardNextBtn').textContent=this.value.trim()?'Next →':'Skip for now →'"/>
-        <div id="wizardError" style="display:none;font-size:12px;color:#a32d2d;margin-top:6px;padding:6px 10px;background:#fdf0f0;border-radius:6px;"></div>
-        <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">You can add both later in Settings if you are not ready yet.</div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">📷</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Scan cover</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
+        </div>
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">✍️</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Type title</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Manual entry</div>
+        </div>
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">📋</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Batch add</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Queue multiple</div>
+        </div>
       </div>
     `;
-    // Clear error on input
-    setTimeout(() => {
-      const inp = document.getElementById('wiz-scriptUrl');
-      if (inp) inp.addEventListener('input', () => {
-        const e = document.getElementById('wizardError');
-        if (e) e.style.display = 'none';
-      });
-    }, 50);
   }
 
   else if (wizardStep === 2) {
-    // Cloudinary (optional)
+    // Feature tour: Search
     nextBtn.textContent = 'Next →';
-    const cn = stored.cloudName || '';
-    const cp = stored.cloudPreset || '';
     content.innerHTML = `
-      <div style="margin-bottom:20px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 2 of 2 — Optional</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:6px;">Cover Image Storage</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">Cloudinary lets you store full-resolution cover images. It's completely free and takes 2 minutes to set up — but you can skip this and add it later.</div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 3 of 4</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Your library</div>
       </div>
-      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-        <ol style="font-size:12px;color:var(--ink);line-height:2;margin:0;padding-left:18px;">
-          <li>Sign up free at <a href="https://cloudinary.com" target="_blank" style="color:var(--accent);font-weight:500;">cloudinary.com</a> (no credit card)</li>
-          <li>Copy your <strong>Cloud Name</strong> from the dashboard</li>
-          <li>Go to <strong>Settings → Upload → Add upload preset</strong></li>
-          <li>Set to <strong>Unsigned</strong>, save, copy the preset name</li>
-        </ol>
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:8px;">Find anything instantly</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;">Search by title, author, or publisher. Filter by condition, status, or price. Sort any way you like.</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div>
-          <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:5px;">Cloud Name</label>
-          <input type="text" id="wiz-cloudName" value="${cn}" placeholder="your-cloud-name"
-            style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">🔍</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Fuzzy search</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Typos welcome</div>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:5px;">Upload Preset</label>
-          <input type="text" id="wiz-cloudPreset" value="${cp}" placeholder="unsigned_preset_name"
-            style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"/>
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">🏷️</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Filter</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Condition, status</div>
         </div>
-        <div style="font-size:11px;color:var(--ink-faint);">Leave blank to skip — covers will still work using URLs and base64.</div>
+        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">↕️</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ink);">Sort</div>
+          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Price, date, A–Z</div>
+        </div>
       </div>
     `;
   }
 
   else if (wizardStep === 3) {
-    // Done
-    nextBtn.textContent = 'Go to my library →';
+    // Feature tour: Pricing
+    nextBtn.textContent = 'Go to Library →';
     backBtn.style.visibility = 'hidden';
-    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-    const hasSheet = !!s.scriptUrl;
-    const hasCloud = !!s.cloudName;
     content.innerHTML = `
-      <div style="text-align:center;padding:16px 0 24px;">
-        <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="" style="height:52px;width:auto;"/></div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;">${hasSheet ? "You're all set!" : 'Almost ready!'}</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;max-width:360px;margin:0 auto;">
-          ${hasSheet ? 'MagiLib is connected and ready to catalogue your collection.' : "You can start browsing, but you'll need to add your Apps Script URL in Settings before saving books."}
-        </div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 4 of 4</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Pricing</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:${hasSheet?'var(--success-bg)':'var(--paper-warm)'};border:0.5px solid ${hasSheet?'var(--tier1-border)':'var(--border)'};">
-          <span style="font-size:16px;">${hasSheet?'✓':'○'}</span>
-          <div style="font-size:13px;font-weight:500;color:${hasSheet?'var(--success)':'var(--ink-light)'};">Google Sheet ${hasSheet?'connected':'not configured'}</div>
-          ${!hasSheet?`<button onclick="wizardStep=1;renderWizardStep();" style="margin-left:auto;padding:4px 10px;font-size:11px;border:0.5px solid var(--accent);border-radius:6px;background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;">Fix →</button>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:${hasCloud?'var(--success-bg)':'var(--paper-warm)'};border:0.5px solid ${hasCloud?'var(--tier1-border)':'var(--border)'};">
-          <span style="font-size:16px;">${hasCloud?'✓':'○'}</span>
-          <div style="font-size:13px;font-weight:500;color:${hasCloud?'var(--success)':'var(--ink-light)'};">Cloudinary ${hasCloud?'connected':'not configured (optional)'}</div>
-          ${!hasCloud?`<button onclick="wizardStep=2;renderWizardStep();" style="margin-left:auto;padding:4px 10px;font-size:11px;border:0.5px solid var(--border-med);border-radius:6px;background:transparent;color:var(--ink-light);cursor:pointer;font-family:'DM Sans',sans-serif;">Set up →</button>`:''}
-        </div>
+      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:8px;">Know what it's worth</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;">When adding a book, tap <strong>Fetch Price Estimate</strong> to see a value based on eBay sales and dealer listings. In the library, tap any book then <strong>eBay</strong> to see live results.</div>
+      </div>
+      <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:12px;color:var(--ink);line-height:1.6;"><strong>Tip:</strong> Set your condition presets in Settings (Fine / Very Good / Good / Fair) so every estimate is adjusted to the condition of your copy.</div>
       </div>
     `;
   }

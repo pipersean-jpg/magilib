@@ -176,18 +176,28 @@ function saveUsernameDebounced() {
 }
 
 // ── WELCOME SCREEN ──
-function dismissWelcome(action) {
-  document.getElementById('welcomeScreen').classList.add('hidden');
+function _markWelcomeSeen() {
   try {
     const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
     s.welcomeSeen = true;
     localStorage.setItem('arcana_books_v2', JSON.stringify(s));
   } catch(e) {}
+}
+
+function startWizardTour() {
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  _markWelcomeSeen();
+  openWizard(true);
+}
+
+function dismissWelcome(action) {
+  document.getElementById('welcomeScreen').classList.add('hidden');
+  _markWelcomeSeen();
   if (action === 'import') {
     showView('settings');
     setTimeout(() => { const el = document.getElementById('csvImportSection'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 200);
   } else {
-    showView('entry');
+    showView('catalog');
   }
 }
 

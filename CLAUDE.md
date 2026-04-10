@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 11
+# MagiLib Project Status — Session 12
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -28,13 +28,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 10)
-- ### 1. `scripts/handoff.js` — full rewrite
-- Parses `SESSION_HANDOFF.md` for session number + summary → smart git commit message (e.g. `Session 10 handoff: Infrastructure + planning session`)
-- Auto-injects "Last Session" summary section into `CLAUDE.md` before committing — so it's always in auto-loaded context at session start
-- Correct order: CLAUDE.md updated → git add/commit/push → Notion sync
-- Staleness check: warns if SESSION_HANDOFF.md hasn't been modified in 6+ hours
-- ### 2. `scripts/sync-claude-to-notion.js` — full rewrite
+## Last Session (Session 11)
+- ### 1. `index.html` — multiple removals + welcome screen rewrite
+- Book detail sheet: 6 buttons (2×3) → 4 buttons (2×2): Edit | eBay / Mark Sold | Delete. Removed + Wishlist and Close buttons (✕ at top is the only close now)
+- Nav dropdown: removed duplicate "Account" item, kept single "Settings" link
+- Cloudinary: removed 3 settings rows (Cloud Name, Upload Preset, Test button + status div)
+- Cloudinary: removed entire "Cloudinary setup" error panel section
+- Google Sheets: updated Setup panel description text
 
 **Known issues carried forward:**
 - **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, but 2,021 manual CSV rows in price_db
@@ -45,20 +45,21 @@ Before running `handoff`, Claude Code MUST:
 
 ## Phase 1 Beta Launch — 3-Session Sprint
 
-### Session 10 — Cleanup & Redundancy
-- [ ] **Book detail sheet**: reduce 6 buttons → 4 (Edit · Mark Sold · eBay · Delete); remove duplicate ✕/Close buttons
-- [ ] **Nav dropdown**: merge duplicate "Account" + "Settings" items into one Settings link
-- [ ] **Strip Cloudinary**: remove all Cloudinary config fields from Settings + all references in HTML/JS
-- [ ] **Strip Google Sheets**: remove all Google Sheets / Apps Script references from wizard, settings, HTML, JS
+### Session 10 — Cleanup & Redundancy ✅
+- [x] **Book detail sheet**: reduce 6 buttons → 4 (Edit · Mark Sold · eBay · Delete); remove duplicate ✕/Close buttons
+- [x] **Nav dropdown**: merge duplicate "Account" + "Settings" items into one Settings link
+- [x] **Strip Cloudinary**: remove all Cloudinary config fields from Settings + all references in HTML/JS
+- [x] **Strip Google Sheets**: remove all Google Sheets / Apps Script references from wizard, settings, HTML, JS
 
-### Session 11 — Settings & Onboarding
-- [ ] **New Setup Wizard**: OAuth → display name → 3-slide feature tour (how to add / search / price) — zero technical config
+### Session 11 — Settings & Onboarding ✅ (partial)
+- [x] **New Setup Wizard**: display name (unique) → 3-slide feature tour (how to add / search / price)
 - [ ] **Settings simplified**: Account · Security · Currency+Marketplace · Library prefs (stat cards, CSV) · Condition presets
 - [ ] **Condition % presets**: Fine 100% / Very Good 80% / Good 60% / Fair 40% — stored in settings, used by pricing
 
-### Session 12 — Pricing & Beta QA
-- [ ] **Library detail pricing**: remove Market Sync panel. Replace with: price display + tap-to-edit + "Check eBay" link
-- [ ] **Add page pricing**: keep "Fetch Price Estimate" as-is (working, backed by price_db data)
+### Session 12 — Settings + Beta QA
+- [ ] **Settings simplified**: restructure settings view — Account · Security · Currency+Marketplace · Library prefs · Condition presets
+- [ ] **Condition % presets**: Fine 100% / VG 80% / Good 60% / Fair 40% stored in settings, consumed by `getEstimatedValue()` in pricing.js
+- [ ] **Library detail pricing**: remove Market Sync panel. Replace with: stored price display + tap-to-edit + "Check eBay" link
 - [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings
 
 ### Beta Launch Checklist

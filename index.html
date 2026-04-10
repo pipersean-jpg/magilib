@@ -77,12 +77,12 @@
 <!-- WELCOME / ONBOARDING SCREEN -->
 <div id="welcomeScreen" class="hidden">
   <div class="welcome-card">
-    <div class="welcome-emoji">🎩</div>
+    <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="MagiLib" style="height:52px;width:auto;display:block;margin:0 auto;"></div>
     <div class="welcome-title">Welcome to MagiLib, <span class="welcome-name" id="welcomeName">Collector</span>!</div>
-    <div class="welcome-sub">Your magic book collection lives here. Start by adding your first book, or import an existing collection from a CSV export.</div>
+    <div class="welcome-sub">Your personal catalogue for magic and conjuring books. Take a quick tour, or dive straight in.</div>
     <div class="welcome-actions">
-      <button class="welcome-btn-primary" onclick="dismissWelcome('add')">Add my first book →</button>
-      <button class="welcome-btn-secondary" onclick="dismissWelcome('import')">Import from CSV</button>
+      <button class="welcome-btn-primary" onclick="startWizardTour()">Take the tour →</button>
+      <button class="welcome-btn-secondary" onclick="dismissWelcome('explore')">Explore first</button>
     </div>
   </div>
 </div>
@@ -120,10 +120,6 @@
     <div class="user-dropdown" id="userDropdown">
       <div class="user-dropdown-item" id="userMenuName" style="font-weight:600;cursor:default;color:var(--ink-light);font-size:12px;"></div>
       <div class="user-dropdown-divider"></div>
-      <div class="user-dropdown-item" onclick="showView('settings');closeUserMenu();">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Account
-      </div>
       <div class="user-dropdown-item" onclick="showView('settings');closeUserMenu();">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings
@@ -798,24 +794,10 @@
       </select>
     </div>
 
-    <div class="settings-row">
-      <label>Cloudinary Cloud Name (optional — for high-res cover storage)</label>
-      <input type="text" id="s-cloudName" placeholder="your-cloud-name" oninput="saveSettings()" autocomplete="off"/>
-      <div class="settings-hint">Free at cloudinary.com. Enables full-resolution cover storage and zoom view.</div>
-    </div>
-    <div class="settings-row">
-      <label>Cloudinary Upload Preset</label>
-      <input type="text" id="s-cloudPreset" placeholder="unsigned_preset_name" oninput="saveSettings()" autocomplete="off"/>
-      <div class="settings-hint">In Cloudinary: Settings → Upload → Add upload preset → Unsigned. Copy the preset name here.</div>
-    </div>
-    <div class="settings-row">
-      <button onclick="testCloudinaryUpload()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:36px;">Test Cloudinary Connection</button>
-      <div id="cloudinaryTestStatus" style="margin-top:8px;font-size:12px;display:none;padding:8px 12px;border-radius:var(--radius);"></div>
-    </div>
   </div>
   <div class="settings-panel" style="margin-top:0;">
     <div class="section-title">Setup</div>
-    <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to connect your Google Sheet and configure your library.</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">New to MagiLib? Run the setup wizard to get a quick tour of your library.</div>
     <button onclick="openWizard(true)" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;">Run Setup Wizard</button>
   </div>
 
@@ -963,29 +945,6 @@
     </div>
   </div>
 </div>
-
-<!-- APPS SCRIPT VIEWER MODAL -->
-<div class="modal-overlay hidden" id="appsScriptOverlay" onclick="if(event.target===this)document.getElementById('appsScriptOverlay').classList.add('hidden')" style="z-index:700;">
-  <div class="modal" style="max-width:600px;border-radius:20px;overflow:hidden;">
-    <div class="modal-handle"></div>
-    <div class="modal-header" style="padding:18px 20px 14px;">
-      <div>
-        <div class="modal-title">MagiLib Apps Script</div>
-        <div style="font-size:12px;color:var(--ink-faint);margin-top:2px;">Copy all, paste into Apps Script editor</div>
-      </div>
-      <button class="modal-close" onclick="document.getElementById('appsScriptOverlay').classList.add('hidden')">✕</button>
-    </div>
-    <div style="padding:0 16px 8px;">
-      <div id="appsScriptCopyStatus" style="display:none;font-size:12px;font-weight:500;padding:6px 12px;border-radius:7px;margin-bottom:8px;text-align:center;background:var(--success-bg);color:var(--success);border:0.5px solid var(--tier1-border);">✓ Copied to clipboard!</div>
-      <pre id="appsScriptCode" style="background:var(--paper-warm);border:0.5px solid var(--border-med);border-radius:10px;padding:14px;font-size:11px;line-height:1.6;overflow-x:auto;overflow-y:auto;max-height:45vh;white-space:pre;font-family:ui-monospace,monospace;color:var(--ink);margin:0;"></pre>
-    </div>
-    <div style="padding:12px 16px 20px;display:flex;gap:10px;">
-      <button onclick="copyAppsScript()" style="flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;"style="display:inline-flex;align-items:center;justify-content:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Copy to Clipboard</button>
-      <button onclick="document.getElementById('appsScriptOverlay').classList.add('hidden')" style="padding:12px 18px;background:transparent;border:0.5px solid var(--border-med);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--ink-light);">Done</button>
-    </div>
-  </div>
-</div>
-
 <!-- CHANGELOG MODAL -->
 <div class="modal-overlay hidden" id="changelogOverlay" onclick="if(event.target===this)closeChangelog()" style="z-index:600;">
   <div class="modal" style="max-width:520px;border-radius:20px;overflow:hidden;">
@@ -1027,15 +986,13 @@
     <button class="sheet-close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-actions magi-sheet-content" id="modalActionsArea" style="display:block;padding:12px 16px 0;">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <button class="btn-secondary" onclick="openEditFromModal()">✏ Edit</button>
         <button class="btn-primary" onclick="openEbayModal()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> eBay</button>
-        <button class="btn-secondary" id="modalWishlistBtn" onclick="toggleWishlistStatus()">+ Wishlist</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button class="btn-secondary" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
         <button class="btn-secondary" onclick="confirmDelete()" style="color:#a32d2d;border-color:#f5b7b5;">🗑 Delete</button>
-        <button class="btn-secondary" onclick="closeModal()">Close</button>
       </div>
     </div>
   </div>
@@ -1111,21 +1068,10 @@
     <span style="font-size:18px;">⚠</span>
     <div>
       <div style="font-weight:600;margin-bottom:2px;" id="errorBannerTitle">Saving paused</div>
-      <div style="font-size:11px;opacity:0.85;" id="errorBannerMsg">There was a problem saving to Google Sheets. Fix the issue before continuing.</div>
+      <div style="font-size:11px;opacity:0.85;" id="errorBannerMsg">There was a problem saving. Fix the issue before continuing.</div>
     </div>
   </div>
   <button onclick="dismissError()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">Dismiss</button>
-  <div class="settings-panel">
-    <div class="section-title">Cloudinary setup (free high-res storage)</div>
-    <div style="font-size:13px;color:var(--ink-light);line-height:1.9;">
-      <p style="margin-bottom:6px;">1. Sign up free at <strong>cloudinary.com</strong> (no credit card)</p>
-      <p style="margin-bottom:6px;">2. From your dashboard, copy your <strong>Cloud name</strong></p>
-      <p style="margin-bottom:6px;">3. Go to <strong>Settings → Upload → Add upload preset</strong></p>
-      <p style="margin-bottom:6px;">4. Set Signing mode to <strong>Unsigned</strong>, save, copy the preset name</p>
-      <p style="margin-bottom:6px;">5. Paste both into the fields above</p>
-      <p style="color:var(--ink-faint);font-size:11px;">Once configured, every new cover photo is automatically stored in full resolution. The catalog still loads fast using the compressed thumbnail, but tapping zoom shows the full-res version.</p>
-    </div>
-  </div>
 </div>
 
 <!-- COVER PICKER MODAL -->

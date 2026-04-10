@@ -437,7 +437,7 @@ async function confirmDelete() {
   const idx = S.currentModalIdx;
   const b = S.books[idx];
   if (!b) return;
-  const confirmed = window.confirm(`Delete "${b.title}"?\n\nThis will permanently remove it from your Google Sheet. This cannot be undone.`);
+  const confirmed = window.confirm(`Delete "${b.title}"?\n\nThis cannot be undone.`);
   if (!confirmed) return;
 
   if (b._id) {

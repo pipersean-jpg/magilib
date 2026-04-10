@@ -204,8 +204,6 @@ function loadSettings(){
     const s=JSON.parse(localStorage.getItem('arcana_books_v2')||'{}');
     S.settings=s;
     const setField = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-    setField('s-cloudName', s.cloudName);
-    setField('s-cloudPreset', s.cloudPreset);
     if(s.currency){const el=document.getElementById('s-currency');if(el)el.value=s.currency;const cl=document.getElementById('currencyLabel');if(cl)cl.textContent=s.currency;}
     if(s.marketplace){ const el=document.getElementById('s-marketplace'); if(el) el.value=s.marketplace; }
   }catch(e){ console.warn('loadSettings error:', e); }
@@ -216,8 +214,6 @@ function saveSettings(){
   const getVal = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
   const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
   const s = {
-    cloudName: getVal('s-cloudName') || existing.cloudName || '',
-    cloudPreset: getVal('s-cloudPreset') || existing.cloudPreset || '',
     currency: getVal('s-currency') || existing.currency || 'AUD',
     marketplace: getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
     statTotal: getCheck('s-stat-total'),
@@ -440,9 +436,6 @@ function openEbay(e){
 
 
 
-
-// Apps Script URL is now configurable in Settings
-function getScriptUrl(){ return ''; } // Legacy stub — no longer used
 
 // ── IN PRINT ↔ NOTES ENCODING ──
 // Persists "In Print" status as a trailing line in the notes field.
@@ -1550,14 +1543,6 @@ async function setCoverCompressed(dataUrl) {
   img.onload = () => { img.style.display='block'; ph.style.display='none'; };
   img.src = compressed;
   showToast('Cover ready (' + kb + 'KB)', 'success', 2000);
-  // Upload full-res to Cloudinary silently in background — NEVER blocks save
-  if (S.settings && S.settings.cloudName && S.settings.cloudPreset) {
-    setTimeout(() => {
-      uploadToCloudinary(dataUrl)
-        .then(url => { if (url) S.coverUrlHighRes = url; })
-        .catch(e => console.warn('Cloudinary (non-critical):', e));
-    }, 500);
-  }
 }
 
 
@@ -1577,95 +1562,6 @@ function openZoomFromModal() {
   if (b) openZoom(b.rawCover || b.coverUrl);
 }
 function closeZoom() { document.getElementById('zoomOverlay').classList.add('hidden'); }
-
-// ── CLOUDINARY UPLOAD ──
-async function uploadToCloudinary(dataUrl) {
-  // Fully silent — never shows errors to user, never blocks anything
-  const cloudName = (S.settings.cloudName || '').trim();
-  const preset = (S.settings.cloudPreset || '').trim();
-  if (!cloudName || !preset) return null;
-  try {
-    const arr = dataUrl.split(',');
-    const mime = (arr[0].match(/:(.*?);/) || [,'image/jpeg'])[1];
-    const bstr = atob(arr[1]);
-    const u8arr = new Uint8Array(bstr.length);
-    for (let n = 0; n < bstr.length; n++) u8arr[n] = bstr.charCodeAt(n);
-    const blob = new Blob([u8arr], {type: mime});
-    const formData = new FormData();
-    formData.append('file', blob, 'cover.jpg');
-    formData.append('upload_preset', preset);
-    formData.append('folder', 'arcana-books');
-    const resp = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
-      method: 'POST', body: formData
-    });
-    const data = await resp.json();
-    if (data.secure_url) return data.secure_url;
-  } catch(e) { /* silent — Cloudinary is optional */ }
-  return null;
-}
-
-// Cloudinary upload happens separately — called after setCoverCompressed when needed
-
-// ── CLOUDINARY CONNECTION TEST ──
-async function testCloudinaryUpload() {
-  const cloudName = (S.settings.cloudName || '').trim();
-  const preset = (S.settings.cloudPreset || '').trim();
-  const statusEl = document.getElementById('cloudinaryTestStatus');
-
-  const showStatus = (msg, ok) => {
-    statusEl.style.display = 'block';
-    statusEl.textContent = msg;
-    statusEl.style.background = ok ? '#d1fae5' : '#fee2e2';
-    statusEl.style.color = ok ? '#065f46' : '#991b1b';
-    statusEl.style.border = '0.5px solid ' + (ok ? '#6ee7b7' : '#fca5a5');
-  };
-
-  if (!cloudName || !preset) {
-    showStatus('⚠  Enter your Cloud Name and Upload Preset above first.', false);
-    return;
-  }
-
-  showStatus('Testing…', true);
-  statusEl.style.background = '#f3f4f6';
-  statusEl.style.color = '#374151';
-  statusEl.style.border = '0.5px solid #d1d5db';
-
-  try {
-    // Upload a minimal 1×1 transparent PNG as a test image
-    const testPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    const arr = testPng.split(',');
-    const bstr = atob(arr[1]);
-    const u8arr = new Uint8Array(bstr.length);
-    for (let n = 0; n < bstr.length; n++) u8arr[n] = bstr.charCodeAt(n);
-    const blob = new Blob([u8arr], {type: 'image/png'});
-    const formData = new FormData();
-    formData.append('file', blob, 'magilib-test.png');
-    formData.append('upload_preset', preset);
-    formData.append('folder', 'arcana-books');
-
-    const resp = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
-      method: 'POST', body: formData
-    });
-    const data = await resp.json();
-
-    if (data.secure_url) {
-      showStatus('✓ Connected! Test image uploaded successfully. Cloudinary is working.', true);
-    } else if (data.error) {
-      const msg = data.error.message || 'Unknown error';
-      if (msg.toLowerCase().includes('preset')) {
-        showStatus('✗ Invalid preset "' + preset + '". Check it exists and is set to Unsigned in Cloudinary.', false);
-      } else if (msg.toLowerCase().includes('cloud')) {
-        showStatus('✗ Cloud name "' + cloudName + '" not found. Check your Cloudinary dashboard.', false);
-      } else {
-        showStatus('✗ Cloudinary error: ' + msg, false);
-      }
-    } else {
-      showStatus('✗ Unexpected response from Cloudinary. Check your credentials.', false);
-    }
-  } catch(e) {
-    showStatus('✗ Network error — could not reach Cloudinary. Check your internet connection.', false);
-  }
-}
 
 // ── COVER PICKER ──
 function resetPickerState() {
