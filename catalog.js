@@ -981,12 +981,13 @@ async function loadMarketSync(b) {
       }
       linkUrl = srcRows[0].url || fallbackUrl;
     } else {
-      priceHtml = `<span style="font-size:11px;color:var(--ink-faint);font-style:italic;">No current pricing found</span>`;
+      priceHtml = `<span style="font-size:11px;color:var(--ink-faint);font-style:italic;">Price fetch not reliable</span>`;
       linkUrl = fallbackUrl;
     }
 
+    const linkLabel = srcKey === 'ebay_sold' ? 'Check sold listings ↗' : 'View listing ↗';
     const linkHtml = linkUrl
-      ? `<a href="${linkUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none;">View listing ↗</a>`
+      ? `<a href="${linkUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none;">${linkLabel}</a>`
       : '';
 
     return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border);">
@@ -1005,7 +1006,7 @@ async function loadMarketSync(b) {
     <div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);">
       <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Market Price Evidence</div>
       ${rowsHtml}
-      <div style="font-size:10px;color:var(--ink-faint);margin-top:10px;line-height:1.8;">
+      <div style="font-size:10px;color:var(--ink-faint);margin-top:10px;line-height:1.8;text-align:center;">
         <span style="color:#2a9d5c;">●</span> New &nbsp;
         <span style="color:#f5a623;">●</span> Pre-Owned &nbsp;
         <span style="color:#e05252;">●</span> Out of Print
