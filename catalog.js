@@ -926,47 +926,89 @@ async function loadMarketSync(b) {
   const el = document.getElementById('marketSyncSection');
   if (!el) return;
 
-  const [est, fxRates] = await Promise.all([getEstimatedValue(b), getFxRates()]);
-  if (!est) { el.style.display = 'none'; return; }
-
+  const key = normKey(b.title, b.author);
   const sym = currSym();
   const userCur = (S.settings && S.settings.currency) || 'AUD';
+
+  const [{ data: rows }, fxRates] = await Promise.all([
+    _supa.from('price_db').select('source,price,currency,url,in_print,created_at').eq('norm_key', key),
+    getFxRates()
+  ]);
+
+  const allRows = rows || [];
   const toLocal = (price, srcCur) => {
     if (!srcCur || srcCur === userCur) return parseFloat(price);
     return parseFloat(price) * ((fxRates[srcCur] || {})[userCur] || 1);
   };
 
-  const sourceRows = est.sources.map(r => {
-    const date  = new Date(r.created_at).toLocaleDateString('en-AU', { month:'short', year:'numeric' });
-    const label = SOURCE_LABELS[r.source] || r.source;
-    const nameEl = r.url
-      ? `<a href="${r.url}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;">${label} ↗</a>`
-      : `<span style="font-size:13px;font-weight:600;color:var(--ink);">${label}</span>`;
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);">
-      <div>${nameEl}<div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">${date}</div></div>
-      <span style="font-size:15px;font-weight:700;color:var(--ink);">${sym}${toLocal(r.price, r.currency||'USD').toFixed(0)}</span>
+  // Group rows by source
+  const bySource = {};
+  allRows.forEach(r => { (bySource[r.source] = bySource[r.source] || []).push(r); });
+
+  // Dot colour: eBay/QTTE = pre-owned (yellow), MSRP = green if in_print else red
+  const dotFor = (srcKey, srcRows) => {
+    if (srcKey === 'ebay_sold' || srcKey === 'qtte_secondary') return '#f5a623';
+    const ip = srcRows[0] && srcRows[0].in_print;
+    if (ip === 'confirmed_inprint' || ip === 'likely_inprint') return '#2a9d5c';
+    if (ip === 'confirmed_oop'     || ip === 'likely_oop')     return '#e05252';
+    return '#f5a623';
+  };
+
+  const ebayUrl = buildEbayUrl(b.title, b.author);
+
+  const SOURCES = [
+    { key: 'ebay_sold',      label: 'eBay Sold Listings',    fallbackUrl: ebayUrl },
+    { key: 'qtte_secondary', label: 'QTTE / CMB / MC',        fallbackUrl: null    },
+    { key: 'penguin_retail', label: 'Penguin Magic (MSRP)',   fallbackUrl: null    },
+    { key: 'murphys_msrp',   label: "Murphy's Magic (MSRP)", fallbackUrl: null    },
+  ];
+
+  const rowsHtml = SOURCES.map(({ key: srcKey, label, fallbackUrl }) => {
+    const srcRows = bySource[srcKey] || [];
+    const dotColor = srcRows.length ? dotFor(srcKey, srcRows) : '#ccc';
+    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin-right:10px;margin-top:2px;flex-shrink:0;"></span>`;
+
+    let priceHtml, linkUrl;
+
+    if (srcRows.length) {
+      if (srcKey === 'ebay_sold') {
+        const prices = srcRows.map(r => toLocal(r.price, r.currency || 'USD'));
+        const avg = prices.reduce((a, x) => a + x, 0) / prices.length;
+        priceHtml = `<span style="font-size:14px;font-weight:700;color:var(--ink);">${sym}${avg.toFixed(0)}</span>${prices.length > 1 ? `<div style="font-size:10px;color:var(--ink-faint);">avg of ${prices.length} sales</div>` : ''}`;
+      } else {
+        const local = toLocal(srcRows[0].price, srcRows[0].currency || 'USD');
+        priceHtml = `<span style="font-size:14px;font-weight:700;color:var(--ink);">${sym}${local.toFixed(0)}</span>`;
+      }
+      linkUrl = srcRows[0].url || fallbackUrl;
+    } else {
+      priceHtml = `<span style="font-size:11px;color:var(--ink-faint);font-style:italic;">No current pricing found</span>`;
+      linkUrl = fallbackUrl;
+    }
+
+    const linkHtml = linkUrl
+      ? `<a href="${linkUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none;">View listing ↗</a>`
+      : '';
+
+    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border);">
+      <div style="display:flex;align-items:flex-start;flex:1;min-width:0;">
+        ${dot}
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;">${label}</div>
+          ${linkHtml ? `<div style="margin-top:3px;">${linkHtml}</div>` : ''}
+        </div>
+      </div>
+      <div style="padding-left:12px;text-align:right;">${priceHtml}</div>
     </div>`;
   }).join('');
 
-  const modeLabel = est.mode === 'inprint' ? 'In-Print' : 'Out-of-Print';
-  const modeColor = est.mode === 'inprint' ? 'var(--green,#2a9d5c)' : 'var(--gold)';
-  const stars = '★'.repeat(est.confidence) + '☆'.repeat(5 - est.confidence);
-  const rangeStr = est.low > 0 ? `${sym}${est.low.toFixed(0)} – ${sym}${est.high.toFixed(0)}` : '';
-
   el.innerHTML = `
     <div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;">Market Price Evidence</div>
-        <div style="font-size:9px;font-weight:600;color:${modeColor};text-transform:uppercase;letter-spacing:0.06em;">${modeLabel}</div>
-      </div>
-      ${sourceRows}
-      <div style="display:flex;align-items:center;margin-top:12px;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-size:12px;color:var(--ink-faint);">Est. value <span style="color:var(--gold);letter-spacing:0.05em;">${stars}</span></div>
-          ${rangeStr ? `<div style="font-size:10px;color:var(--ink-faint);margin-top:1px;">${rangeStr}</div>` : ''}
-        </div>
-        <span style="font-size:19px;font-weight:700;color:var(--ink);">${sym}${est.value.toFixed(0)}</span>
-        <button onclick="acceptMarketPrice('${b._id}',${est.value.toFixed(2)})" style="padding:6px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Accept</button>
+      <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Market Price Evidence</div>
+      ${rowsHtml}
+      <div style="font-size:10px;color:var(--ink-faint);margin-top:10px;line-height:1.8;">
+        <span style="color:#2a9d5c;">●</span> New &nbsp;
+        <span style="color:#f5a623;">●</span> Pre-Owned &nbsp;
+        <span style="color:#e05252;">●</span> Out of Print
       </div>
     </div>`;
   el.style.display = '';
@@ -983,15 +1025,11 @@ async function toggleMarketSync(bookId) {
   }
   const b = S.books.find(x => x._id === bookId);
   if (!b) return;
-  // Show loading inline without revealing the section yet — avoids jump if no data found
   el.innerHTML = `<div style="padding:14px 20px;border-top:0.5px solid var(--border);text-align:center;font-size:12px;color:var(--ink-faint);">Loading…</div>`;
   el.style.display = '';
   await loadMarketSync(b);
-  // loadMarketSync hides el if no data — only activate button and scroll if still visible
-  if (el.style.display !== 'none') {
-    if (btn) btn.classList.add('is-active');
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+  if (btn) btn.classList.add('is-active');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function acceptMarketPrice(id, price) {
@@ -1074,21 +1112,11 @@ function openModal(idx){
           <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
         </div>`;
     } else {
-      const priceVal = b.price && !isNaN(parseFloat(b.price)) ? parseFloat(b.price).toFixed(0) : '';
-      const sym = currSym();
       actionsArea.innerHTML =
-        `<div id="modalPriceRow" style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px 14px;border-bottom:0.5px solid var(--border);">
-          <span style="font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;">Stored Price</span>
-          <span id="modalPriceDisplay" onclick="openModalPriceEdit('${b._id}')" style="cursor:pointer;font-size:15px;font-weight:600;color:${priceVal?'var(--ink)':'var(--ink-faint)'};">${priceVal?sym+priceVal:'Tap to set'}</span>
-        </div>
-        <div id="modalPriceEdit" style="display:none;padding:10px 4px 14px;border-bottom:0.5px solid var(--border);gap:8px;align-items:center;flex-wrap:nowrap;">
-          <input id="modalPriceInput" type="number" inputmode="decimal" placeholder="${sym}0" value="${priceVal}" style="flex:1;padding:8px 10px;border:1px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--paper);">
-          <button onclick="saveModalPrice('${b._id}')" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">Save</button>
-          <button onclick="cancelModalPriceEdit()" style="padding:8px 10px;background:none;border:1px solid var(--border-med);border-radius:7px;font-size:13px;color:var(--ink-faint);cursor:pointer;">✕</button>
-        </div>
-        <div class="ms-actions-primary" style="margin-top:12px;">
-          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
+        `<div class="ms-actions-primary">
+          <button class="btn-action" id="btnMarketValue" onclick="toggleMarketSync('${b._id}')">Market Value</button>
           <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
+          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
           <button class="btn-action" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
         </div>
         <hr class="ms-separator">
@@ -1113,31 +1141,6 @@ function openEbayModal(){
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) { window.location.href = S.currentModalUrl; }
   else { window.open(S.currentModalUrl, '_blank'); }
-}
-function openModalPriceEdit(id) {
-  document.getElementById('modalPriceDisplay').style.display = 'none';
-  const editRow = document.getElementById('modalPriceEdit');
-  editRow.style.display = 'flex';
-  const inp = document.getElementById('modalPriceInput');
-  inp.focus();
-  inp.select();
-}
-function cancelModalPriceEdit() {
-  document.getElementById('modalPriceEdit').style.display = 'none';
-  document.getElementById('modalPriceDisplay').style.display = '';
-}
-async function saveModalPrice(id) {
-  const inp = document.getElementById('modalPriceInput');
-  const val = parseFloat(inp.value);
-  if (isNaN(val)) { cancelModalPriceEdit(); return; }
-  await _supa.from('books').update({ market_price: val, updated_at: new Date().toISOString() }).eq('id', id);
-  const b = S.books.find(x => x._id === id);
-  if (b) b.price = String(val);
-  const sym = currSym();
-  const disp = document.getElementById('modalPriceDisplay');
-  disp.textContent = sym + val.toFixed(0);
-  disp.style.color = 'var(--ink)';
-  cancelModalPriceEdit();
 }
 function openEditFromModal(id){
   const sheet = document.querySelector('#modalOverlay .magi-sheet');
