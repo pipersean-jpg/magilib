@@ -403,7 +403,15 @@ function debouncedConjuringCheck(title) {
 function showTitleDropdown(title) {
   const dd = document.getElementById('titleDropdown');
   if (!dd) return;
-  const matches = conjuringTopMatches(title, 7);
+  const raw = conjuringTopMatches(title, 12);
+  // Deduplicate: skip entries whose displayed title is identical to a prior entry
+  const seenTitles = new Set();
+  const matches = raw.filter(m => {
+    const label = (m.entry.t || m.key).trim().toLowerCase();
+    if (seenTitles.has(label)) return false;
+    seenTitles.add(label);
+    return true;
+  }).slice(0, 7);
   if (matches.length === 0) { hideTitleDropdown(); return; }
   dd.innerHTML = '';
   matches.forEach((match) => {
@@ -421,7 +429,7 @@ function showTitleDropdown(title) {
 
     const titleSpan = document.createElement('div');
     titleSpan.textContent = match.entry.t || toTitleCase(match.key);
-    titleSpan.style.cssText = 'font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    titleSpan.style.cssText = 'font-size:13px;font-weight:500;color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;';
     textWrap.appendChild(titleSpan);
 
     // Show author from DB entry if available, else fall back to price DB

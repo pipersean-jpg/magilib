@@ -1138,10 +1138,7 @@ function openModal(idx){
   document.getElementById('modalOverlay').classList.add('is-active');
 }
 function openEbayModal(){
-  // Use location.href on mobile to avoid white-screen-on-back issue
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (isMobile) { window.location.href = S.currentModalUrl; }
-  else { window.open(S.currentModalUrl, '_blank'); }
+  window.open(S.currentModalUrl, '_blank');
 }
 function openEditFromModal(id){
   const sheet = document.querySelector('#modalOverlay .magi-sheet');
@@ -1177,7 +1174,7 @@ function toggleMoveMode() {
   S.selectMode = 'move';
   S.selectedBooks.clear();
   _setModeBtn('moveModeBtn', 'Exit Move', true);
-  _setModeBtn('editModeBtn', '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg> Edit', false);
+  _setModeBtn('editModeBtn', 'Edit', false);
   renderCatalog();
 }
 window.toggleMoveMode = toggleMoveMode;
@@ -1185,7 +1182,7 @@ window.toggleMoveMode = toggleMoveMode;
 function exitSelectMode() {
   S.selectMode = null;
   S.selectedBooks.clear();
-  _setModeBtn('editModeBtn', '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg> Edit', false);
+  _setModeBtn('editModeBtn', 'Edit', false);
   _setModeBtn('moveModeBtn', 'Move', false);
   const bar = document.getElementById('batchActionsBar');
   if (bar) bar.classList.remove('is-visible');
@@ -1478,11 +1475,16 @@ function dismissError() {
 }
 
 // ── PHOTO QUEUE ──
+const QUEUE_LIMIT = 20;
 const photoQueue = [];
 function addToQueue(event) {
   const files = Array.from(event.target.files);
   event.target.value = '';
-  files.forEach(file => {
+  const remaining = QUEUE_LIMIT - photoQueue.length;
+  if (remaining <= 0) { showToast('Queue limit reached (20 books max)', 'error'); return; }
+  const toAdd = files.slice(0, remaining);
+  if (files.length > remaining) showToast(`Added ${toAdd.length} of ${files.length} — queue limit is 20`, 'info', 3000);
+  toAdd.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
       photoQueue.push({ file, dataUrl: e.target.result });
@@ -1496,16 +1498,52 @@ function updateQueueUI() {
   document.getElementById('queueCount').textContent = count + ' photo' + (count !== 1 ? 's' : '') + ' queued';
   const panel = document.getElementById('queuePanel');
   panel.style.display = count > 0 ? 'block' : 'none';
+  const hint = document.getElementById('queueLimitHint');
+  if (hint) hint.textContent = count > 0 ? `(${count}/20)` : '';
   const thumbs = document.getElementById('queueThumbs');
-  thumbs.innerHTML = photoQueue.map((item, i) => 
-    `<div style="position:relative;width:52px;height:72px;border-radius:6px;overflow:hidden;border:0.5px solid var(--border-med);">
+  thumbs.innerHTML = photoQueue.map((item, i) =>
+    `<div onclick="queueThumbAction(${i})" style="position:relative;width:52px;height:72px;border-radius:6px;overflow:hidden;border:0.5px solid var(--border-med);cursor:pointer;">
       <img src="${item.dataUrl}" style="width:100%;height:100%;object-fit:cover;">
       ${i === 0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:var(--accent);color:white;font-size:9px;text-align:center;padding:2px;">Next</div>' : ''}
-     </div>`
+    </div>`
   ).join('');
   const btn = document.getElementById('processQueueBtn');
-  if (btn) btn.textContent = `Process next (${count} left) →`;
+  if (btn) btn.textContent = `Process next title`;
 }
+function queueThumbAction(idx) {
+  const overlay = document.getElementById('dialogOverlay');
+  overlay.innerHTML = `
+    <div class="magi-dialog">
+      <h3>Photo ${idx + 1} of ${photoQueue.length}</h3>
+      <p>Process this photo now, or remove it from the queue?</p>
+      <div class="magi-dialog-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button onclick="closeDialog();removeFromQueue(${idx})" class="btn-ghost" style="color:#b91c1c;border-color:#fca5a5;">Remove</button>
+        <button onclick="closeDialog();processSpecificFromQueue(${idx})" class="btn-primary">Process Now</button>
+      </div>
+    </div>`;
+  overlay.classList.add('is-active');
+}
+function removeFromQueue(idx) {
+  photoQueue.splice(idx, 1);
+  updateQueueUI();
+}
+function processSpecificFromQueue(idx) {
+  if (idx > 0) photoQueue.unshift(photoQueue.splice(idx, 1)[0]);
+  processNextFromQueue();
+}
+function closeQueuePanel() {
+  if (photoQueue.length === 0) { document.getElementById('queuePanel').style.display = 'none'; return; }
+  magiConfirm({
+    title: 'Close photo queue?',
+    message: `${photoQueue.length} queued photo${photoQueue.length > 1 ? 's' : ''} will be lost. This cannot be undone.`,
+    confirmText: 'Close & Discard',
+    onConfirm: () => { photoQueue.length = 0; updateQueueUI(); }
+  });
+}
+window.queueThumbAction = queueThumbAction;
+window.removeFromQueue = removeFromQueue;
+window.processSpecificFromQueue = processSpecificFromQueue;
+window.closeQueuePanel = closeQueuePanel;
 async function processNextFromQueue() {
   if (!photoQueue.length) { showToast('Queue is empty', 'info'); return; }
   const item = photoQueue.shift();

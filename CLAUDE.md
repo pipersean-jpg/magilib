@@ -66,8 +66,8 @@ Before running `handoff`, Claude Code MUST:
 
 ### Session 13 — Beta QA
 - [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
-- [ ] **Library detail pricing**: remove Market Sync panel. Replace with: stored price display + tap-to-edit + "Check eBay" link
-- [ ] **Wishlist price label**: check if wishlist price input needs currency label update
+- [x] **Library detail pricing**: 2×2 button grid (Market Value · Check eBay · Edit Details · Mark Sold) + lazy Market Sync panel — **confirmed complete and locked for beta. Do NOT replace before Phase 2.**
+- [x] **Wishlist price label**: currency label fix shipped in Session 14
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -94,7 +94,7 @@ Before running `handoff`, Claude Code MUST:
 
 ## Pricing Model — Beta Scope (simplified)
 - **Add page**: "Fetch Price Estimate" button uses `pricing.js` → looks up `price_db` (2,021 eBay sold rows + Murphy's MSRP + QTTE + Penguin) → returns estimate. Working. Keep as-is.
-- **Library detail**: stored `market_price` field, tap-to-edit, "Check eBay" link. No live scraping in UI.
+- **Library detail**: 2×2 button grid — Market Value (lazy Market Sync via `price_db`) · Check eBay · Edit Details · Mark Sold. This is the final beta UX — do NOT change before Phase 2.
 - **Condition %**: user-set presets (Fine 100% / VG 80% / Good 60% / Fair 40%) stored in settings — used by estimate function.
 - **Phase 2 (post-beta)**: full scraper-backed Market Sync panel, price range bar, condition slider, OOP scarcity, FX rates table.
 - **Phase 2 — Multi-currency architecture** (spec confirmed):

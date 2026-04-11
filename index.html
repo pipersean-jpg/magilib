@@ -25,10 +25,10 @@
 <body>
 
 <!-- SPLASH SCREEN -->
-<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
-  <img src="/logo@3x.png" alt="MagiLib" id="splashLogo" onerror="this.src='/logo.png'" style="height:180px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;"/>
+<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#2A1F6B;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
+  <img src="/logo@3x.png" alt="MagiLib" id="splashLogo" onerror="this.src='/logo.png'" style="height:180px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;filter:brightness(0) invert(1);"/>
   <div id="splashWordmark" style="display:none;"></div>
-  <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(42,31,107,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
+  <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
 </div>
 
 <!-- AUTH SCREEN -->
@@ -48,7 +48,7 @@
     </div>
     <div class="auth-field">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()"/>
     </div>
     <button class="auth-forgot" id="authForgotLink" onclick="forgotPassword()">Forgot password?</button>
     <div class="auth-success" id="authSuccess"></div>
@@ -142,7 +142,7 @@
   <div class="camera-hero">
     <div class="camera-hero-title"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Scan a Book Cover</div>
     <div class="camera-actions">
-      <label class="camera-btn primary-action" style="cursor:pointer">
+      <label class="camera-btn" style="cursor:pointer">
         <span class="cam-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
         <span class="cam-label">Take Photo</span>
         <span class="cam-sub">Use camera</span>
@@ -163,13 +163,18 @@
     </div>
     <div id="queuePanel" style="display:none;margin-top:14px;padding:12px;background:var(--paper-warm);border-radius:var(--radius);border:0.5px solid var(--border-med);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:12px;font-weight:500;color:var(--ink);">Photo queue</span>
-        <div style="display:flex;gap:6px;">
-          <button onclick="quickAddFromQueue()" id="quickAddBtn" class="btn-queue-action btn-queue-gold"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Quick Add All</button>
-          <button onclick="processNextFromQueue()" id="processQueueBtn" class="btn-queue-action btn-queue-accent"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg> Process next</button>
-        </div>
+        <span style="font-size:12px;font-weight:500;color:var(--ink);">Photo queue <span id="queueLimitHint" style="color:var(--ink-faint);font-weight:400;"></span></span>
+        <button onclick="closeQueuePanel()" style="background:none;border:none;font-size:18px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;" title="Close queue">✕</button>
       </div>
-      <div id="queueThumbs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <label style="display:block;width:100%;text-align:center;padding:10px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--accent);cursor:pointer;margin-bottom:10px;box-sizing:border-box;">
+        + Load another title
+        <input type="file" class="file-input" accept="image/*" onchange="addToQueue(event)">
+      </label>
+      <div id="queueThumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <button onclick="quickAddFromQueue()" id="quickAddBtn" class="btn-queue-action btn-queue-gold">Add All to Drafts</button>
+        <button onclick="processNextFromQueue()" id="processQueueBtn" class="btn-queue-action btn-queue-accent">Process next title</button>
+      </div>
     </div>
     <div class="scan-status" id="scanStatus">
       <span class="scan-icon" id="scanIcon"><span class="spinner dark" style="margin:0;"></span></span>
@@ -705,9 +710,9 @@
     </div>
     <!-- Row 2: Edit | Move | Filters (each flex:1) -->
     <div class="toolbar-row-2">
-      <button onclick="toggleEditMode()" id="editModeBtn" class="toolbar-row-btn"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Edit</button>
+      <button onclick="toggleEditMode()" id="editModeBtn" class="toolbar-row-btn">Edit</button>
       <button onclick="toggleMoveMode()" id="moveModeBtn" class="toolbar-row-btn">Move</button>
-      <button id="filterMenuBtn" class="toolbar-row-btn" onclick="openFilterSheet()">⊿ Filters <span id="filterCount"></span></button>
+      <button id="filterMenuBtn" class="toolbar-row-btn" onclick="openFilterSheet()">Filters <span id="filterCount"></span></button>
     </div>
   </div>
   <div id="wishlistQuickAdd" style="display:none;background:var(--paper-card);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;">
@@ -765,13 +770,21 @@
   <div class="settings-panel">
     <div class="section-title">Security</div>
     <div class="settings-row">
+      <label>Current Password</label>
+      <input type="password" id="s-current-password" placeholder="Your current password" autocomplete="current-password"/>
+    </div>
+    <div class="settings-row">
       <label>New Password</label>
       <input type="password" id="s-new-password" placeholder="At least 6 characters" autocomplete="new-password"/>
+    </div>
+    <div class="settings-row">
+      <label>Confirm New Password</label>
+      <input type="password" id="s-confirm-password" placeholder="Repeat new password" autocomplete="new-password"/>
       <div class="settings-hint">Must be at least 6 characters.</div>
     </div>
     <div class="settings-row" style="margin-top:4px;">
       <button class="btn-secondary" style="min-height:38px;" onclick="changePasswordFromSettings(this)">Update Password</button>
-      <div id="s-password-status" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <div id="s-password-status" style="font-size:12px;margin-top:8px;min-height:16px;color:#b91c1c;"></div>
     </div>
   </div>
   <div class="settings-panel">
