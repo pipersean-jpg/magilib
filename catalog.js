@@ -526,13 +526,21 @@ function renderCatalog(){
 
   // Fuzzy search via Fuse.js (if loaded and query present)
   let fuzzyMatched = null;
+  let _fuseOrder = null;
   if(search && typeof Fuse !== 'undefined'){
     const fuse = new Fuse(S.books, {
-      keys: ['title','author','publisher','year'],
-      threshold: 0.3,
+      keys: [
+        { name: 'title', weight: 3 },
+        { name: 'author', weight: 2 },
+        { name: 'publisher', weight: 0.5 },
+      ],
+      threshold: 0.25,
       ignoreLocation: true,
+      includeScore: true,
     });
-    fuzzyMatched = new Set(fuse.search(search).map(r => r.item));
+    const _fuseResults = fuse.search(search);
+    fuzzyMatched = new Set(_fuseResults.map(r => r.item));
+    _fuseOrder = new Map(_fuseResults.map((r, i) => [r.item, i]));
   }
 
   let books=S.books.filter(b=>{
@@ -544,24 +552,26 @@ function renderCatalog(){
     if(S.showSold) return ms&&mc&&mp&&b.sold==='Sold';
     return ms&&mc&&mp&&b.sold!=='Sold'&&b.sold!=='Wishlist'&&b.draft!=='Draft';
   });
-  // Sort
-  const sort=S.sortBy||'dateAdded';
-  const dir=S.sortDir||'desc';
-  books=[...books].sort((a,b2)=>{
-    const normSort = s => (s||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
-    if(sort==='title') return dir==='asc'?normSort(a.title).localeCompare(normSort(b2.title)):normSort(b2.title).localeCompare(normSort(a.title));
-    if(sort==='author') return dir==='asc'?normSort(a.author).localeCompare(normSort(b2.author)):normSort(b2.author).localeCompare(normSort(a.author));
-    if(sort==='price') return dir==='asc'?(parseFloat(a.price)||0)-(parseFloat(b2.price)||0):(parseFloat(b2.price)||0)-(parseFloat(a.price)||0);
-    if(sort==='year') return dir==='asc'?(parseInt(a.year)||0)-(parseInt(b2.year)||0):(parseInt(b2.year)||0)-(parseInt(a.year)||0);
-    if(sort==='star') return dir==='asc'?(parseInt(a.star)||0)-(parseInt(b2.star)||0):(parseInt(b2.star)||0)-(parseInt(a.star)||0);
-    // dateAdded — parse en-AU date (DD/MM/YYYY), use row index as tiebreaker for same-day entries
-    const parseDate=d=>{if(!d)return 0;const p=d.split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():0;};
-    const da=parseDate(a.dateAdded), db=parseDate(b2.dateAdded);
-    if(da!==db) return dir==='asc'?da-db:db-da;
-    // Same date (or both missing) — use row position so last-added appears first
-    const ia=S.books.indexOf(a), ib=S.books.indexOf(b2);
-    return dir==='asc'?ia-ib:ib-ia;
-  });
+  // Sort — when searching rank by relevance, otherwise use selected sort
+  if (search && _fuseOrder) {
+    books = books.sort((a, b2) => (_fuseOrder.get(a) ?? 9999) - (_fuseOrder.get(b2) ?? 9999));
+  } else {
+    const sort=S.sortBy||'dateAdded';
+    const dir=S.sortDir||'desc';
+    books=[...books].sort((a,b2)=>{
+      const normSort = s => (s||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
+      if(sort==='title') return dir==='asc'?normSort(a.title).localeCompare(normSort(b2.title)):normSort(b2.title).localeCompare(normSort(a.title));
+      if(sort==='author') return dir==='asc'?normSort(a.author).localeCompare(normSort(b2.author)):normSort(b2.author).localeCompare(normSort(a.author));
+      if(sort==='price') return dir==='asc'?(parseFloat(a.price)||0)-(parseFloat(b2.price)||0):(parseFloat(b2.price)||0)-(parseFloat(a.price)||0);
+      if(sort==='year') return dir==='asc'?(parseInt(a.year)||0)-(parseInt(b2.year)||0):(parseInt(b2.year)||0)-(parseInt(a.year)||0);
+      if(sort==='star') return dir==='asc'?(parseInt(a.star)||0)-(parseInt(b2.star)||0):(parseInt(b2.star)||0)-(parseInt(a.star)||0);
+      const parseDate=d=>{if(!d)return 0;const p=d.split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():0;};
+      const da=parseDate(a.dateAdded), db=parseDate(b2.dateAdded);
+      if(da!==db) return dir==='asc'?da-db:db-da;
+      const ia=S.books.indexOf(a), ib=S.books.indexOf(b2);
+      return dir==='asc'?ia-ib:ib-ia;
+    });
+  }
   // Price source: wishlist uses the filtered wishlist set; normal view excludes sold/wishlist/drafts
   const priceSrc=S.showWishlist?books:books.filter(b=>b.sold!=='Sold'&&b.sold!=='Wishlist'&&b.draft!=='Draft');
   const prices=priceSrc.map(b=>parseFloat(b.price)||0).filter(p=>p>0&&p<50000);
@@ -608,7 +618,7 @@ function renderStatsRow() {
   if(!books.length){
     const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
     const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
-    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
+    grid.innerHTML = `<div class="empty-search-container" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;width:100%;"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
     return;
   }
   const isListView = S.viewMode === 'list';
@@ -724,13 +734,25 @@ function closeFilterSheet(e) {
   }
 }
 function updateFilterBtn() {
-  const count = document.querySelectorAll('#booksGrid .book-card').length;
+  // Compute count from data (not DOM) to avoid timing issues
+  const search = ((document.getElementById('catalogSearch') || {}).value || '').trim().toLowerCase();
+  const cond = S.filterCondition || 'all';
+  const pub = ((document.getElementById('filterPublisher') || {}).value || '');
+  const count = (S.books || []).filter(b => {
+    const ms = !search || (b.title||'').toLowerCase().includes(search) || (b.author||'').toLowerCase().includes(search);
+    const mc = cond === 'all' || b.condition === cond;
+    const mp = !pub || b.publisher === pub;
+    if (S.showWishlist) return ms && mc && mp && b.sold === 'Wishlist';
+    if (S.showDrafts)   return ms && mc && mp && b.draft === 'Draft';
+    if (S.showSold)     return ms && mc && mp && b.sold === 'Sold';
+    return ms && mc && mp && b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft';
+  }).length;
   const applyBtn = document.getElementById('filterApplyBtn');
   if (applyBtn) applyBtn.textContent = `Show ${count} Book${count !== 1 ? 's' : ''}`;
   let active = 0;
   if ((S.sortBy || 'dateAdded') !== 'dateAdded' || (S.sortDir || 'desc') !== 'desc') active++;
   if ((S.filterCondition || 'all') !== 'all') active++;
-  if (((document.getElementById('filterPublisher') || {}).value || '') !== '') active++;
+  if (pub !== '') active++;
   if (S.showSold) active++;
   if (S.showDrafts) active++;
   const badge = document.getElementById('filterCount');
@@ -1138,6 +1160,9 @@ function openModal(idx){
   document.getElementById('modalOverlay').classList.add('is-active');
 }
 function openEbayModal(){
+  // Installed PWA on iOS loses state with window.open — use location.href only in that case
+  const isIOSPWA = /iPhone|iPad|iPod/i.test(navigator.userAgent) && window.navigator.standalone === true;
+  if (isIOSPWA) { window.location.href = S.currentModalUrl; return; }
   window.open(S.currentModalUrl, '_blank');
 }
 function openEditFromModal(id){

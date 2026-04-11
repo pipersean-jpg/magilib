@@ -403,10 +403,19 @@ async function toggleSold() {
   const b = S.books[idx];
   if (!b) return;
   const isSold = b.sold === 'Sold';
+  if (!isSold) {
+    magiConfirm({
+      title: 'Mark as sold?',
+      message: `"${b.title}" will be moved to your Sold list.`,
+      confirmText: 'Mark Sold',
+      onConfirm: () => _doToggleSold(b, false)
+    });
+    return;
+  }
+  _doToggleSold(b, true);
+}
+async function _doToggleSold(b, isSold) {
   const newStatus = isSold ? '' : 'Sold';
-  const label = isSold ? 'Return to Library' : 'Sold';
-  const rowNum = idx + 2; // +1 header +1 for 0-index
-
   if (!b._id) { showToast('Could not update sold status', 'error'); return; }
   await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
   b.sold = newStatus;

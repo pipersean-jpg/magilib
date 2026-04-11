@@ -1050,12 +1050,15 @@
   <div class="magi-sheet" id="filterSheet">
     <div class="magi-sheet-handle"></div>
     <div style="padding:16px 20px 0;">
-      <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:16px;">Filters</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;">Filters</div>
+        <button onclick="closeFilterSheet()" style="background:none;border:none;font-size:20px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Sort</div>
           <select id="filterSort" class="filter-select" style="width:100%;" onchange="setSortFromSelect(this.value)">
-            <option value="dateAdded-desc">Last Added</option>
+            <option value="dateAdded-desc">Newest First</option>
             <option value="dateAdded-asc">Date added ↑</option>
             <option value="title-asc">Title A → Z</option>
             <option value="title-desc">Title Z → A</option>
@@ -1174,7 +1177,7 @@
       <div class="modal-title" id="editModalTitle">Edit Book</div>
       <button class="modal-close" onclick="closeEditModal()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div id="editModalScroll" style="padding:20px;overflow-y:auto;max-height:75vh;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;">
+    <div id="editModalScroll" style="padding:20px;overflow-y:auto;max-height:60vh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:flex;flex-direction:column;gap:14px;">
       <input type="hidden" id="edit-rowIndex"/>
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:16px;border-bottom:0.5px solid var(--border);">
         <div id="editCoverFrame" style="width:90px;height:112px;background:var(--paper-warm);border-radius:8px;border:0.5px solid var(--border);overflow:hidden;">
