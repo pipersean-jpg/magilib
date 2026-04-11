@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 14)
-- ### 1. `catalog.js` — wishlist price placeholder + currency warning
-- `updatePriceLabels()`: added `#wl-price` placeholder update → now reads `Price (AUD)` / `Price (GBP)` etc. matching user currency setting
-- `saveSettings()`: after `updatePriceLabels()`, shows `#currencyChangeWarning` element on currency change
-- ### 2. `index.html` — currency change warning
-- Added `<p id="currencyChangeWarning">` below currency selector in Settings — hidden by default, shown in red on currency save: *"Currency label updated. Existing prices are not converted — they still reflect the value they were entered in."*
-- ### 3. `CLAUDE.md` — Phase 2 currency spec
+## Last Session (Session 15)
+- ### 1. Confirmed Library detail layout as beta-complete (no code change)
+- The 2×2 button grid (Market Value · Check eBay · Edit Details · Mark Sold) + lazy Market Sync panel is the intended beta UX. Do NOT replace before Phase 2.
+- ### 2. `index.html` + `catalog.js` — remove icons from Edit and Filter toolbar buttons
+- Removed SVG checkmark icon from `editModeBtn` in HTML
+- Removed ⊿ from `filterMenuBtn` in HTML
+- Removed SVG icon from `editModeBtn` label in `toggleMoveMode()` and `exitSelectMode()` in catalog.js
 
 **Known issues carried forward:**
 - **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
 - **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
-- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) — Phase 2 migration now fully specced
+- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) — Phase 2 migration fully specced in CLAUDE.md
 
 ---
 
