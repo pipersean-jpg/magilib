@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 13)
-- ### 1. `assets/css/magilib.css` — Phase 1, 2, 5, 6
-- **Phase 1**: Expanded `:root` with `--status-*` (sold/wishlist/draft colors, bgs, borders, overlay), `--shadow-*` (sm/md/lg/card/toast), `--radius-btn`, `--radius-dialog`, `--overlay-scrim`, `--text-xs/sm/base/md/lg/xl/2xl`, `--icon-sm/md/lg`, `--tier1-field-bg`
-- **Phase 2**: `.modal-overlay` z-index `200` → `var(--z-sheet)`; `.modal` box-shadow → `var(--shadow-lg)`
-- **Phase 5**: `.scan-status` `align-items:flex-start` → `center`; `.price-value` and `.price-range` `text-align:center`; `.empty-state .empty-icon` → SVG-container display:flex centered
-- **Phase 6**: All hardcoded `10px/11px/13px/15px/20px` font-sizes replaced with `var(--text-xs/sm/base/md/xl)` across 35+ selectors including: `.camera-hero-title`, `.cover-placeholder p`, `.cover-btn`, `.price-label`, `.source-breakdown-header`, `.source-detail/link`, `.legend-item`, `.search-dealer-btn`, `.fetch-price-btn`, `.condition-opt`, `.search-bar input`, `.book-cover-ph p`, `.book-price-text`, `.empty-state button`, `.detail-key/val`, `.settings-hint`, `.url-input-row button`, `.auth-title/sub/toggle/optional`, `.user-menu-btn`, `.user-dropdown-item`, `.btn-danger-link`, `.btn-ghost`, `.btn-action`, `.magi-dialog input`, `.batch-count`, `.batch-btn`, `.insights-bar`, `.copies-badge`, `.star`, `.search-clear`, `.list-view .book-title-text`, `.field input/select/textarea`, `.settings-row input/select`
-- New CSS classes: `.btn-queue-action`, `.btn-queue-gold`, `.btn-queue-accent`, `.btn-icon-dismiss`, `.chip-sold`, `.chip-wishlist`, `.chip-draft` (with `.active` variants), `.sold-badge`, `.cover-placeholder .book-icon` SVG container
+## Last Session (Session 14)
+- ### 1. `catalog.js` — wishlist price placeholder + currency warning
+- `updatePriceLabels()`: added `#wl-price` placeholder update → now reads `Price (AUD)` / `Price (GBP)` etc. matching user currency setting
+- `saveSettings()`: after `updatePriceLabels()`, shows `#currencyChangeWarning` element on currency change
+- ### 2. `index.html` — currency change warning
+- Added `<p id="currencyChangeWarning">` below currency selector in Settings — hidden by default, shown in red on currency save: *"Currency label updated. Existing prices are not converted — they still reflect the value they were entered in."*
+- ### 3. `CLAUDE.md` — Phase 2 currency spec
 
 **Known issues carried forward:**
 - **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
 - **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
-- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js — Phase 2 migration
+- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) — Phase 2 migration now fully specced
 
 ---
 
@@ -97,6 +97,12 @@ Before running `handoff`, Claude Code MUST:
 - **Library detail**: stored `market_price` field, tap-to-edit, "Check eBay" link. No live scraping in UI.
 - **Condition %**: user-set presets (Fine 100% / VG 80% / Good 60% / Fair 40%) stored in settings — used by estimate function.
 - **Phase 2 (post-beta)**: full scraper-backed Market Sync panel, price range bar, condition slider, OOP scarcity, FX rates table.
+- **Phase 2 — Multi-currency architecture** (spec confirmed):
+  - **Storage**: all `market_price` values stored in USD internally. Display layer multiplies by FX rate for user's currency preference. Requires `price_currency` column on books table + one-time migration script (existing `currency` tags on `price_db` rows already cover this).
+  - **Live FX rates**: fetch from free API (exchangerate.host or similar) on app load. Cache in localStorage with timestamp. Refresh if >24hrs old. If fetch fails, keep existing cached/hardcoded rates silently.
+  - **Manual refresh**: "Update rates" button in Settings → fetch live rates → show last-updated timestamp.
+  - **Purchase price**: stays static (never converted). Add `cost_currency` column + small currency dropdown (USD/AUD/GBP/EUR/JPY) on Add + Edit forms. Display-only — shows what the user actually paid in original currency.
+  - **Migration**: one-time batch script converts existing `market_price` values to USD using rate at migration time. After that, only new book additions convert on write. Run once; no ongoing UI impact.
 
 ---
 

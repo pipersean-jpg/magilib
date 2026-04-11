@@ -206,6 +206,7 @@ function updatePriceLabels(cur) {
   if(el('costLabelAdd'))   el('costLabelAdd').textContent   = 'Purchase price (' + c + ')';
   if(el('priceLabelEdit')) el('priceLabelEdit').textContent = 'Market Price (' + c + ')';
   if(el('costLabelEdit'))  el('costLabelEdit').textContent  = 'Purchase Price (' + c + ')';
+  if(el('wl-price'))       el('wl-price').placeholder       = 'Price (' + c + ')';
 }
 function loadSettings(){
   try{
@@ -246,6 +247,8 @@ function saveSettings(){
   const cl = document.getElementById('currencyLabel');
   if(cl) cl.textContent = currency;
   updatePriceLabels(currency);
+  const curWarn = document.getElementById('currencyChangeWarning');
+  if(curWarn) curWarn.style.display = 'block';
 }
 function showView(v){
   // Safety lock: block leaving Add tab if queue or key fields have content
