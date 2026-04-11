@@ -280,10 +280,10 @@ function checkLocalDBBadges(title) {
   const badge   = document.getElementById('localDBBadge');
   if (!badge) return;
   if (inPrice) {
-    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#e8f5ee;color:#2d6a4f;border:0.5px solid #a3d9b9;">✓ In Print — MSRP USD $' + inPrice.price_usd.toFixed(2) + '</span>';
+    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--tier1-bg);color:var(--tier1);border:0.5px solid var(--tier1-border);"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><polyline points=\'20 6 9 17 4 12\'/></svg> In Print — MSRP USD $' + inPrice.price_usd.toFixed(2) + '</span>';
     badge.style.display = 'block';
   } else if (inDisc) {
-    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#faeeda;color:#854f0b;border:0.5px solid #f5d59a;">⚠ Possibly Out of Print</span>';
+    badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--tier3-bg);color:var(--tier3);border:0.5px solid var(--tier3-border);"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\'/><line x1=\'12\' y1=\'9\' x2=\'12\' y2=\'13\'/><line x1=\'12\' y1=\'17\' x2=\'12.01\' y2=\'17\'/></svg> Possibly Out of Print</span>';
     badge.style.display = 'block';
   } else {
     badge.style.display = 'none';
@@ -422,13 +422,10 @@ function toggleShowSold(btn) {
   S.showWishlist = false;
   S.showDrafts = false;
   btn.classList.toggle('active', S.showSold);
-  btn.style.background = S.showSold ? '#a32d2d' : 'transparent';
-  btn.style.color = S.showSold ? 'white' : '#a32d2d';
-  btn.style.borderColor = S.showSold ? '#a32d2d' : '#f5b7b5';
   const wishChip = document.getElementById('showWishlistChip');
   const draftsChip = document.getElementById('showDraftsChip');
-  if (wishChip) { wishChip.classList.remove('active'); wishChip.style.background = 'transparent'; wishChip.style.color = '#185fa5'; }
-  if (draftsChip) { draftsChip.classList.remove('active'); draftsChip.style.background = 'transparent'; draftsChip.style.color = '#5f5e5a'; }
+  if (wishChip) wishChip.classList.remove('active');
+  if (draftsChip) draftsChip.classList.remove('active');
   renderCatalog();
 }
 

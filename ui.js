@@ -5,14 +5,8 @@ function toggleWishlist(btn) {
   S.showSold = false;
   S.showDrafts = false;
   btn.classList.toggle('active', S.showWishlist);
-  btn.style.background = S.showWishlist ? '#185fa5' : 'transparent';
-  btn.style.color = S.showWishlist ? 'white' : '#185fa5';
   document.getElementById('showSoldChip').classList.remove('active');
-  document.getElementById('showSoldChip').style.background = 'transparent';
-  document.getElementById('showSoldChip').style.color = '#a32d2d';
   document.getElementById('showDraftsChip').classList.remove('active');
-  document.getElementById('showDraftsChip').style.background = 'transparent';
-  document.getElementById('showDraftsChip').style.color = '#5f5e5a';
   renderCatalog();
 }
 
@@ -24,9 +18,9 @@ function showDraftsInCatalog() {
   const draftsChip = document.getElementById('showDraftsChip');
   const soldChip   = document.getElementById('showSoldChip');
   const wishChip   = document.getElementById('showWishlistChip');
-  if (draftsChip) { draftsChip.classList.add('active'); draftsChip.style.background = '#5f5e5a'; draftsChip.style.color = 'white'; }
-  if (soldChip)   { soldChip.classList.remove('active'); soldChip.style.background = 'transparent'; soldChip.style.color = '#a32d2d'; }
-  if (wishChip)   { wishChip.classList.remove('active'); wishChip.style.background = 'transparent'; wishChip.style.color = '#185fa5'; }
+  if (draftsChip) { draftsChip.classList.add('active'); }
+  if (soldChip)   { soldChip.classList.remove('active'); }
+  if (wishChip)   { wishChip.classList.remove('active'); }
   showView('catalog');
   renderCatalog();
 }
@@ -36,14 +30,8 @@ function toggleDrafts(btn) {
   S.showSold = false;
   S.showWishlist = false;
   btn.classList.toggle('active', S.showDrafts);
-  btn.style.background = S.showDrafts ? '#5f5e5a' : 'transparent';
-  btn.style.color = S.showDrafts ? 'white' : '#5f5e5a';
   document.getElementById('showSoldChip').classList.remove('active');
-  document.getElementById('showSoldChip').style.background = 'transparent';
-  document.getElementById('showSoldChip').style.color = '#a32d2d';
   document.getElementById('showWishlistChip').classList.remove('active');
-  document.getElementById('showWishlistChip').style.background = 'transparent';
-  document.getElementById('showWishlistChip').style.color = '#185fa5';
   renderCatalog();
 }
 
@@ -94,10 +82,10 @@ function checkDuplicate(title) {
   if (match) {
     const banner = document.getElementById('duplicateBanner');
     if (banner) {
-      banner.textContent = '⚠ "' + match.title + '" may already be in your library (' + match.condition + ')';
+      banner.textContent = '"' + match.title + '" may already be in your library (' + match.condition + ')';
       banner.style.display = 'block';
     } else {
-      showToast('⚠ Possible duplicate: "' + match.title + '" is already in your library', 'error', 6000);
+      showToast('Possible duplicate: "' + match.title + '" is already in your library', 'error', 6000);
     }
   } else {
     const banner = document.getElementById('duplicateBanner');
@@ -181,7 +169,7 @@ async function quickAddFromQueue() {
   // All done — re-render once at the end
   renderCatalog();
 
-  if (btn) { btn.disabled = false; btn.textContent = '⚡ Quick Add All'; }
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Quick Add All'; }
 
   const added = total - failed;
   if (failed === 0) {
@@ -380,10 +368,11 @@ function showPriceReviewCard(b, result, idx, total) {
   const coverWrap = document.getElementById('priceReviewCoverWrap');
   const coverUrl = b.rawCover || b.coverUrl || '';
   if (coverUrl) {
-    const _img = document.createElement('img'); _img.src = coverUrl; _img.style.cssText = 'width:100%;height:100%;object-fit:cover;'; _img.onerror = function(){ coverWrap.innerHTML='\U0001f4d6'; coverWrap.style.opacity='0.3'; }; coverWrap.innerHTML=''; coverWrap.appendChild(_img);
+    const _svgPh = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+    const _img = document.createElement('img'); _img.src = coverUrl; _img.style.cssText = 'width:100%;height:100%;object-fit:cover;'; _img.onerror = function(){ coverWrap.innerHTML=_svgPh; coverWrap.style.opacity='0.3'; }; coverWrap.innerHTML=''; coverWrap.appendChild(_img);
     coverWrap.style.opacity = '1';
   } else {
-    coverWrap.innerHTML = '📖';
+    coverWrap.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
     coverWrap.style.opacity = '0.3';
   }
 
@@ -469,7 +458,7 @@ async function fetchPriceForEdit() {
   if (!result) {
     // Check discontinued list
     const discEntry = (typeof MARKET_DB !== 'undefined' && MARKET_DB.disc) ? MARKET_DB.disc[title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()] : null;
-    const msg = discEntry ? '⚠ Possibly Out of Print — not found in any price database.' : 'Not found in any price database.';
+    const msg = discEntry ? 'Possibly Out of Print — not found in any price database.' : 'Not found in any price database.';
     showToast(msg, 'error', 4000);
     btn.disabled = false;
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Fetch Price';
@@ -562,7 +551,7 @@ function openDraftInAddForm(idx) {
     S.draftRowNum = idx + 2;
     // Update save button to signal draft-completion mode
     const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) { saveBtn.textContent = 'Save and Delete Draft'; saveBtn.style.background = 'var(--gold)'; saveBtn.style.color = '#1A1814'; }
+    if (saveBtn) { saveBtn.textContent = 'Save and Delete Draft'; saveBtn.style.background = 'var(--gold)'; saveBtn.style.color = 'var(--ink)'; }
     showToast('Draft loaded — fill in details and save', 'info', 3000);
   }, 200);
 }
@@ -717,7 +706,7 @@ function showSplash() {
 
   var overlay = document.createElement('div');
   overlay.id = '_splashOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#2A1F6B;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:1;transition:opacity 0.5s ease;';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--accent);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:1;transition:opacity 0.5s ease;';
 
 overlay.innerHTML = '<img src="/logo@3x.png" style="width:180px;max-width:70vw;object-fit:contain;" onerror="this.style.display=\'none\'">'
     + '<div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">v1.0 beta</div>';
@@ -824,7 +813,7 @@ function openSupport(tab) {
           <span style="flex-shrink:0;color:var(--accent);display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
           <div style="font-size:13px;color:var(--ink);line-height:1.6;">We read every piece of feedback. Tell us what you love, what confuses you, or what you wish MagiLib could do.</div>
         </div>
-        <button onclick="window.open('${FEEDBACK_FORM_URL}','_blank')" style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Open Feedback Form ↗</button>
+        <button onclick="window.open('${FEEDBACK_FORM_URL}','_blank')" class="btn-primary" style="width:100%;border-radius:10px;font-size:14px;">Open Feedback Form <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         <div style="font-size:11px;color:var(--ink-faint);text-align:center;">Opens in your browser — takes about 2 minutes</div>
       </div>
     `;
@@ -835,13 +824,13 @@ function openSupport(tab) {
     subtitle.textContent = 'Help us squash it';
     body.innerHTML = `
       <div style="padding:12px 0 20px;display:flex;flex-direction:column;gap:14px;">
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:#fdf0f0;border-radius:12px;border:0.5px solid #f5b7b5;">
-          <span style="flex-shrink:0;color:#a32d2d;display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a32d2d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l1.5 1.5M15 2l-1.5 1.5M9 7.13v-1a3 3 0 1 1 6 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM12 20v-9M6.5 9C4.5 8.8 3 7.1 3 5M6 13H2M3 21c0-2 1.7-3.9 4-4M17.5 9c2-.2 3.5-1.9 3.5-4M18 13h4M21 21c0-2-1.7-3.9-4-4"/></svg></span>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--status-sold-bg);border-radius:12px;border:0.5px solid var(--status-sold-border);">
+          <span style="flex-shrink:0;color:var(--status-sold);display:flex;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2l1.5 1.5M15 2l-1.5 1.5M9 7.13v-1a3 3 0 1 1 6 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM12 20v-9M6.5 9C4.5 8.8 3 7.1 3 5M6 13H2M3 21c0-2 1.7-3.9 4-4M17.5 9c2-.2 3.5-1.9 3.5-4M18 13h4M21 21c0-2-1.7-3.9-4-4"/></svg></span>
           <div style="font-size:13px;color:var(--ink);line-height:1.6;">Please describe what you were doing, what you expected to happen, and what happened instead. Screenshots help a lot.</div>
         </div>
         <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:-6px;">Quick diagnostics</div>
         <div style="display:flex;flex-direction:column;gap:6px;" id="bugDiagnostics"></div>
-        <button onclick="window.open('${BUG_REPORT_URL}','_blank')" style="width:100%;padding:14px;background:#a32d2d;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Open Bug Report Form ↗</button>
+        <button onclick="window.open('${BUG_REPORT_URL}','_blank')" class="btn-primary" style="width:100%;background:var(--status-sold);border-radius:10px;font-size:14px;">Open Bug Report Form <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
         <div style="font-size:11px;color:var(--ink-faint);text-align:center;">Include the diagnostics above if you can</div>
       </div>
     `;
@@ -1069,7 +1058,7 @@ function renderWizardStep() {
           style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
           oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
           maxlength="30"/>
-        <div id="wiz-username-error" style="display:none;font-size:12px;color:#a32d2d;margin-top:6px;padding:6px 10px;background:#fdf0f0;border-radius:6px;"></div>
+        <div id="wiz-username-error" style="display:none;font-size:12px;color:var(--status-sold);margin-top:6px;padding:6px 10px;background:var(--status-sold-bg);border-radius:6px;"></div>
         <div style="font-size:11px;color:var(--ink-faint);margin-top:8px;">Letters, numbers, _ and - only. At least 3 characters. <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:0;color:var(--ink-faint);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit;">Skip for now</button></div>
       </div>
     `;
@@ -1091,7 +1080,7 @@ function renderWizardStep() {
       </div>
       <div style="display:flex;gap:10px;">
         <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">📷</div>
+          <div style="display:flex;justify-content:center;margin-bottom:4px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <div style="font-size:12px;font-weight:500;color:var(--ink);">Scan cover</div>
           <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
         </div>

@@ -259,7 +259,8 @@ Only return in_stock:true if you are confident this is a currently published, in
 function showPriceUnavailable(reason) {
   const sym = currSym();
   const currency = S.settings.currency || 'AUD';
-  document.getElementById('priceDisplay').innerHTML = '<span style="font-size:13px;color:var(--ink-faint);">Unable to calculate</span>';
+  document.getElementById('priceDisplay').innerHTML = '<span style="font-size:var(--text-base);color:var(--ink-faint);">Unable to calculate</span>';
+  document.getElementById('priceRange').style.textAlign = 'center';
   document.getElementById('priceRange').textContent = reason || 'Fewer than 3 verified sources found. Check eBay sold listings manually.';
   document.getElementById('f-price').value = '';
   const sb = document.getElementById('sourceBreakdown');
@@ -410,7 +411,7 @@ async function fetchPrice(){
         'Found on discontinued list. Not currently listed on any dealer site.';
       document.getElementById('f-price').value = '';
       showAiInfoCard(
-        '<span style="color:var(--tier3);font-weight:600;">⚠ Possibly Out of Print</span><br>' +
+        '<span style="color:var(--tier3);font-weight:600;">Possibly Out of Print</span><br>' +
         '<span style="font-size:11px;color:var(--ink-light);">Found on discontinued list. ' +
         'Not currently listed on any dealer site.<br>Unable to calculate market value — check eBay sold listings manually.</span>'
       );
@@ -418,7 +419,7 @@ async function fetchPrice(){
       if (sb) sb.style.display = 'none';
     } else {
       document.getElementById('priceDisplay').innerHTML =
-        '<span style="font-size:12px;color:var(--ink-faint);">Unable to calculate</span>';
+        '<span style="font-size:var(--text-base);color:var(--ink-faint);">Unable to calculate</span>';
       document.getElementById('priceRange').textContent =
         'Not found in any price database. Use search buttons below.';
       document.getElementById('f-price').value = '';

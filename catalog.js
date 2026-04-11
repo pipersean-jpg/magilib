@@ -368,7 +368,7 @@ async function scanCover(event){
     fields.forEach(f=>{if(f.val&&f.val.trim()){const el=document.getElementById(f.id);el.value=toTitleCase(f.val.trim());el.classList.add('field-populated');setTimeout(()=>el.classList.remove('field-populated'),3000);populated++;}});
     const confClass={high:'conf-high',medium:'conf-med',low:'conf-low'}[json.confidence]||'conf-med';
     statusEl.className='scan-status done';
-    document.getElementById('scanIcon').textContent='✓';
+    document.getElementById('scanIcon').innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     document.getElementById('scanTitle').innerHTML=`${populated} fields extracted <span class="confidence-badge ${confClass}">${json.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent=json.notes||'Please verify the details below before saving.';
     if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(json.title,json.author),1500);}
@@ -385,7 +385,7 @@ async function scanCover(event){
     }
   }catch(err){
     statusEl.className='scan-status error';
-    document.getElementById('scanIcon').textContent='✕';
+    document.getElementById('scanIcon').innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     document.getElementById('scanTitle').textContent='Scan failed';
     document.getElementById('scanDetail').textContent=(err&&err.message)||'Could not read the cover. Please fill in details manually.';
   }
@@ -512,7 +512,7 @@ async function loadCatalog(){
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
     console.error('Catalog load error:',e);
-    grid.innerHTML='<div class="empty-state"><div class="empty-icon">⚠ </div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
   }
 }
 function renderCatalog(){
@@ -605,7 +605,7 @@ function renderStatsRow() {
   if(!books.length){
     const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
     const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
-    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon">📚</div><p>${msg}</p>${clearBtn}</div>`;
+    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
     return;
   }
   const isListView = S.viewMode === 'list';
@@ -674,7 +674,7 @@ function renderStatsRow() {
 
     const thumbHtml = hasCover
       ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
-      : `<span>${b.coverUrl==='__local__'?'📷':'📖'}</span>`;
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
     const clickHandler = S.selectMode
       ? `toggleBookSelection('${b._id}')`
       : isGrouped
@@ -684,12 +684,12 @@ function renderStatsRow() {
     // Adaptive duplicate badge: icon-only in card view, icon+text in list view
     const dupBadge = inLibrary
       ? (isListView
-          ? '<span style="display:inline-block;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:4px;white-space:nowrap;">⚠️ In Library</span>'
-          : '<span style="display:inline-block;font-size:11px;margin-left:3px;" title="Already in Library">⚠️</span>')
+          ? '<span style="display:inline-flex;align-items:center;gap:3px;background:var(--tier3-bg);color:var(--tier3);font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:4px;white-space:nowrap;"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'9\' height=\'9\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' stroke-linecap=\'round\'><path d=\'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\'/></svg> In Library</span>'
+          : '<span style="display:inline-flex;align-items:center;margin-left:3px;color:var(--tier3);" title="Already in Library"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\'/></svg></span>')
       : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p>${b.coverUrl==='__local__'?'📷':''}</p><p style="margin-top:4px">${b.title}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
@@ -793,13 +793,13 @@ function openCopiesSheet(key) {
       <div class="copy-thumb">
         ${hasCover
           ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
-          : `<span style="font-size:16px;">${b.coverUrl==='__local__'?'📷':'📖'}</span>`}
+          : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`}
       </div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
           <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'—'}</span>
           ${b.price&&!isNaN(parseFloat(b.price))?`<span style="font-size:14px;font-weight:500;color:var(--ink);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
-          ${isSold?'<span class="draft-badge" style="background:#fdecea;color:#a32d2d;margin-left:0;">Sold</span>':''}
+          ${isSold?'<span class="sold-badge" style="font-size:9px;padding:2px 8px;border-radius:4px;font-weight:500;letter-spacing:normal;text-transform:none;">Sold</span>':''}
           ${isDraft?'<span class="draft-badge" style="margin-left:0;">Draft</span>':''}
         </div>
         <div style="font-size:12px;color:var(--ink-faint);">
@@ -1029,11 +1029,11 @@ function openModal(idx){
 
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
-      ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid #D97706;background:rgba(251,191,36,0.07);border-radius:0 6px 6px 0;"><span style="font-size:14px;flex-shrink:0;">⚠️</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#92400E;letter-spacing:0.02em;">Already in your library</span></div>` : ''}
+      ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid var(--tier3);background:var(--tier3-bg);border-radius:0 6px 6px 0;opacity:0.9;"><span style="flex-shrink:0;color:var(--tier3);"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg></span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tier3);letter-spacing:0.02em;">Already in your library</span></div>` : ''}
       <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'zoomCover(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc
           ? `<img class="ms-image" src="${modalCoverSrc}" alt="${b.title}" onerror="this.style.display='none'">`
-          : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.15;background:var(--paper-warm);border-radius:6px;">📖</div>`}
+          : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;opacity:0.15;background:var(--paper-warm);border-radius:6px;color:var(--ink-faint);"><svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg></div>`}
       </div>
       <div class="ms-title">${b.title}</div>
       <div class="ms-subtitle" style="margin-bottom:${isWishlist?'6px':'10px'};">${[b.author, (b.artist && b.artist !== b.author) ? b.artist : null].filter(Boolean).join(' · ')}</div>
@@ -1116,7 +1116,7 @@ S.selectedBooks = new Set();
 function _setModeBtn(id, label, active) {
   const btn = document.getElementById(id);
   if (!btn) return;
-  btn.textContent = label;
+  btn.innerHTML = label;
   btn.classList.toggle('is-active', active);
 }
 
@@ -1135,7 +1135,7 @@ function toggleMoveMode() {
   S.selectMode = 'move';
   S.selectedBooks.clear();
   _setModeBtn('moveModeBtn', 'Exit Move', true);
-  _setModeBtn('editModeBtn', '✓ Edit', false);
+  _setModeBtn('editModeBtn', '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg> Edit', false);
   renderCatalog();
 }
 window.toggleMoveMode = toggleMoveMode;
@@ -1143,7 +1143,7 @@ window.toggleMoveMode = toggleMoveMode;
 function exitSelectMode() {
   S.selectMode = null;
   S.selectedBooks.clear();
-  _setModeBtn('editModeBtn', '✓ Edit', false);
+  _setModeBtn('editModeBtn', '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg> Edit', false);
   _setModeBtn('moveModeBtn', 'Move', false);
   const bar = document.getElementById('batchActionsBar');
   if (bar) bar.classList.remove('is-visible');
@@ -1294,7 +1294,7 @@ function openPriceReviewSheet(ids) {
   el.innerHTML = `
     <div class="magi-sheet" id="priceReviewSheet" style="background:var(--ink);color:#fff;">
       <div class="magi-sheet-handle" style="background:rgba(255,255,255,0.2);"></div>
-      <button class="sheet-close-btn" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff;" onclick="closePriceReviewSheet()">✕</button>
+      <button class="sheet-close-btn" style="background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.15);color:#fff;" onclick="closePriceReviewSheet()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       <div style="padding:0 20px 20px;">
         <div style="text-align:center;padding:16px 0 20px;">
           <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:4px;">Price Review</div>
@@ -1502,13 +1502,13 @@ async function processNextFromQueue() {
     });
     const confClass = {high:'conf-high',medium:'conf-med',low:'conf-low'}[parsed.confidence]||'conf-med';
     statusEl.className = 'scan-status done';
-    document.getElementById('scanIcon').textContent = '✓';
+    document.getElementById('scanIcon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     document.getElementById('scanTitle').innerHTML = `${populated} fields extracted <span class="confidence-badge ${confClass}">${parsed.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent = (photoQueue.length > 0 ? `${photoQueue.length} photo(s) still in queue. ` : '') + (parsed.notes || 'Verify details below before saving.');
     if (parsed.title && parsed.author) setTimeout(() => fetchPrice(), 800);
   } catch(err) {
     statusEl.className = 'scan-status error';
-    document.getElementById('scanIcon').textContent = '✕';
+    document.getElementById('scanIcon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     document.getElementById('scanTitle').textContent = 'Scan failed';
     document.getElementById('scanDetail').textContent = err.message || 'Could not read the cover.';
   }
@@ -2363,7 +2363,7 @@ function magiConfirm({ title, message, confirmText, onConfirm }) {
       <p>${message}</p>
       <div class="magi-dialog-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <button onclick="closeDialog()" class="btn-ghost">Cancel</button>
-        <button id="magiConfirmBtn" class="btn-primary" style="background:#a32d2d;">${confirmText}</button>
+        <button id="magiConfirmBtn" class="btn-primary" style="background:var(--status-sold);">${confirmText}</button>
       </div>
     </div>
   `;
@@ -2396,7 +2396,7 @@ function magiPrompt({ title, message, placeholder = '0.00', onConfirm }) {
   setTimeout(() => input.focus(), 50);
   const submit = () => {
     const val = parseFloat(input.value);
-    if (isNaN(val) || val < 0) { input.style.borderColor = '#a32d2d'; return; }
+    if (isNaN(val) || val < 0) { input.style.borderColor = 'var(--status-sold)'; return; }
     onConfirm(val);
     closeDialog();
   };

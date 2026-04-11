@@ -8,6 +8,10 @@ const rootPath      = path.resolve(__dirname, '../');
 const claudePath    = path.join(rootPath, 'CLAUDE.md');
 const handoffPath   = path.join(rootPath, 'SESSION_HANDOFF.md');
 const syncScriptPath = path.join(__dirname, 'sync-claude-to-notion.js');
+const memoryPath    = path.join(
+  process.env.HOME,
+  '.claude/projects/-Users-seanpiper/memory/project_magilib.md'
+);
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
 
@@ -37,7 +41,10 @@ function parseHandoff(content) {
                        extractSection(content, 'Session Summary');
   const builtLines = whatWasBuilt.split('\n').filter(l => l.trim()).slice(0, 6);
 
-  return { sessionNum, commitSummary, summaryLines, builtLines, issues };
+  const nextPriorities = extractSection(content, 'Next Session Priorities.*');
+  const nextLines = nextPriorities.split('\n').filter(l => l.trim()).slice(0, 5);
+
+  return { sessionNum, commitSummary, summaryLines, builtLines, issues, nextLines };
 }
 
 // ─── Inject "Last Session" section into CLAUDE.md ────────────────────────────
@@ -85,7 +92,7 @@ if (hoursSince > 6) {
 }
 
 const handoffContent = fs.readFileSync(handoffPath, 'utf-8');
-const { sessionNum, commitSummary, builtLines, issues } = parseHandoff(handoffContent);
+const { sessionNum, commitSummary, builtLines, issues, nextLines } = parseHandoff(handoffContent);
 
 // Step 1 — Inject "Last Session" summary into CLAUDE.md (so it's in auto-loaded context next session)
 const claudeContent = fs.readFileSync(claudePath, 'utf-8');
@@ -122,11 +129,56 @@ exec(gitCmd, (gitErr, _stdout, stderr) => {
       console.log('✅ Notion Hub replaced with current report');
     }
 
+    // Step 4 — Update Claude memory file so newchat context is current
+    try {
+      const nextBlock = nextLines.length
+        ? nextLines.map(l => `- ${l.replace(/^[-*\d.]+\s+(\[.\]\s+)?/, '')}`).join('\n')
+        : '- See SESSION_HANDOFF.md';
+      const issueBlock = issues
+        ? '\n\n**Known issues carried forward:**\n' +
+          issues.split('\n').filter(l => l.trim()).slice(0, 3).map(l => `- ${l.replace(/^[-*\d.]+\s+/, '')}`).join('\n')
+        : '';
+      const builtBlock = builtLines.length
+        ? builtLines.map(l => `- ${l.replace(/^[-*\d.]+\s+(\[.\]\s+)?/, '')}`).join('\n')
+        : '- See SESSION_HANDOFF.md';
+
+      const memoryContent = `---
+name: MagiLib Project State
+description: Current state, priorities, and critical rules for the MagiLib PWA project — auto-updated by handoff script
+type: project
+---
+
+**Project:** MagiLib — magic book collection PWA. Pure HTML/CSS/JS. No frameworks.
+**Location:** /Users/seanpiper/magilib/
+**Last completed session:** Session ${sessionNum}
+**Authoritative files:** \`CLAUDE.md\` (auto-loaded) and \`SESSION_HANDOFF.md\` — always read these first. This memory is a supplement only.
+
+**Session ${sessionNum} — What Was Built:**
+${builtBlock}
+${issueBlock}
+
+**Next Session (Session ${parseInt(sessionNum) + 1}) Priorities:**
+${nextBlock}
+
+**How to apply:** On \`newchat\`, read SESSION_HANDOFF.md immediately. If this memory conflicts with CLAUDE.md or SESSION_HANDOFF.md, trust the .md files.
+`;
+
+      if (fs.existsSync(path.dirname(memoryPath))) {
+        fs.writeFileSync(memoryPath, memoryContent);
+        console.log(`✅ Memory updated — project_magilib.md synced to Session ${sessionNum}`);
+      } else {
+        console.warn('⚠️  Memory directory not found — skipping memory update');
+      }
+    } catch (memErr) {
+      console.warn('⚠️  Memory update failed:', memErr.message);
+    }
+
     console.log('\n──────────────────────────────────────────────────');
     console.log(`🌌 Session ${sessionNum} handoff complete`);
     console.log(`   CLAUDE.md → Last Session section updated`);
     console.log(`   GitHub    → pushed`);
     console.log(`   Notion    → replaced with current report`);
+    console.log(`   Memory    → project_magilib.md synced`);
     console.log('──────────────────────────────────────────────────');
     console.log('Next: open new Claude Code chat and type: newchat');
   });

@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 13
+# MagiLib Project Status — Session 14
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -11,6 +11,7 @@
 ### Session Start — `newchat`
 When `newchat` is invoked, Claude Code MUST:
 1. Read `SESSION_HANDOFF.md` in full (CLAUDE.md is auto-loaded). Confirm the last session's outcomes and any carried issues.
+   - **CLAUDE.md and SESSION_HANDOFF.md are authoritative.** Memory files (`~/.claude/projects/.../memory/`) are supplementary only. If memory conflicts with these files, trust the .md files and silently update memory to match.
 2. Run `git status` — report uncommitted changes or unexpected state.
 3. State the top 1–2 priorities for this session and confirm with Sean before writing any code.
 
@@ -28,13 +29,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 12)
-- ### 1. `index.html` — settings restructure + label IDs
-- "Preferences" panel renamed → "Currency & Marketplace"
-- Standalone "Setup" panel removed — wizard button folded into Help & Feedback as a secondary row button ("Setup Wizard / Revisit the onboarding tour →")
-- New "Condition Presets" panel added (between Currency & Marketplace and Library Settings): 4 rows (Fine/Very Good/Good/Fair) with condition badge colors and editable % number inputs (`s-cond-fine`, `s-cond-vg`, `s-cond-good`, `s-cond-fair`)
-- Add page price labels given IDs: `priceLabelAdd`, `costLabelAdd`
-- Edit modal price labels given IDs: `priceLabelEdit`, `costLabelEdit`
+## Last Session (Session 13)
+- ### 1. `assets/css/magilib.css` — Phase 1, 2, 5, 6
+- **Phase 1**: Expanded `:root` with `--status-*` (sold/wishlist/draft colors, bgs, borders, overlay), `--shadow-*` (sm/md/lg/card/toast), `--radius-btn`, `--radius-dialog`, `--overlay-scrim`, `--text-xs/sm/base/md/lg/xl/2xl`, `--icon-sm/md/lg`, `--tier1-field-bg`
+- **Phase 2**: `.modal-overlay` z-index `200` → `var(--z-sheet)`; `.modal` box-shadow → `var(--shadow-lg)`
+- **Phase 5**: `.scan-status` `align-items:flex-start` → `center`; `.price-value` and `.price-range` `text-align:center`; `.empty-state .empty-icon` → SVG-container display:flex centered
+- **Phase 6**: All hardcoded `10px/11px/13px/15px/20px` font-sizes replaced with `var(--text-xs/sm/base/md/xl)` across 35+ selectors including: `.camera-hero-title`, `.cover-placeholder p`, `.cover-btn`, `.price-label`, `.source-breakdown-header`, `.source-detail/link`, `.legend-item`, `.search-dealer-btn`, `.fetch-price-btn`, `.condition-opt`, `.search-bar input`, `.book-cover-ph p`, `.book-price-text`, `.empty-state button`, `.detail-key/val`, `.settings-hint`, `.url-input-row button`, `.auth-title/sub/toggle/optional`, `.user-menu-btn`, `.user-dropdown-item`, `.btn-danger-link`, `.btn-ghost`, `.btn-action`, `.magi-dialog input`, `.batch-count`, `.batch-btn`, `.insights-bar`, `.copies-badge`, `.star`, `.search-clear`, `.list-view .book-title-text`, `.field input/select/textarea`, `.settings-row input/select`
+- New CSS classes: `.btn-queue-action`, `.btn-queue-gold`, `.btn-queue-accent`, `.btn-icon-dismiss`, `.chip-sold`, `.chip-wishlist`, `.chip-draft` (with `.active` variants), `.sold-badge`, `.cover-placeholder .book-icon` SVG container
 
 **Known issues carried forward:**
 - **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
