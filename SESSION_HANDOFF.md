@@ -1,39 +1,23 @@
-# SESSION HANDOFF — 2026-04-11 (Session 15)
+# SESSION HANDOFF — 2026-04-11 (Session 16)
 
 ## Session Summary
-Confirmed Library detail layout is beta-complete. Applied 3 quick cosmetic fixes. Logged a full backlog of UI/UX improvements for next sprint.
+Quick fix session. Four small targeted fixes: cover picker z-index, Add screen scroll-to-top, cover picker UI labels, and two items logged to next session notes.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. Confirmed Library detail layout as beta-complete (no code change)
-The 2×2 button grid (Market Value · Check eBay · Edit Details · Mark Sold) + lazy Market Sync panel is the intended beta UX. Do NOT replace before Phase 2.
+### 1. `index.html` — Cover picker z-index fix
+- `#coverPickerOverlay` was at `z-index:400`, below `.modal-overlay` (`--z-sheet: 1000`)
+- Changed inline style to `z-index:var(--z-dialog)` (2000) so it renders above the Edit modal
 
-### 2. `index.html` + `catalog.js` — remove icons from Edit and Filter toolbar buttons
-- Removed SVG checkmark icon from `editModeBtn` in HTML
-- Removed ⊿ from `filterMenuBtn` in HTML
-- Removed SVG icon from `editModeBtn` label in `toggleMoveMode()` and `exitSelectMode()` in catalog.js
+### 2. `catalog.js` — Add screen scroll-to-top (robust fix)
+- Old: `window.scrollTo({top:0,behavior:'instant'})` — unreliable on iOS Safari
+- New: triple-target reset (`window`, `document.body`, `document.documentElement`) fired immediately + again after 50ms to catch post-render focus-scroll
 
-### 3. `index.html` + `assets/css/magilib.css` — Take Photo button: no always-on purple
-- Removed `primary-action` class from Take Photo label in HTML
-- Removed `@media(max-width:599px) .camera-btn.primary-action` always-on block from CSS
-- Added `:active` state for ALL camera buttons: purple bg, white text, white icon SVG stroke
-
-### 4. `catalog.js` — Check eBay always opens in new tab
-- Simplified `openEbayModal()` to always use `window.open(_blank)` — removed mobile `location.href` workaround
-
----
-
-## Library Detail — Current State (LOCKED for Beta)
-
-The 2×2 button grid in the book detail sheet is complete and correct:
-- **Market Value** — taps to expand Market Sync panel (lazy-loads from `price_db` via `toggleMarketSync()` / `loadMarketSync()`)
-- **Check eBay** — opens eBay search in new tab
-- **Edit Details** — opens edit form
-- **Mark Sold** — toggles sold status
-
-The Market Sync panel (`#marketSyncSection`) loads on demand below the buttons. This is the intended beta UX. Do NOT remove or replace with a "stored price + tap-to-edit" pattern — that is Phase 2.
+### 3. `index.html` + `catalog.js` — Cover picker label changes
+- Button "Local Database" renamed to **"The Pro Shelf"** (in `index.html`)
+- Thumbnail source label changed from `'Local Database'` to `'Courtesy of'` for both Conjuring Archive and MagicRef cards (in `catalog.js` `makeCard()` calls)
 
 ---
 
@@ -45,32 +29,16 @@ The Market Sync panel (`#marketSyncSection`) loads on demand below the buttons. 
 
 ---
 
-## Low Priority UI/UX Backlog (next sprint, post-beta or Phase 2)
-
-- [ ] **Price conversion**: prices don't convert after currency change in Settings — requires FX logic + stored currency column (Phase 2 arch)
-- [ ] **In-app popups audit**: all system-style alert/confirm popups must be replaced with styled in-app equivalents — audit needed
-- [ ] **Global centering rule**: all icons, toasts, loading spinners, empty states, popups must be centred on screen — CSS audit needed
-- [ ] **Move toast: remove Wishlist option** — redundant when book is already owned; remove Wishlist button from Move batch bar
-- [ ] **Slimmer batch action bar** — side-by-side button layout, better for mobile
-- [ ] **Remove Move mode entirely?** — evaluate whether Move adds value or is just clutter; consider folding into Select flow
-- [ ] **Condense sort options** — replace long list with per-option asc/desc toggle (e.g. Title >/< or Date >/< )
-- [ ] **Filter popup: add X button** — global policy: all popup windows need an X/close button to exit without applying changes
-- [ ] **Replace Edit/Move/Filter with Select + Filter** — Select activates checkbox mode on all covers; bottom bar shows Modify + Cancel; Modify popup offers: Update Price / Auto Fill / Mark Sold (Library) or Move to Library (Wishlist) / Delete (with "type DELETE" confirmation). Cancel deselects all.
-- [ ] **Button contrast audit** — all buttons on Library, Wishlist, Add, Settings must contrast with their background (no white-on-white)
-- [ ] **Desktop/mobile detection for Take Photo** — hide "Take Photo" (camera capture) option on desktop; show only on mobile (navigator.userAgent or media query)
-- [ ] **Add page: price + condition not required** — only Title and Author/Subject should be required fields
-- [ ] **Tab-switch with unsaved Add data** — replace toast with slide-up sheet: "Changes won't be saved" header, Continue (dismiss only) + Discard Changes (clear fields + switch tabs)
-
----
-
-## Next Session Priorities (Session 16)
+## Next Session Priorities (Session 17)
 1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
 2. **Wishlist price label**: verify currency label shows correctly on device after Session 14 fix
-3. **Low priority backlog**: tackle any remaining quick wins from the backlog above
+3. **Market Sync slide-up — add price suggestion + accept**: the Market Price Evidence panel (bottom sheet on Market Value tap) no longer has a way to update the stored price. Add a suggestion row below the colour legend: show a calculated suggested price based on average sale price × condition % × out-of-print scarcity factor, with an "Accept" button that writes it to `market_price` on the book. Keep the layout consistent with the existing evidence row style.
+4. **External links must open in external browser**: any clickable link that goes to an external URL (eBay, Google Images, publisher sites, etc.) must use `window.open(url, '_blank')` — never `location.href` or an in-app tab. Audit all external link handlers and `<a>` tags with `href` pointing outside the app. This is a universal rule.
+5. **Low priority backlog**: tackle any remaining quick wins from the backlog in Session 15 handoff
 
 ---
 
 ## Model Learnings
-- **Library detail layout is final for beta.** The 2×2 btn-action grid + lazy Market Sync panel is intentional. Do not refactor before Phase 2.
-- **Camera button `:active` pattern**: use `:active` pseudo-class (not a persistent class) for press-highlight. Include `svg{stroke:#fff}` inside `:active` rule so icon goes white when background goes purple.
-- **eBay new tab**: `openEbayModal()` now always uses `window.open(_blank)`. The old mobile `location.href` workaround is removed — if white-screen-on-back resurfaces on iOS, investigate then rather than pre-empting.
+- **Cover picker z-index**: `#coverPickerOverlay` must be at `--z-dialog` (2000) or higher to appear above `.modal-overlay` overlays (which sit at `--z-sheet: 1000`).
+- **iOS scroll-to-top**: `window.scrollTo({top:0,behavior:'instant'})` is unreliable on iOS Safari. Use the triple-target pattern: `window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;` — and repeat after a 50ms `setTimeout` to override any post-render focus scroll.
+- **Cover picker terminology**: "Local Database" = "The Pro Shelf" (button label). Source attribution under thumbnails uses "Courtesy of" with the source name below.

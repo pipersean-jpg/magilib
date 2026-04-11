@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 14
+# MagiLib Project Status — Session 16
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,13 +29,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 15)
-- ### 1. Confirmed Library detail layout as beta-complete (no code change)
-- The 2×2 button grid (Market Value · Check eBay · Edit Details · Mark Sold) + lazy Market Sync panel is the intended beta UX. Do NOT replace before Phase 2.
-- ### 2. `index.html` + `catalog.js` — remove icons from Edit and Filter toolbar buttons
-- Removed SVG checkmark icon from `editModeBtn` in HTML
-- Removed ⊿ from `filterMenuBtn` in HTML
-- Removed SVG icon from `editModeBtn` label in `toggleMoveMode()` and `exitSelectMode()` in catalog.js
+## Last Session (Session 16)
+- ### 1. `index.html` — Cover picker z-index fix
+- `#coverPickerOverlay` was at `z-index:400`, below `.modal-overlay` (`--z-sheet: 1000`)
+- Changed inline style to `z-index:var(--z-dialog)` (2000) so it renders above the Edit modal
+- ### 2. `catalog.js` — Add screen scroll-to-top (robust fix)
+- Old: `window.scrollTo({top:0,behavior:'instant'})` — unreliable on iOS Safari
+- New: triple-target reset (`window`, `document.body`, `document.documentElement`) fired immediately + again after 50ms to catch post-render focus-scroll
 
 **Known issues carried forward:**
 - **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
@@ -150,6 +150,9 @@ Before running `handoff`, Claude Code MUST:
 - **Settings panel order**: Account → Security → Currency & Marketplace → Condition Presets → Library Settings → Price Refresh → Help & Feedback.
 - **eBay Finding API fetch-failed** = network block (not quota). Quota exhaustion returns a structured error response.
 - **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
+- **iOS scroll-to-top pattern:** `window.scrollTo({top:0,behavior:'instant'})` is unreliable on iOS Safari. Use: `window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;` — repeat in a 50ms `setTimeout` to override focus-triggered scroll.
+- **Cover picker z-index:** `#coverPickerOverlay` must be `--z-dialog` (2000+) to appear above `.modal-overlay` elements at `--z-sheet` (1000).
+- **External links:** all external URLs must use `window.open(url, '_blank')`. Never `location.href`. Universal rule across all link handlers and `<a>` tags.
 
 ---
 
@@ -187,6 +190,9 @@ Before running `handoff`, Claude Code MUST:
 - Settings restructure: Currency & Marketplace, Condition Presets, wizard folded into Help & Feedback
 - `getConditionPct()` — user-configurable condition % presets, fixes 'Very Good'/'VG' mismatch
 - `updatePriceLabels()` — dynamic price labels on Add + Edit modal tied to currency setting
+- Cover picker z-index fix: `#coverPickerOverlay` at `--z-dialog` (2000)
+- Add screen scroll-to-top robust fix: triple-target + 50ms setTimeout repeat
+- Cover picker: "Local Database" → "The Pro Shelf" (button); thumbnail label → "Courtesy of"
 
 ---
 
