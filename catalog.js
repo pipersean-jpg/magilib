@@ -1914,8 +1914,8 @@ async function searchCoverSource(source) {
           '</div>';
       }
 
-      if (caUrl) cardHtml += makeCard(caUrl, 'Local Database', caLabel);
-      if (mrUrl) cardHtml += makeCard(mrUrl, 'MagicRef', mrLabel);
+      if (caUrl) cardHtml += makeCard(caUrl, 'Courtesy of', caLabel);
+      if (mrUrl) cardHtml += makeCard(mrUrl, 'Courtesy of', mrLabel);
 
       if (!cardHtml) {
         statusEl.textContent = 'Not found in local database.';
