@@ -294,7 +294,12 @@ function showView(v){
     }
     if(catH2&&v==='catalog'){catH2.textContent='Library';}
     if(v==='catalog')loadCatalog();
-    if(v==='entry')window.scrollTo({top:0,behavior:'instant'});
+    if(v==='entry'){
+      window.scrollTo(0,0);
+      document.body.scrollTop=0;
+      document.documentElement.scrollTop=0;
+      setTimeout(()=>{window.scrollTo(0,0);document.body.scrollTop=0;document.documentElement.scrollTop=0;},50);
+    }
   }
 }
 function showToast(msg,type='info',dur=3500){
