@@ -1074,11 +1074,21 @@ function openModal(idx){
           <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
         </div>`;
     } else {
+      const priceVal = b.price && !isNaN(parseFloat(b.price)) ? parseFloat(b.price).toFixed(0) : '';
+      const sym = currSym();
       actionsArea.innerHTML =
-        `<div class="ms-actions-primary">
-          <button class="btn-action" id="btnMarketValue" onclick="toggleMarketSync('${b._id}')">Market Value</button>
-          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
+        `<div id="modalPriceRow" style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px 14px;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.06em;">Stored Price</span>
+          <span id="modalPriceDisplay" onclick="openModalPriceEdit('${b._id}')" style="cursor:pointer;font-size:15px;font-weight:600;color:${priceVal?'var(--ink)':'var(--ink-faint)'};">${priceVal?sym+priceVal:'Tap to set'}</span>
+        </div>
+        <div id="modalPriceEdit" style="display:none;padding:10px 4px 14px;border-bottom:0.5px solid var(--border);gap:8px;align-items:center;flex-wrap:nowrap;">
+          <input id="modalPriceInput" type="number" inputmode="decimal" placeholder="${sym}0" value="${priceVal}" style="flex:1;padding:8px 10px;border:1px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--paper);">
+          <button onclick="saveModalPrice('${b._id}')" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">Save</button>
+          <button onclick="cancelModalPriceEdit()" style="padding:8px 10px;background:none;border:1px solid var(--border-med);border-radius:7px;font-size:13px;color:var(--ink-faint);cursor:pointer;">✕</button>
+        </div>
+        <div class="ms-actions-primary" style="margin-top:12px;">
           <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
+          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
           <button class="btn-action" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
         </div>
         <hr class="ms-separator">
@@ -1103,6 +1113,31 @@ function openEbayModal(){
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) { window.location.href = S.currentModalUrl; }
   else { window.open(S.currentModalUrl, '_blank'); }
+}
+function openModalPriceEdit(id) {
+  document.getElementById('modalPriceDisplay').style.display = 'none';
+  const editRow = document.getElementById('modalPriceEdit');
+  editRow.style.display = 'flex';
+  const inp = document.getElementById('modalPriceInput');
+  inp.focus();
+  inp.select();
+}
+function cancelModalPriceEdit() {
+  document.getElementById('modalPriceEdit').style.display = 'none';
+  document.getElementById('modalPriceDisplay').style.display = '';
+}
+async function saveModalPrice(id) {
+  const inp = document.getElementById('modalPriceInput');
+  const val = parseFloat(inp.value);
+  if (isNaN(val)) { cancelModalPriceEdit(); return; }
+  await _supa.from('books').update({ market_price: val, updated_at: new Date().toISOString() }).eq('id', id);
+  const b = S.books.find(x => x._id === id);
+  if (b) b.price = String(val);
+  const sym = currSym();
+  const disp = document.getElementById('modalPriceDisplay');
+  disp.textContent = sym + val.toFixed(0);
+  disp.style.color = 'var(--ink)';
+  cancelModalPriceEdit();
 }
 function openEditFromModal(id){
   const sheet = document.querySelector('#modalOverlay .magi-sheet');
