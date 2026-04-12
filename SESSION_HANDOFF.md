@@ -1,71 +1,73 @@
-# SESSION HANDOFF — 2026-04-12 (Session 17)
+# SESSION HANDOFF — 2026-04-12 (Session 18)
 
 ## Session Summary
-Add Book page structural redesign. Sections reordered top-to-bottom, pricing extracted into a standalone box, condition and notes merged into one section, Artist/ISBN fields removed. All CSS and JS labels updated to match.
+Bug fixes + performance quick wins. Four bugs resolved: Save to Library TypeError (f-isbn), iOS keyboard lockout after logout, search dropdown ghost-space thumbnails, external link using location.href. Five P1 quick wins shipped: inputmode="decimal" on all price inputs, loading="lazy"+decoding="async" on book grid images, preconnect/dns-prefetch for Supabase + CDN, splash pulse animation, script version bumped to s9.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `index.html` — Add Book page restructured
-- **Section order** (top to bottom): Scan/Upload → Details → Pricing → Condition & Notes → Cover Image → Save
-- **`book-preview-panel`** removed. Replaced by two new sections:
-  - `el-pricing`: Contains price estimate panel (renamed "Price Estimate" from "Market Value") + Market price estimate field + Purchase price field
-  - `el-cover`: Contains cover frame, Source/Upload/URL buttons, URL input, AI info card
-- **`el-notes`** removed as standalone section — merged into `el-condition`
-- **Section headings updated**:
-  - "Book Details" → "Details"
-  - "Condition & Valuation" → "Condition & Notes"
-- **Fields removed**: `f-isbn` (ISBN) and Artist field (`f-artist` label changed from "Artist / Subject" → "Subject")
-- **Price fields moved**: `f-price` and `f-cost` moved from `el-condition` into new `el-pricing` section
-- **Script versions**: bumped `?v=s7` → `?v=s8` on all script tags
+### 1. `books.js` — Save to Library fix (critical bug)
+- **Root cause**: `f-isbn` field was removed from HTML in Session 17 but `saveBook()` still called `document.getElementById('f-isbn').value.trim()` — threw TypeError before the Supabase insert, silently blocking all saves
+- **Fix**: changed to `(document.getElementById('f-isbn') || {value:''}).value.trim()` — safe fallback
+- **Bonus**: removed `'f-isbn'` from `clearForm()`'s field array (same crash path); fixed stale `'Save to Sheet'` button text → `'Save to Library'`
+- **External link fix**: `openGoogleImagesTab()` was using `window.location.href` on mobile — changed to `window.open(url, '_blank')` universally
 
-### 2. `assets/css/magilib.css` — Entry layout CSS simplified
-- Replaced 2-column desktop grid with single-column flex layout
-- New `order` rules: `el-book-details:1`, `el-pricing:2`, `el-condition:3`, `el-cover:4`, `el-save:5`
-- Removed `el-notes` order rule (section removed)
-- Removed `@media(min-width:700px)` desktop grid override (no longer needed)
+### 2. `catalog.js` — f-isbn null guard (same root cause, 3 locations)
+- Scan result fill (line ~374): removed `{id:'f-isbn',val:json.isbn}` from fields array; added `if(!el) return;` null guard in the forEach loop
+- Batch scan fill (line ~1604): removed `{id:'f-isbn',val:parsed.isbn}` from fields array
+- `searchCover()` (line ~405): changed `document.getElementById('f-isbn').value.trim()` to safe `isbnEl?.value.trim()` pattern
 
-### 3. `catalog.js` — Price label updated
-- `updatePriceLabels()`: `priceLabelAdd` text changed from `'Market price (...) *'` → `'Market price estimate (...) *'`
+### 3. `auth.js` — iOS keyboard lockout after logout
+- `signOut()` now explicitly hides `editModalOverlay`, `coverPickerOverlay`, `magiDialogOverlay` and resets their `pointer-events`
+- Also sweeps `.magi-sheet-overlay.is-active` and `.modal-overlay:not(.hidden)` to clean any leftover state
+- After resetting auth screen, restores `authScreen` pointer-events and focuses `#authEmail` after 350ms to trigger iOS keyboard
+
+### 4. `conjuring.js` — Search dropdown thumbnail ghost space
+- `thumb.onerror` was `this.style.visibility = 'hidden'` — left a 30×40px transparent block in the flex layout
+- Changed to `this.style.display = 'none'` — removes the element from flex flow entirely, text wraps naturally
+
+### 5. `index.html` — Performance quick wins
+- `inputmode="decimal"` added to: `#f-price`, `#f-cost`, `#wl-price`, `#edit-price`, `#edit-cost`, `#priceReviewCustom` — forces decimal keypad on iOS/Android
+- `preconnect` + `dns-prefetch` added for `acuehbwbwsbbxuqcmnrp.supabase.co` and `cdn.jsdelivr.net`
+- Script version bumped `?v=s8` → `?v=s9`
+
+### 6. `catalog.js` — Lazy images
+- Book grid `<img>` at line ~711 was missing `loading="lazy"` — added along with `decoding="async"`
+- All other existing `loading="lazy"` instances also got `decoding="async"` added
+
+### 7. `assets/css/magilib.css` + `ui.js` — Splash pulse
+- Added `@keyframes splash-breathe` (opacity 1→0.75→1, 1.8s infinite) and `.splash-pulse` class to CSS
+- Applied `.splash-pulse` class to the logo `<img>` inside `showSplash()` in `ui.js`
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Cover image tool UX** (Task 5): tap-the-frame UX overhaul deferred — reserved for next session with fresh token budget
+- **Search dropdown author line**: author often missing because many CONJURING_DB entries lack the `a` field — data gap, not a code bug
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
 - **QTTE/Penguin**: may have stale matches — Phase 2
 - **FX rates**: hardcoded — Phase 2
 
 ---
 
-## Next Session Priorities (Session 18)
-
-### Bugs (fix first)
-1. **Save to Library button broken**: click shows toast warning but doesn't save, clear form, or advance. No action taken. Investigate `saveBook()` validation path.
-2. **iOS login keyboard bug**: after logout, system keyboard won't appear on login input fields. User locked out until app restart. Likely an `autofocus` or `focus()` call on a non-visible input, or `pointer-events` left blocked on an overlay after logout.
-3. **Search dropdown**: cover image thumbnails not always loading; author line often missing under title.
-4. **External links**: all external URLs must use `window.open(url, '_blank')` — audit pricing buttons, eBay links, dealer search grid, Google Images, publisher lookups.
+## Next Session Priorities (Session 19)
 
 ### Feature work
-5. **Search priority**: MagicRef first-only. Fall back to Conjuring Archive only if zero MagicRef results. Never show both collections at once.
-6. **Photo scan result UI**: remove mention of "Claude"; show only extracted fields + confidence level (no image preview); verify sentence structure is correct; strip subtitle (anything after `:` or `—`) before running the title search, as full titles reduce match rate.
-7. **Cover image tool UX overhaul**: tap the cover frame → bottom sheet with 2 options only (Search by Title + The Pro Shelf). Remove Sources/tab navigation. Make entry point self-evident for new users.
+1. **Search priority**: MagicRef first-only. Fall back to Conjuring Archive only if zero MagicRef results. Never show both collections at once.
+2. **Photo scan result UI**: remove mention of "Claude"; show only extracted fields + confidence level (no image preview); verify sentence structure is correct; strip subtitle (anything after `:` or `—`) before running the title search, as full titles reduce match rate.
+3. **Cover image tool UX overhaul**: tap the cover frame → bottom sheet with 2 options only (Search by Title + The Pro Shelf). Remove Sources/tab navigation. Make entry point self-evident for new users.
 
-### Pre-Beta Performance (P1 — from Fix Backlog)
-8. **`inputmode="decimal"` on all price/cost inputs** — Add form, Edit modal, Wishlist, Price Review. Zero-cost, high-impact iOS/Android UX fix.
-9. **`loading="lazy"` + `decoding="async"` on all book cover `<img>` tags** — In `renderCatalog()`. Prevents memory spikes on 500+ book libraries.
-10. **`rel="preconnect"` + `dns-prefetch` for Supabase + CDN** — One-line `<head>` additions. Shaves 100–200ms off first auth request.
-11. **Publisher `<datalist>` → `publishers.js` array** — Extract 300+ hardcoded `<option>` elements from `index.html` into a JS file injected on load.
-12. **Lazy-load 4 static DB scripts after auth** — `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` → dynamic load post-auth only.
-13. **Splash screen pulse animation** — CSS opacity breathe on `#splashLogo` to signal loading on slow connections.
-14. **Sanitize user input before DOM insertion** — `sanitize(str)` helper escaping `<>` etc.; apply in `renderCatalog()`, `openModal()`, toasts (XSS fix).
-15. **`aria-label` on all icon-only buttons** — Search clear, close buttons, hamburger, avatar, view toggle, zoom close, sheet closes.
+### Pre-Beta Performance (still outstanding from backlog)
+4. **Currency switching guard** (P2 #5): when library has books, require explicit confirmation before changing currency; show migration prompt warning about mixed-currency data corruption
+5. **Publisher `<datalist>` → `publishers.js` array** (P1 #2): extract 300+ `<option>` elements from `index.html` into a JS file injected on load
+6. **Lazy-load 4 static DB scripts after auth** (P1 #1): `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` → dynamic load post-auth only
+7. **`sanitize()` helper** (P4 #12): XSS guard for user content in DOM
+8. **`aria-label` on icon-only buttons** (P4 #11)
 
 ---
 
 ## Model Learnings
-- **entry-layout restructure**: Removing the 2-column desktop grid (`@media min-width:700px`) simplifies the Add page to pure single-column flex. The `form-section` class provides all card styling (background, border, border-radius, padding) — new `el-pricing` and `el-cover` wrappers just need `order` rules in CSS, no additional styling.
-- **Price field move**: `id="priceLabelAdd"` is set by `updatePriceLabels()` in `catalog.js` on `loadSettings` and `saveSettings`. The static HTML label is only a fallback — always update the JS string too.
-- **el-notes removal**: Merged into `el-condition` with `margin-top:4px` on the description field to maintain spacing. No JS references to `el-notes` class — safe to remove.
+- **f-isbn removal gap**: When removing a field from HTML, grep ALL JS files for its `id` string — it may be referenced in field fill arrays, save functions, and cover search functions independently. The pattern `document.getElementById('f-foo').value` is not null-safe; always use `(document.getElementById('f-foo') || {value:''}).value`.
+- **iOS keyboard after signOut**: The root cause is likely overlays left in an active state with pointer-events blocking the auth inputs. The fix: in signOut(), sweep all known overlay IDs and the magi-sheet/modal-overlay selectors, then focus the email field after 350ms (inside the browser's post-paint window).
+- **Thumbnail ghost space**: `visibility:hidden` removes pixel presence but not layout space in a flex container. Always use `display:none` in onerror handlers for flex children.

@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 17
+# MagiLib Project Status — Session 18
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,16 +29,16 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 17)
-- ### 1. `index.html` — Add Book page restructured
-- **Section order** (top to bottom): Scan/Upload → Details → Pricing → Condition & Notes → Cover Image → Save
-- **`book-preview-panel`** removed. Replaced by two new sections:
--   - `el-pricing`: Contains price estimate panel (renamed "Price Estimate" from "Market Value") + Market price estimate field + Purchase price field
--   - `el-cover`: Contains cover frame, Source/Upload/URL buttons, URL input, AI info card
-- **`el-notes`** removed as standalone section — merged into `el-condition`
+## Last Session (Session 18)
+- ### 1. `books.js` — Save to Library fix (critical bug)
+- **Root cause**: `f-isbn` field was removed from HTML in Session 17 but `saveBook()` still called `document.getElementById('f-isbn').value.trim()` — threw TypeError before the Supabase insert, silently blocking all saves
+- **Fix**: changed to `(document.getElementById('f-isbn') || {value:''}).value.trim()` — safe fallback
+- **Bonus**: removed `'f-isbn'` from `clearForm()`'s field array (same crash path); fixed stale `'Save to Sheet'` button text → `'Save to Library'`
+- **External link fix**: `openGoogleImagesTab()` was using `window.location.href` on mobile — changed to `window.open(url, '_blank')` universally
+- ### 2. `catalog.js` — f-isbn null guard (same root cause, 3 locations)
 
 **Known issues carried forward:**
-- **Cover image tool UX** (Task 5): tap-the-frame UX overhaul deferred — reserved for next session with fresh token budget
+- **Search dropdown author line**: author often missing because many CONJURING_DB entries lack the `a` field — data gap, not a code bug
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
 - **QTTE/Penguin**: may have stale matches — Phase 2
 
