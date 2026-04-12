@@ -202,7 +202,7 @@ async function importFromCSV(event) {
 function updatePriceLabels(cur) {
   const c = cur || (S.settings && S.settings.currency) || 'AUD';
   const el = id => document.getElementById(id);
-  if(el('priceLabelAdd'))  el('priceLabelAdd').textContent  = 'Market price (' + c + ') *';
+  if(el('priceLabelAdd'))  el('priceLabelAdd').textContent  = 'Market price estimate (' + c + ') *';
   if(el('costLabelAdd'))   el('costLabelAdd').textContent   = 'Purchase price (' + c + ')';
   if(el('priceLabelEdit')) el('priceLabelEdit').textContent = 'Market Price (' + c + ')';
   if(el('costLabelEdit'))  el('costLabelEdit').textContent  = 'Purchase Price (' + c + ')';

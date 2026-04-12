@@ -186,64 +186,74 @@
   </div>
 
   <div class="entry-layout">
-    <div class="book-preview-panel">
-      <div class="section-title" style="margin-bottom:14px;">Cover Image</div>
-      <div class="cover-frame" id="coverFrame">
-        <img id="coverImg" alt="Book cover"/>
-        <div class="cover-placeholder" id="coverPlaceholder">
-          <div class="book-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-          <p>Cover appears here<br>after scan or search</p>
-        </div>
-      </div>
-      <div class="cover-actions-row">
-        <button class="cover-btn" onclick="openCoverPicker()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Sources</button>
-        <label class="cover-btn" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
-        <button class="cover-btn" onclick="toggleUrlInput()"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> URL</button>
-      </div>
-      <div id="urlInputArea" style="display:none;margin-top:8px;">
-        <div class="url-input-row">
-          <input type="text" id="manualUrlInput" placeholder="https://…"/>
-          <button onclick="applyManualUrl()">Set</button>
-        </div>
-      </div>
-      <div class="price-panel">
-        <div class="price-label">Market Value</div>
-        <div class="price-value" id="priceDisplay">— <span id="currencyLabel">AUD</span></div>
-        <div class="price-range" id="priceRange"></div>
-        <div class="source-breakdown" id="sourceBreakdown" style="display:none;">
-          <div class="source-breakdown-header">Price sources</div>
-          <div id="sourceRows"></div>
-        </div>
-        <div class="source-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--tier1)"></div>Specialist</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--tier2)"></div>Sold</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--tier3)"></div>Listed</div>
-        </div>
-        <button class="fetch-price-btn" id="fetchPriceBtn" onclick="fetchPrice()">Fetch Price Estimate</button>
-        <div style="margin-top:10px;">
-          <div style="font-size:10px;color:var(--ink-faint);text-align:center;margin-bottom:6px;letter-spacing:0.03em;">Search specific site for this title</div>
-          <div class="search-dealer-btn-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
-            <a class="search-dealer-btn" href="#" onclick="openDealerSearch('ebay',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>eBay Sold</a>
-            <a class="search-dealer-btn" href="#" onclick="openDealerSearch('qtte',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>QTTE</a>
-            <a class="search-dealer-btn" href="#" onclick="openDealerSearch('cmb',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Collecting Magic</a>
-            <a class="search-dealer-btn" href="#" onclick="openDealerSearch('mc',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Magic Collectibles</a>
+    <div class="el-pricing">
+      <div class="form-section">
+        <div class="section-title">Pricing</div>
+        <div class="price-panel" style="margin-top:0;border-top:none;padding-top:0;">
+          <div class="price-label">Price Estimate</div>
+          <div class="price-value" id="priceDisplay">— <span id="currencyLabel">AUD</span></div>
+          <div class="price-range" id="priceRange"></div>
+          <div class="source-breakdown" id="sourceBreakdown" style="display:none;">
+            <div class="source-breakdown-header">Price sources</div>
+            <div id="sourceRows"></div>
+          </div>
+          <div class="source-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--tier1)"></div>Specialist</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--tier2)"></div>Sold</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--tier3)"></div>Listed</div>
+          </div>
+          <button class="fetch-price-btn" id="fetchPriceBtn" onclick="fetchPrice()">Fetch Price Estimate</button>
+          <div style="margin-top:10px;">
+            <div style="font-size:10px;color:var(--ink-faint);text-align:center;margin-bottom:6px;letter-spacing:0.03em;">Search specific site for this title</div>
+            <div class="search-dealer-btn-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+              <a class="search-dealer-btn" href="#" onclick="openDealerSearch('ebay',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>eBay Sold</a>
+              <a class="search-dealer-btn" href="#" onclick="openDealerSearch('qtte',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>QTTE</a>
+              <a class="search-dealer-btn" href="#" onclick="openDealerSearch('cmb',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Collecting Magic</a>
+              <a class="search-dealer-btn" href="#" onclick="openDealerSearch('mc',event)"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Magic Collectibles</a>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- AI INFO CARD -->
-      <div id="aiInfoCard" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;">Book Intelligence</span>
-          <button onclick="document.getElementById('aiInfoCard').style.display='none'" class="btn-icon-dismiss" title="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div class="field-row two" style="margin-top:14px;">
+          <div class="field"><label id="priceLabelAdd">Market price estimate (AUD) *</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0"/></div>
+          <div class="field"><label id="costLabelAdd">Purchase price (AUD)</label><input type="number" id="f-cost" placeholder="0.00" step="0.01" min="0"/></div>
         </div>
-        <div id="aiInfoContent" style="font-size:12px;color:var(--ink-light);line-height:1.6;"></div>
+      </div>
+    </div>
+    <div class="el-cover">
+      <div class="form-section">
+        <div class="section-title">Cover Image</div>
+        <div class="cover-frame" id="coverFrame">
+          <img id="coverImg" alt="Book cover"/>
+          <div class="cover-placeholder" id="coverPlaceholder">
+            <div class="book-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+            <p>Cover appears here<br>after scan or search</p>
+          </div>
+        </div>
+        <div class="cover-actions-row">
+          <button class="cover-btn" onclick="openCoverPicker()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Sources</button>
+          <label class="cover-btn" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
+          <button class="cover-btn" onclick="toggleUrlInput()"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> URL</button>
+        </div>
+        <div id="urlInputArea" style="display:none;margin-top:8px;">
+          <div class="url-input-row">
+            <input type="text" id="manualUrlInput" placeholder="https://…"/>
+            <button onclick="applyManualUrl()">Set</button>
+          </div>
+        </div>
+        <!-- AI INFO CARD -->
+        <div id="aiInfoCard" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;">Book Intelligence</span>
+            <button onclick="document.getElementById('aiInfoCard').style.display='none'" class="btn-icon-dismiss" title="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div id="aiInfoContent" style="font-size:12px;color:var(--ink-light);line-height:1.6;"></div>
+        </div>
       </div>
     </div>
 
     <div class="el-book-details">
       <div class="form-section">
-        <div class="section-title">Book Details</div>
+        <div class="section-title">Details</div>
         <div class="field-row">
           <div class="field" style="position:relative;"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="debouncedConjuringCheck(this.value)" onkeydown="handleTitleKey(event)"/><div id="titleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:350px;overflow-y:auto;margin-top:2px;"></div></div>
         </div>
@@ -251,7 +261,7 @@
           <div class="field"><label>Author *</label><input type="text" id="f-author" placeholder="e.g. S. W. Erdnase" onblur="applyTitleCase('f-author')" autocomplete="off"/></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Artist / Subject</label><input type="text" id="f-artist" placeholder="e.g. Illustrator name or subject matter" onblur="applyTitleCase('f-artist')" autocomplete="off"/></div>
+          <div class="field"><label>Subject</label><input type="text" id="f-artist" placeholder="e.g. Subject matter or illustrator" onblur="applyTitleCase('f-artist')" autocomplete="off"/></div>
         </div>
         <div class="field-row two">
           <div class="field"><label>Edition / Print run</label><input type="text" id="f-edition" placeholder="e.g. 1st, Limited" onblur="applyTitleCase('f-edition')"/></div>
@@ -637,13 +647,12 @@
 <option value="Zauberzentrale München">
 <option value="Zentralhaus für Kulturarbeit">
 <option value="Édition Ch. Eggimann, Genève"></datalist></div>
-          <div class="field"><label>ISBN (if known)</label><input type="text" id="f-isbn" placeholder="978-…"/></div>
         </div>
       </div>
     </div>
     <div class="el-condition">
       <div class="form-section">
-        <div class="section-title">Condition & Valuation</div>
+        <div class="section-title">Condition & Notes</div>
         <div class="field" style="margin-bottom:14px;">
           <label>Condition</label>
           <div class="condition-select">
@@ -661,19 +670,10 @@
             <button type="button" class="flag-btn" onclick="toggleFlag(this,'Written Notes')">Written Notes</button>
           </div>
         </div>
-        <div class="field-row two">
-          <div class="field"><label id="priceLabelAdd">Market price (AUD) *</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0"/></div>
-          <div class="field"><label id="costLabelAdd">Purchase price (AUD)</label><input type="number" id="f-cost" placeholder="0.00" step="0.01" min="0"/></div>
-        </div>
         <div class="field-row">
           <div class="field"><label>Where acquired</label><input type="text" id="f-location" placeholder="e.g. Davenports auction, Magic fair 2024" autocomplete="off" onblur="applyTitleCase('f-location')"/></div>
         </div>
-      </div>
-    </div>
-    <div class="el-notes">
-      <div class="form-section">
-        <div class="section-title">Notes</div>
-        <div class="field">
+        <div class="field" style="margin-top:4px;">
           <label>Description / Notes</label>
           <textarea id="f-notes" placeholder="Any notable details about condition or provenance"></textarea>
         </div>
@@ -1104,14 +1104,14 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s7"></script>
-<script src="/globals.js?v=s7"></script>
-<script src="/auth.js?v=s7"></script>
-<script src="/catalog.js?v=s7"></script>
-<script src="/books.js?v=s7"></script>
-<script src="/pricing.js?v=s7"></script>
-<script src="/conjuring.js?v=s7"></script>
-<script src="/ui.js?v=s7"></script>
+<script src="/supabase.min.js?v=s8"></script>
+<script src="/globals.js?v=s8"></script>
+<script src="/auth.js?v=s8"></script>
+<script src="/catalog.js?v=s8"></script>
+<script src="/books.js?v=s8"></script>
+<script src="/pricing.js?v=s8"></script>
+<script src="/conjuring.js?v=s8"></script>
+<script src="/ui.js?v=s8"></script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--status-sold);color:white;padding:14px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
