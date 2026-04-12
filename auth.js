@@ -157,6 +157,14 @@ document.addEventListener('click', function(e) {
 async function signOut() {
   await _supa.auth.signOut();
   _supaUser = null; S.books = []; S.profile = {};
+  // Close all overlays so nothing blocks auth inputs on iOS
+  ['editModalOverlay','coverPickerOverlay','magiDialogOverlay'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('hidden'); el.style.pointerEvents = 'none'; }
+  });
+  document.querySelectorAll('.magi-sheet-overlay.is-active, .modal-overlay:not(.hidden)').forEach(el => {
+    el.classList.remove('is-active'); el.classList.add('hidden');
+  });
   document.getElementById('userMenuBtn').style.display = 'none';
   document.getElementById('authScreen').classList.remove('hidden');
   _authMode = 'signin';
@@ -171,6 +179,14 @@ async function signOut() {
   document.getElementById('authSubmitBtn').disabled = false;
   document.getElementById('authError').classList.remove('show');
   closeUserMenu();
+  // Restore pointer-events on auth inputs (defensive — clears any residual block)
+  const authScreen = document.getElementById('authScreen');
+  if (authScreen) authScreen.style.pointerEvents = '';
+  // Focus email field after paint so iOS keyboard appears
+  setTimeout(() => {
+    const emailEl = document.getElementById('authEmail');
+    if (emailEl) { emailEl.removeAttribute('disabled'); emailEl.focus(); }
+  }, 350);
 }
 function confirmSignOut() {
   magiConfirm({

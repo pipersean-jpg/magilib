@@ -371,9 +371,9 @@ async function scanCover(event){
       {type:'text',text:'You are a bibliographic expert specialising in magic and conjuring books. Extract all metadata visible on this book cover. Reply ONLY with valid JSON, no markdown: {"title":"","author":"","artist":"","edition":"","year":"","publisher":"","isbn":"","confidence":"high|medium|low","fields_found":[],"notes":""}'}
     ]}],600);
     const json=JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-    const fields=[{id:'f-title',val:json.title},{id:'f-author',val:json.author},{id:'f-artist',val:json.artist||''},{id:'f-edition',val:json.edition},{id:'f-year',val:json.year},{id:'f-publisher',val:json.publisher},{id:'f-isbn',val:json.isbn}];
+    const fields=[{id:'f-title',val:json.title},{id:'f-author',val:json.author},{id:'f-artist',val:json.artist||''},{id:'f-edition',val:json.edition},{id:'f-year',val:json.year},{id:'f-publisher',val:json.publisher}];
     let populated=0;
-    fields.forEach(f=>{if(f.val&&f.val.trim()){const el=document.getElementById(f.id);el.value=toTitleCase(f.val.trim());el.classList.add('field-populated');setTimeout(()=>el.classList.remove('field-populated'),3000);populated++;}});
+    fields.forEach(f=>{if(f.val&&f.val.trim()){const el=document.getElementById(f.id);if(!el)return;el.value=toTitleCase(f.val.trim());el.classList.add('field-populated');setTimeout(()=>el.classList.remove('field-populated'),3000);populated++;}});
     const confClass={high:'conf-high',medium:'conf-med',low:'conf-low'}[json.confidence]||'conf-med';
     statusEl.className='scan-status done';
     document.getElementById('scanIcon').innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -402,7 +402,8 @@ async function scanCover(event){
 async function searchCover(){
   const title=document.getElementById('f-title').value.trim();
   const author=document.getElementById('f-author').value.trim();
-  const isbn=document.getElementById('f-isbn').value.trim();
+  const isbnEl=document.getElementById('f-isbn');
+  const isbn=isbnEl?isbnEl.value.trim():'';
   if(!title){showToast('Enter a title first','error');return;}
   showToast('Searching for cover…','info');
   let imgUrl='';
@@ -691,7 +692,7 @@ function renderStatsRow() {
     const hasCover = !!effectiveCover;
 
     const thumbHtml = hasCover
-      ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
+      ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
       : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
     const clickHandler = S.selectMode
       ? `toggleBookSelection('${b._id}')`
@@ -707,7 +708,7 @@ function renderStatsRow() {
       : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p style="margin-top:4px">${b.title}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${b.title}" loading="lazy" decoding="async" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p style="margin-top:4px">${b.title}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
@@ -822,7 +823,7 @@ function openCopiesSheet(key) {
     return `<div class="copy-row" onclick="closeCopiesSheet();setTimeout(()=>openModal(${idx}),120);">
       <div class="copy-thumb">
         ${hasCover
-          ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy"/>`
+          ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
           : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`}
       </div>
       <div style="flex:1;min-width:0;">
@@ -1601,7 +1602,7 @@ async function processNextFromQueue() {
     const fields = [
       {id:'f-title',val:parsed.title},{id:'f-author',val:parsed.author},
       {id:'f-artist',val:parsed.artist||''},{id:'f-edition',val:parsed.edition},{id:'f-year',val:parsed.year},
-      {id:'f-publisher',val:parsed.publisher},{id:'f-isbn',val:parsed.isbn}
+      {id:'f-publisher',val:parsed.publisher}
     ];
     let populated = 0;
     fields.forEach(f => {
@@ -1908,7 +1909,7 @@ async function searchCoverSource(source) {
         return '<div onclick="selectPickedCover(\'' + esc + '\',this)" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color 0.15s;background:var(--paper-warm);">' +
           '<div style="width:100%;aspect-ratio:2/3;position:relative;background:var(--paper-warm);">' +
           '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.18;">&#128218;</div>' +
-          '<img src="' + url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy"/>' +
+          '<img src="' + url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy" decoding="async"/>' +
           '</div>' +
           '<div style="padding:4px 6px;font-size:9px;color:var(--ink-faint);text-align:center;line-height:1.3;">' + sourceLabel + '<br><span style="color:var(--ink);font-size:8px;">' + titleLabel.substring(0,35) + '</span></div>' +
           '</div>';
@@ -1980,7 +1981,7 @@ async function searchCoverSource(source) {
     return '<div onclick="selectPickedCover(\'' + esc + '\',this)" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color 0.15s;background:var(--paper-warm);">' +
       '<div style="width:100%;aspect-ratio:2/3;background:var(--paper-warm);position:relative;">' +
       '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.18;">&#128218;</div>' +
-      '<img src="' + img.url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy"/>' +
+      '<img src="' + img.url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\'" loading="lazy" decoding="async"/>' +
       '</div>' +
       '<div style="padding:4px 6px;font-size:9px;color:var(--ink-faint);text-align:center;line-height:1.3;">' + img.source + '<br><span style="color:var(--ink);font-size:8px;">' + (img.label||'').substring(0,35) + '</span></div>' +
       '</div>';

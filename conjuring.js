@@ -422,7 +422,7 @@ function showTitleDropdown(title) {
     thumb.src = match.url || '';
     thumb.alt = '';
     thumb.style.cssText = 'width:30px;height:40px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--paper-warm);border:0.5px solid var(--border);';
-    thumb.onerror = function() { this.style.visibility = 'hidden'; };
+    thumb.onerror = function() { this.style.display = 'none'; };
 
     const textWrap = document.createElement('div');
     textWrap.style.cssText = 'flex:1;min-width:0;';

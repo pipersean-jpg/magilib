@@ -215,7 +215,7 @@ function clearFlags() {
 // ── SCROLL TO TOP AFTER SAVE ──
 function clearForm() {
   // Clear all text fields
-  ['f-title','f-author','f-artist','f-edition','f-year','f-publisher','f-isbn','f-price','f-cost','f-notes','f-location','f-collector-note'].forEach(id => {
+  ['f-title','f-author','f-artist','f-edition','f-year','f-publisher','f-price','f-cost','f-notes','f-location','f-collector-note'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   // Reset condition
@@ -260,7 +260,7 @@ function clearForm() {
   S.draftRowNum = null;
   // Reset save button back to normal state
   const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) { saveBtn.textContent = 'Save to Sheet'; saveBtn.style.background = ''; saveBtn.style.color = ''; }
+  if (saveBtn) { saveBtn.textContent = 'Save to Library'; saveBtn.style.background = ''; saveBtn.style.color = ''; }
 }
 
 // ── AI INFO CARD ──
@@ -360,7 +360,7 @@ async function saveBook() {
     edition: document.getElementById('f-edition').value.trim(),
     year: document.getElementById('f-year').value.trim(),
     publisher: document.getElementById('f-publisher').value.trim(),
-    isbn: document.getElementById('f-isbn').value.trim(),
+    isbn: (document.getElementById('f-isbn') || {value:''}).value.trim(),
     condition: S.condition,
     market_price: parseFloat(price) || null,
     purchase_price: parseFloat(document.getElementById('f-cost').value) || null,
@@ -473,7 +473,7 @@ function searchEditCoverImages() {
 
 function openGoogleImagesTab() {
   const url = S._googleImgUrl || '';
-  if (url) { const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent); if (isMobile) window.location.href = url; else window.open(url, '_blank'); }
+  if (url) window.open(url, '_blank');
 }
 
 function pickerUploadCover(event) {

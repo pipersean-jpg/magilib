@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 16)
-- ### 1. `index.html` — Cover picker z-index fix
-- `#coverPickerOverlay` was at `z-index:400`, below `.modal-overlay` (`--z-sheet: 1000`)
-- Changed inline style to `z-index:var(--z-dialog)` (2000) so it renders above the Edit modal
-- ### 2. `catalog.js` — Add screen scroll-to-top (robust fix)
-- Old: `window.scrollTo({top:0,behavior:'instant'})` — unreliable on iOS Safari
-- New: triple-target reset (`window`, `document.body`, `document.documentElement`) fired immediately + again after 50ms to catch post-render focus-scroll
+## Last Session (Session 17)
+- ### 1. `index.html` — Add Book page restructured
+- **Section order** (top to bottom): Scan/Upload → Details → Pricing → Condition & Notes → Cover Image → Save
+- **`book-preview-panel`** removed. Replaced by two new sections:
+-   - `el-pricing`: Contains price estimate panel (renamed "Price Estimate" from "Market Value") + Market price estimate field + Purchase price field
+-   - `el-cover`: Contains cover frame, Source/Upload/URL buttons, URL input, AI info card
+- **`el-notes`** removed as standalone section — merged into `el-condition`
 
 **Known issues carried forward:**
-- **eBay API**: fetch-failed on network (not quota) — still 0 live API rows, 2,021 manual CSV rows in price_db
-- **QTTE/Penguin**: may have stale matches — rerun scrapers in Phase 2
-- **FX rates**: still hardcoded (USD→AUD 1.55, GBP→AUD 2.02) — Phase 2 migration fully specced in CLAUDE.md
+- **Cover image tool UX** (Task 5): tap-the-frame UX overhaul deferred — reserved for next session with fresh token budget
+- **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
+- **QTTE/Penguin**: may have stale matches — Phase 2
 
 ---
 
@@ -79,6 +79,36 @@ Before running `handoff`, Claude Code MUST:
 - [ ] Settings: profile, security, currency, condition presets, stat cards, CSV export/import
 - [ ] Onboarding: welcome + feature tour for new users
 - [ ] No dead code: Cloudinary, Google Sheets, Apps Script all removed
+
+---
+
+## Pre-Beta Fix Backlog
+
+### P1 — Performance & Load Time
+1. **Lazy-load 4 static DB scripts after auth** — `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` are all `<script defer>` in `<head>`, downloading before auth. Move to dynamic `import()` / `document.createElement('script')` calls that only fire after successful auth. Keep fallback `.includes()` search working without Fuse until `conjuring_db.js` loads.
+2. **Move publisher `<datalist>` to a JS array** — 300+ `<option>` elements for `id="publisher-list"` are hardcoded in `index.html` (~250 lines). Extract to `publishers.js` as a plain array; inject into `<datalist>` on load. Reduces initial document size and keeps HTML clean.
+3. **Add `loading="lazy"` to all book cover `<img>` tags** — In `catalog.js` `renderCatalog()`, ensure every `<img>` gets `loading="lazy"` and `decoding="async"`. Prevents memory spikes and jank on large libraries (500+ books) on older phones.
+4. **Add `inputmode="decimal"` to all price/cost inputs** — All `<input type="number">` for prices/costs (Add form, Edit modal, Wishlist quick-add, Price Review) need `inputmode="decimal"`. Forces iOS/Android decimal keypad instead of clunky full number keyboard.
+
+### P2 — Data Integrity & Offline
+5. **Fix currency switching to prevent mixed-currency data** — Changing currency in Settings only updates labels; existing `market_price` values keep old currency, causing silent data corruption. Either: (a) disable the currency dropdown when library has books + show a migration prompt (30-min guard), or (b) implement Phase 2 USD-storage spec now. At minimum, make `currencyChangeWarning` prominent and require explicit confirmation.
+6. **Add a basic Service Worker for shell caching + offline read** — App has `<link rel="manifest">` but no service worker. Critical for use at book fairs with bad cell reception. Cache app shell (HTML, CSS, JS, fonts, logo); store Supabase library data in IndexedDB on fetch; serve cached data offline; show offline banner; queue mutations while offline and replay on reconnect.
+
+### P3 — UX & Trust
+7. **Add spinner/pulse animation to splash screen** — `#splashScreen` shows static logo. Add a subtle CSS pulse (opacity breathe 0.8–1.0) to `#splashLogo` to signal loading is happening. Pure CSS, no JS.
+8. **Show live condition price adjustment in Add and Edit** — When user selects condition grade and a price estimate has been fetched, dynamically recalculate and display adjusted price in real-time (e.g. base $100 + Fair → shows $40 per preset). Makes condition multiplier tangible.
+9. **Add batch queue progress indicator** — When "Add All to Drafts" or "Process next title" runs, show "Processing 2 of 5…" with progress bar or counter. AI vision takes seconds per image; current UI gives no feedback. Update `#queueCount` and add progress bar inside `#queuePanel`.
+10. **Replace iOS ghost-click `setTimeout` with `requestAnimationFrame`** — Current fix uses 300–400ms `setTimeout`. More robust: use double-rAF when toggling overlay visibility, aligned to browser paint cycle. Apply to `.modal-overlay`, `.magi-sheet-overlay`, and `#coverPickerOverlay` open/close handlers.
+
+### P4 — Code Quality & Accessibility
+11. **Add `aria-label` to all icon-only buttons** — Audit and add `aria-label` to: search clear, modal close buttons, cover picker close, zoom close, hamburger menu, user menu avatar, view toggle, refresh, all sheet close buttons. Zero visual impact, required for a11y.
+12. **Sanitize user input before DOM insertion** — Book titles, notes, collector's notes, and author names inserted via `innerHTML` (grid, modal, toast) are an XSS vector. Create a `sanitize(str)` helper that escapes `<`, `>`, `&`, `"`, `'`. Apply in `renderCatalog()`, `openModal()`, and toast messages.
+13. **Migrate inline `onclick` handlers to event delegation (Phase 2 prep)** — 100+ inline `onclick="functionName()"` handlers are a memory leak risk under frequent re-render. Start migrating to event delegation on stable parent containers (`#view-catalog`, `#modalOverlay`, `#view-entry`) using `event.target.closest()`. Prioritize most re-rendered areas first.
+14. **Add `rel="preconnect"` for Supabase and CDN domains** — Add `<link rel="preconnect">` and `dns-prefetch` for the Supabase API domain and `cdn.jsdelivr.net` (Fuse.js). Shaves 100–200ms off first authenticated request.
+
+### P5 — Delight (Phase 2 Seeds)
+15. **Condition flag value modifiers in Settings** — Extend Condition Presets to support flag-based multipliers (Signed +20%, No Dustjacket -30%, etc.). Store alongside `condPct_*` in settings; `getEstimatedValue()` applies them on top of condition grade.
+16. **Populate the AI Info Card with book trivia** — `#aiInfoCard` exists but is unused. When Claude extracts book data from a cover scan, also return a 2-sentence historical note/trivia about the book/author. Populate `#aiInfoContent`. Adds a "magical" touch to the scanning experience.
 
 ---
 

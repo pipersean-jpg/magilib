@@ -53,6 +53,16 @@ Add Book page structural redesign. Sections reordered top-to-bottom, pricing ext
 6. **Photo scan result UI**: remove mention of "Claude"; show only extracted fields + confidence level (no image preview); verify sentence structure is correct; strip subtitle (anything after `:` or `—`) before running the title search, as full titles reduce match rate.
 7. **Cover image tool UX overhaul**: tap the cover frame → bottom sheet with 2 options only (Search by Title + The Pro Shelf). Remove Sources/tab navigation. Make entry point self-evident for new users.
 
+### Pre-Beta Performance (P1 — from Fix Backlog)
+8. **`inputmode="decimal"` on all price/cost inputs** — Add form, Edit modal, Wishlist, Price Review. Zero-cost, high-impact iOS/Android UX fix.
+9. **`loading="lazy"` + `decoding="async"` on all book cover `<img>` tags** — In `renderCatalog()`. Prevents memory spikes on 500+ book libraries.
+10. **`rel="preconnect"` + `dns-prefetch` for Supabase + CDN** — One-line `<head>` additions. Shaves 100–200ms off first auth request.
+11. **Publisher `<datalist>` → `publishers.js` array** — Extract 300+ hardcoded `<option>` elements from `index.html` into a JS file injected on load.
+12. **Lazy-load 4 static DB scripts after auth** — `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` → dynamic load post-auth only.
+13. **Splash screen pulse animation** — CSS opacity breathe on `#splashLogo` to signal loading on slow connections.
+14. **Sanitize user input before DOM insertion** — `sanitize(str)` helper escaping `<>` etc.; apply in `renderCatalog()`, `openModal()`, toasts (XSS fix).
+15. **`aria-label` on all icon-only buttons** — Search clear, close buttons, hamburger, avatar, view toggle, zoom close, sheet closes.
+
 ---
 
 ## Model Learnings

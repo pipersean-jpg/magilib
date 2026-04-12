@@ -708,7 +708,7 @@ function showSplash() {
   overlay.id = '_splashOverlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--accent);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:1;transition:opacity 0.5s ease;';
 
-overlay.innerHTML = '<img src="/logo@3x.png" style="width:180px;max-width:70vw;object-fit:contain;filter:brightness(0) invert(1);" onerror="this.style.display=\'none\'">'
+overlay.innerHTML = '<img src="/logo@3x.png" class="splash-pulse" style="width:180px;max-width:70vw;object-fit:contain;filter:brightness(0) invert(1);" onerror="this.style.display=\'none\'">'
     + '<div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">v1.0 beta</div>';
 
   document.body.appendChild(overlay);
