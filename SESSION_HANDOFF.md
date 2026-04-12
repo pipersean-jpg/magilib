@@ -41,9 +41,17 @@ Add Book page structural redesign. Sections reordered top-to-bottom, pricing ext
 ---
 
 ## Next Session Priorities (Session 18)
-1. **Cover image tool UX overhaul** (Task 5): replace Sources/tab navigation with tap-the-frame → bottom sheet (2 options: Search by Title + The Pro Shelf). Make entry point self-evident for new users.
-2. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
-3. **External links audit**: verify all external URLs use `window.open(url, '_blank')` — check eBay, Google Images, dealer search links, publisher sites
+
+### Bugs (fix first)
+1. **Save to Library button broken**: click shows toast warning but doesn't save, clear form, or advance. No action taken. Investigate `saveBook()` validation path.
+2. **iOS login keyboard bug**: after logout, system keyboard won't appear on login input fields. User locked out until app restart. Likely an `autofocus` or `focus()` call on a non-visible input, or `pointer-events` left blocked on an overlay after logout.
+3. **Search dropdown**: cover image thumbnails not always loading; author line often missing under title.
+4. **External links**: all external URLs must use `window.open(url, '_blank')` — audit pricing buttons, eBay links, dealer search grid, Google Images, publisher lookups.
+
+### Feature work
+5. **Search priority**: MagicRef first-only. Fall back to Conjuring Archive only if zero MagicRef results. Never show both collections at once.
+6. **Photo scan result UI**: remove mention of "Claude"; show only extracted fields + confidence level (no image preview); verify sentence structure is correct; strip subtitle (anything after `:` or `—`) before running the title search, as full titles reduce match rate.
+7. **Cover image tool UX overhaul**: tap the cover frame → bottom sheet with 2 options only (Search by Title + The Pro Shelf). Remove Sources/tab navigation. Make entry point self-evident for new users.
 
 ---
 
