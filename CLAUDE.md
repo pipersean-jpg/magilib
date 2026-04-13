@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 18
+# MagiLib Project Status — Session 19
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,13 +29,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 18)
-- ### 1. `books.js` — Save to Library fix (critical bug)
-- **Root cause**: `f-isbn` field was removed from HTML in Session 17 but `saveBook()` still called `document.getElementById('f-isbn').value.trim()` — threw TypeError before the Supabase insert, silently blocking all saves
-- **Fix**: changed to `(document.getElementById('f-isbn') || {value:''}).value.trim()` — safe fallback
-- **Bonus**: removed `'f-isbn'` from `clearForm()`'s field array (same crash path); fixed stale `'Save to Sheet'` button text → `'Save to Library'`
-- **External link fix**: `openGoogleImagesTab()` was using `window.location.href` on mobile — changed to `window.open(url, '_blank')` universally
-- ### 2. `catalog.js` — f-isbn null guard (same root cause, 3 locations)
+## Last Session (Session 19)
+- ### 1. `index.html` + `catalog.js` — Photo scan UI: remove "Claude" mention
+- `index.html:186`: Static scan detail text changed from "Claude is reading the title, author, and edition from your photo." → "Reading title, author, and edition from your photo."
+- `catalog.js:366`: Same text in the JS reset path (runs before each scan) updated to match.
+- ### 2. `catalog.js` — Strip subtitle before DB/price lookups
+- After `json.title` is parsed from the AI scan response, a `searchTitle` is derived by stripping anything after `:`, `—`, or `–` (e.g. "Card College: Volume 1" → "Card College").
+- `searchTitle` is used for `fetchBookIntelligence()`, `conjuringFuzzyLookup()`, and `checkConjuringDB()`.
 
 **Known issues carried forward:**
 - **Search dropdown author line**: author often missing because many CONJURING_DB entries lack the `a` field — data gap, not a code bug
