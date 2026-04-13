@@ -183,7 +183,7 @@
       <span class="scan-icon" id="scanIcon"><span class="spinner dark" style="margin:0;"></span></span>
       <div class="scan-text">
         <strong id="scanTitle">Analysing cover…</strong>
-        <span id="scanDetail">Claude is reading the title, author, and edition from your photo.</span>
+        <span id="scanDetail">Reading title, author, and edition from your photo.</span>
       </div>
     </div>
   </div>
@@ -225,15 +225,14 @@
     <div class="el-cover">
       <div class="form-section">
         <div class="section-title">Cover Image</div>
-        <div class="cover-frame" id="coverFrame">
+        <div class="cover-frame" id="coverFrame" onclick="openCoverPicker()" style="cursor:pointer;">
           <img id="coverImg" alt="Book cover"/>
           <div class="cover-placeholder" id="coverPlaceholder">
             <div class="book-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-            <p>Cover appears here<br>after scan or search</p>
+            <p>Tap to find<br>cover image</p>
           </div>
         </div>
         <div class="cover-actions-row">
-          <button class="cover-btn" onclick="openCoverPicker()"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Sources</button>
           <label class="cover-btn" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
           <button class="cover-btn" onclick="toggleUrlInput()"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> URL</button>
         </div>
@@ -1107,14 +1106,14 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s9"></script>
-<script src="/globals.js?v=s9"></script>
-<script src="/auth.js?v=s9"></script>
-<script src="/catalog.js?v=s9"></script>
-<script src="/books.js?v=s9"></script>
-<script src="/pricing.js?v=s9"></script>
-<script src="/conjuring.js?v=s9"></script>
-<script src="/ui.js?v=s9"></script>
+<script src="/supabase.min.js?v=s10"></script>
+<script src="/globals.js?v=s10"></script>
+<script src="/auth.js?v=s10"></script>
+<script src="/catalog.js?v=s10"></script>
+<script src="/books.js?v=s10"></script>
+<script src="/pricing.js?v=s10"></script>
+<script src="/conjuring.js?v=s10"></script>
+<script src="/ui.js?v=s10"></script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--status-sold);color:white;padding:14px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -1137,9 +1136,8 @@
     </div>
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
-        <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Google Images</button>
+        <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search by Title</button>
         <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">The Pro Shelf</button>
-        <label class="btn-secondary" style="font-size:12px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" accept="image/*" style="display:none" onchange="pickerUploadCover(event)"></label>
       </div>
       <!-- Google Images instruction card — shown when Google Images is active -->
       <div id="googleImagesCard" style="display:none;margin-top:14px;background:var(--paper-warm);border-radius:10px;padding:16px 20px;border:1.5px dashed var(--border-med);cursor:pointer;" onclick="openGoogleImagesTab()">

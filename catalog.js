@@ -363,7 +363,7 @@ async function scanCover(event){
   statusEl.className='scan-status scanning';
   document.getElementById('scanIcon').textContent='⏳';
   document.getElementById('scanTitle').textContent='Analysing cover…';
-  document.getElementById('scanDetail').textContent='Claude is reading the title, author, and edition from your photo.';
+  document.getElementById('scanDetail').textContent='Reading title, author, and edition from your photo.';
 
   try{
     const data=await callClaude([{role:'user',content:[
@@ -379,15 +379,17 @@ async function scanCover(event){
     document.getElementById('scanIcon').innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
     document.getElementById('scanTitle').innerHTML=`${populated} fields extracted <span class="confidence-badge ${confClass}">${json.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent=json.notes||'Please verify the details below before saving.';
-    if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(json.title,json.author),1500);}
-    if(json.title){
+    // Strip subtitle (anything after : or —) for DB/price lookups to improve match rate
+    const searchTitle = json.title ? json.title.replace(/\s*[:—–].*$/, '').trim() : json.title;
+    if(json.title&&json.author){setTimeout(()=>fetchPrice(),800);setTimeout(()=>fetchBookIntelligence(searchTitle,json.author),1500);}
+    if(searchTitle){
       // Try fuzzy match against Conjuring Archive DB immediately after scan
       setTimeout(async () => {
-        const match = conjuringFuzzyLookup(json.title);
+        const match = conjuringFuzzyLookup(searchTitle);
         if (match) {
           await applyConjuringMatch(match, 'scan');
         } else {
-          checkConjuringDB(json.title); // fall back to exact match display
+          checkConjuringDB(searchTitle); // fall back to exact match display
         }
       }, 300);
     }
