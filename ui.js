@@ -688,6 +688,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const { data: { session } } = await _supa.auth.getSession();
     if (session && session.user) {
       _supaUser = session.user;
+      loadStaticDBs(); // fire-and-forget: load 3.4 MB of DB scripts during splash window
       const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
       S.profile = profile || {};
       updateUserMenu();
