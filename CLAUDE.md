@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 20
+# MagiLib Project Status — Session 21
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,13 +29,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 20)
-- ### 1. `index.html` + `auth.js` — Lazy-load 4 static DB scripts post-auth (P1 #1)
-- Removed 4 `<script defer>` tags from `<head>`: `conjuring_db.js` (2.0 MB), `magilib_market_db.js` (1.2 MB), `magilib_disc_db.js` (140 KB), `magilib_price_db.js` (97 KB). Total: ~3.4 MB no longer downloaded before auth.
-- Added `loadStaticDBs()` to `auth.js:6`: dynamically injects `<script async>` tags on demand, with duplicate-load guard.
-- Called `loadStaticDBs()` at the top of `onAuthSuccess()` — fire and forget. DBs load during the 2.7-second splash screen window, ready before user can interact.
-- All DB usage sites already had `typeof X === 'undefined'` guards — no fallback code needed.
-- ### 2. `conjuring.js` — MagicRef-first search priority
+## Last Session (Session 21)
+- ### 1. `publishers.js` (new) + `index.html` — Publisher datalist extracted (P1 #2)
+- Created `/publishers.js`: defines `PUBLISHERS` array of 300+ publisher strings. IIFE injects `<option>` elements into `#publisher-list` on `DOMContentLoaded`, with duplicate-load guard (`dl.dataset.loaded`).
+- Removed 378 inline `<option>` lines from `index.html` (lines 269–647). Replaced with empty `<datalist id="publisher-list"><!-- populated by publishers.js --></datalist>`.
+- Added `<script src="/publishers.js?v=s12"></script>` after `ui.js` in `index.html`.
+- Both Add form (`#f-publisher`) and Edit modal (`#edit-publisher`) share the same `#publisher-list` datalist — both get autocomplete automatically.
+- ### 2. `globals.js` + `catalog.js` — `sanitize()` XSS helper (P4 #12)
 
 **Known issues carried forward:**
 - **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug)
@@ -86,7 +86,7 @@ Before running `handoff`, Claude Code MUST:
 
 ### P1 — Performance & Load Time
 1. ~~**Lazy-load 4 static DB scripts after auth**~~ ✅ Done Session 20 — `loadStaticDBs()` in auth.js fires post-auth.
-2. **Move publisher `<datalist>` to a JS array** — 300+ `<option>` elements for `id="publisher-list"` are hardcoded in `index.html` (~250 lines). Extract to `publishers.js` as a plain array; inject into `<datalist>` on load. Reduces initial document size and keeps HTML clean.
+2. ~~**Move publisher `<datalist>` to a JS array**~~ ✅ Done Session 21 — `publishers.js` injects options on DOMContentLoaded; 378 lines removed from `index.html`.
 3. **Add `loading="lazy"` to all book cover `<img>` tags** — In `catalog.js` `renderCatalog()`, ensure every `<img>` gets `loading="lazy"` and `decoding="async"`. Prevents memory spikes and jank on large libraries (500+ books) on older phones.
 4. **Add `inputmode="decimal"` to all price/cost inputs** — All `<input type="number">` for prices/costs (Add form, Edit modal, Wishlist quick-add, Price Review) need `inputmode="decimal"`. Forces iOS/Android decimal keypad instead of clunky full number keyboard.
 
@@ -101,8 +101,8 @@ Before running `handoff`, Claude Code MUST:
 10. **Replace iOS ghost-click `setTimeout` with `requestAnimationFrame`** — Current fix uses 300–400ms `setTimeout`. More robust: use double-rAF when toggling overlay visibility, aligned to browser paint cycle. Apply to `.modal-overlay`, `.magi-sheet-overlay`, and `#coverPickerOverlay` open/close handlers.
 
 ### P4 — Code Quality & Accessibility
-11. **Add `aria-label` to all icon-only buttons** — Audit and add `aria-label` to: search clear, modal close buttons, cover picker close, zoom close, hamburger menu, user menu avatar, view toggle, refresh, all sheet close buttons. Zero visual impact, required for a11y.
-12. **Sanitize user input before DOM insertion** — Book titles, notes, collector's notes, and author names inserted via `innerHTML` (grid, modal, toast) are an XSS vector. Create a `sanitize(str)` helper that escapes `<`, `>`, `&`, `"`, `'`. Apply in `renderCatalog()`, `openModal()`, and toast messages.
+11. ~~**Add `aria-label` to all icon-only buttons**~~ ✅ Done Session 21 — 10 buttons labelled across `index.html` + `catalog.js`.
+12. ~~**Sanitize user input before DOM insertion**~~ ✅ Done Session 21 — `sanitize()` in `globals.js`, applied across all innerHTML user-data insertion points in `catalog.js`.
 13. **Migrate inline `onclick` handlers to event delegation (Phase 2 prep)** — 100+ inline `onclick="functionName()"` handlers are a memory leak risk under frequent re-render. Start migrating to event delegation on stable parent containers (`#view-catalog`, `#modalOverlay`, `#view-entry`) using `event.target.closest()`. Prioritize most re-rendered areas first.
 14. **Add `rel="preconnect"` for Supabase and CDN domains** — Add `<link rel="preconnect">` and `dns-prefetch` for the Supabase API domain and `cdn.jsdelivr.net` (Fuse.js). Shaves 100–200ms off first authenticated request.
 
@@ -182,6 +182,9 @@ Before running `handoff`, Claude Code MUST:
 - **Lazy DB load timing**: Splash runs ~2.7s post-auth. `loadStaticDBs()` fires at start of `onAuthSuccess()` — DBs are ready before user reaches any feature that needs them. No loading state needed.
 - **`_isMagicRef(entry)`**: `!!entry.m` — true if entry has a MagicRef page URL. Merged entries (both sources) also have `m`, so they correctly count as MagicRef. Conjuring Archive-only entries have `C:`-prefixed cover and no `m`.
 - **`saveSettings(skipCurrencyGuard)`**: pass `true` to bypass the currency change guard (used by the confirm callback to complete the save after user approval).
+- **`sanitize(str)`**: in `globals.js` (loaded first). Escapes `&<>"'`. Apply to all user-entered fields in innerHTML templates. Safe fields (UUIDs, parseFloat'd prices, fixed enums, cover URLs in `src=`) do not need it.
+- **datalist injection pattern**: build a `DocumentFragment`, append all `<option>` nodes, single `dl.appendChild(frag)` — one DOM write. Guard with `dl.dataset.loaded` to prevent double injection.
+- **aria-label audit scope**: check both static HTML and dynamically-created buttons in JS innerHTML strings — the price review sheet close button is easy to miss.
 - **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
 - **iOS scroll-to-top pattern:** `window.scrollTo({top:0,behavior:'instant'})` is unreliable on iOS Safari. Use: `window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;` — repeat in a 50ms `setTimeout` to override focus-triggered scroll.
 - **Cover picker z-index:** `#coverPickerOverlay` must be `--z-dialog` (2000+) to appear above `.modal-overlay` elements at `--z-sheet` (1000).
@@ -226,6 +229,12 @@ Before running `handoff`, Claude Code MUST:
 - Cover picker z-index fix: `#coverPickerOverlay` at `--z-dialog` (2000)
 - Add screen scroll-to-top robust fix: triple-target + 50ms setTimeout repeat
 - Cover picker: "Local Database" → "The Pro Shelf" (button); thumbnail label → "Courtesy of"
+- Lazy-load 3.4 MB static DB scripts post-auth: `loadStaticDBs()` in `auth.js`, 4 `<script defer>` tags removed from `<head>`
+- MagicRef-first search priority: `_isMagicRef()` + split in `conjuringTopMatches()`
+- Currency switching guard: `magiConfirm` in `saveSettings()` warns when switching currency with existing books
+- Publisher datalist → `publishers.js`: 378 inline `<option>` lines removed from `index.html`
+- `sanitize(str)` XSS helper in `globals.js`: applied across all innerHTML user-data insertion points in `catalog.js`
+- `aria-label` on 10 icon-only buttons across `index.html` + `catalog.js`
 
 ---
 
