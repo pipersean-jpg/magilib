@@ -452,7 +452,8 @@ async function fetchPrice(){
   document.getElementById('priceRange').textContent =
     'Range: ' + sym + low + ' – ' + sym + high +
     ' · ' + confidence + ' confidence · ' + allSources.length + ' source' + (allSources.length !== 1 ? 's' : '');
-  document.getElementById('f-price').value = recommended.toFixed(2);
+  S.priceBase = recommended;
+  _applyConditionAdjustment();
 
   renderSources(allSources.map(s => ({
     name: s.name, price: s.price, detail: s.detail,

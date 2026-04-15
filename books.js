@@ -32,6 +32,9 @@ function openEditForm(bookId) {
   S.editCoverUrl = b.rawCover || b.coverUrl || '';
 
   // Clear ALL edit fields first before populating
+  S.editPriceBase = null;
+  const _ceh = document.getElementById('condAdjHintEdit');
+  if (_ceh) { _ceh.textContent = ''; _ceh.style.display = 'none'; }
   ['edit-title','edit-author','edit-artist','edit-edition','edit-year',
    'edit-publisher','edit-isbn','edit-price','edit-cost','edit-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -241,6 +244,10 @@ function clearForm() {
   if (ss) ss.className = 'scan-status';
   // Clear flags
   clearFlags();
+  // Reset condition price adjustment
+  S.priceBase = null;
+  const _cah = document.getElementById('condAdjHintAdd');
+  if (_cah) { _cah.textContent = ''; _cah.style.display = 'none'; }
   // Hide and clear AI info card
   const ac = document.getElementById('aiInfoCard');
   const ai = document.getElementById('aiInfoContent');
@@ -527,6 +534,20 @@ function setEditCondition(c) {
   );
   const hidden = document.getElementById('edit-condition');
   if (hidden) hidden.value = c;
+  _applyEditConditionAdjustment();
+}
+function _applyEditConditionAdjustment(){
+  if(!S.editPriceBase)return;
+  const pct=getConditionPct(S.editCondition);
+  const adjusted=Math.round(S.editPriceBase*pct*100)/100;
+  const priceEl=document.getElementById('edit-price');
+  if(priceEl)priceEl.value=adjusted.toFixed(2);
+  const hint=document.getElementById('condAdjHintEdit');
+  if(hint){
+    const sym=currSym();
+    hint.textContent='Base '+sym+S.editPriceBase.toFixed(0)+' × '+Math.round(pct*100)+'% ('+S.editCondition+') = '+sym+adjusted.toFixed(0);
+    hint.style.display='block';
+  }
 }
 function toggleEditFlag(btn, value) {
   const active = btn.classList.toggle('active');

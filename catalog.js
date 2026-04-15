@@ -326,6 +326,20 @@ function showToast(msg,type='info',dur=3500){
 function setCondition(c){
   S.condition=c;
   document.querySelectorAll('.condition-opt').forEach(b=>b.classList.toggle('selected',b.textContent.trim()===c));
+  _applyConditionAdjustment();
+}
+function _applyConditionAdjustment(){
+  if(!S.priceBase)return;
+  const pct=getConditionPct(S.condition);
+  const adjusted=Math.round(S.priceBase*pct*100)/100;
+  const priceEl=document.getElementById('f-price');
+  if(priceEl)priceEl.value=adjusted.toFixed(2);
+  const hint=document.getElementById('condAdjHintAdd');
+  if(hint){
+    const sym=currSym();
+    hint.textContent='Base '+sym+S.priceBase.toFixed(0)+' × '+Math.round(pct*100)+'% ('+S.condition+') = '+sym+adjusted.toFixed(0);
+    hint.style.display='block';
+  }
 }
 function currSym(){return{AUD:'A$',USD:'$',GBP:'£',EUR:'€'}[S.settings.currency||'AUD']||'$';}
 
@@ -1120,7 +1134,7 @@ function openModal(idx){
       ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid var(--tier3);background:var(--tier3-bg);border-radius:0 6px 6px 0;opacity:0.9;"><span style="flex-shrink:0;color:var(--tier3);"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg></span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tier3);letter-spacing:0.02em;">Already in your library</span></div>` : ''}
       <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'zoomCover(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc
-          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" onerror="this.style.display='none'">`
+          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
           : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;opacity:0.15;background:var(--paper-warm);border-radius:6px;color:var(--ink-faint);"><svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg></div>`}
       </div>
       <div class="ms-title">${sanitize(b.title)}</div>
@@ -1181,7 +1195,10 @@ function openModal(idx){
   if (!isWishlist) renderModalStars(b);
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
-  document.getElementById('modalOverlay').classList.add('is-active');
+  const _mo = document.getElementById('modalOverlay');
+  _mo.classList.add('is-active');
+  _mo.style.pointerEvents = 'none';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { _mo.style.pointerEvents = ''; }); });
 }
 function openEbayModal(){
   // Installed PWA on iOS loses state with window.open — use location.href only in that case
@@ -1375,7 +1392,7 @@ function openPriceReviewSheet(ids) {
         <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">${sanitize(b.author || '—')}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;">No update found. Enter new price?</div>
       </div>
-      <input type="number" class="review-price-input" data-id="${id}" placeholder="0.00" step="0.01" min="0">
+      <input type="number" class="review-price-input" data-id="${id}" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
     </div>`;
   }).join('');
 
@@ -1395,9 +1412,9 @@ function openPriceReviewSheet(ids) {
 
   document.body.appendChild(el);
 
-  // Suppress ghost-click for 400ms so the tap that opened this doesn't close it
+  // Suppress ghost-click for two paint frames so the tap that opened this doesn't close it
   el.style.pointerEvents = 'none';
-  setTimeout(() => { el.style.pointerEvents = ''; }, 400);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { el.style.pointerEvents = ''; }); });
 
   requestAnimationFrame(() => {
     el.classList.add('is-active');
@@ -1744,14 +1761,20 @@ function resetPickerState() {
 function openCoverPicker() {
   S.coverPickerTarget = 'add';
   resetPickerState();
-  document.getElementById('coverPickerOverlay').classList.remove('hidden');
+  const _cp = document.getElementById('coverPickerOverlay');
+  _cp.classList.remove('hidden');
+  _cp.style.pointerEvents = 'none';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
   // Auto-load Google Images so picker is never empty on open
   setTimeout(() => searchCoverSource('images'), 50);
 }
 function openCoverPickerForEdit() {
   S.coverPickerTarget = 'edit';
   resetPickerState();
-  document.getElementById('coverPickerOverlay').classList.remove('hidden');
+  const _cp = document.getElementById('coverPickerOverlay');
+  _cp.classList.remove('hidden');
+  _cp.style.pointerEvents = 'none';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
   // Auto-load Google Images so picker is never empty on open
   setTimeout(() => searchCoverSource('images'), 50);
 }
@@ -2513,7 +2536,7 @@ function magiPrompt({ title, message, placeholder = '0.00', onConfirm }) {
     <div class="magi-dialog">
       <h3>${title}</h3>
       <p>${message}</p>
-      <input type="number" id="magiPromptInput" step="0.01" min="0" placeholder="${placeholder}">
+      <input type="number" id="magiPromptInput" step="0.01" min="0" inputmode="decimal" placeholder="${placeholder}">
       <div class="magi-dialog-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;">
         <button onclick="closeDialog()" class="btn-ghost">Cancel</button>
         <button id="magiPromptBtn" class="btn-primary">Confirm</button>

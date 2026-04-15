@@ -476,7 +476,8 @@ async function fetchPriceForEdit() {
   if (confirmed) {
     const priceEl = document.getElementById('edit-price');
     if (priceEl) {
-      priceEl.value = newPrice.toFixed(2);
+      S.editPriceBase = newPrice;
+      _applyEditConditionAdjustment();
       _markEditDirty();
       showToast('Price updated to ' + sym + newPrice, 'success', 2500);
     }

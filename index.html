@@ -213,7 +213,7 @@
           </div>
         </div>
         <div class="field-row two" style="margin-top:14px;">
-          <div class="field"><label id="priceLabelAdd">Market price estimate (AUD) *</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
+          <div class="field"><label id="priceLabelAdd">Market price estimate (AUD) *</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/><small id="condAdjHintAdd" style="display:none;color:var(--ink-faint);font-size:11px;margin-top:4px;"></small></div>
           <div class="field"><label id="costLabelAdd">Purchase price (AUD)</label><input type="number" id="f-cost" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
         </div>
       </div>
@@ -836,7 +836,7 @@
       </div>
       <div style="height:0.5px;background:var(--border);"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="field"><label id="priceLabelEdit">Market Price (AUD)</label><input type="number" id="edit-price" step="0.01" inputmode="decimal" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
+        <div class="field"><label id="priceLabelEdit">Market Price (AUD)</label><input type="number" id="edit-price" step="0.01" inputmode="decimal" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/><small id="condAdjHintEdit" style="display:none;color:var(--ink-faint);font-size:11px;margin-top:4px;"></small></div>
         <div class="field" id="editPurchasePriceField"><label id="costLabelEdit">Purchase Price (AUD)</label><input type="number" id="edit-cost" step="0.01" inputmode="decimal" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
       </div>
       <div class="field"><label>Notes</label><textarea id="edit-notes" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;min-height:70px;resize:vertical;line-height:1.5;"></textarea></div>

@@ -684,5 +684,5 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
 .review-price-input::-webkit-outer-spin-button,.review-price-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .review-price-input::placeholder{color:rgba(255,255,255,0.3);}
 /* ── SPLASH PULSE ANIMATION ── */
-@keyframes splash-breathe{0%,100%{opacity:1;}50%{opacity:0.75;}}
+@keyframes splash-breathe{0%,100%{opacity:1;}50%{opacity:0.8;}}
 .splash-pulse{animation:splash-breathe 1.8s ease-in-out infinite;}
