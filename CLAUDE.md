@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 24
+# MagiLib Project Status — Session 25
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,17 +29,17 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 24)
-- ### 1. `sw.js` — NEW: Service Worker
-- Cache name `magilib-sw-s13`; bumped each session alongside `?v=sN`.
-- **Install**: pre-caches 14 shell assets (HTML, CSS, logos, manifest, all JS files) without query strings.
-- **Activate**: deletes stale caches, claims all clients immediately.
-- **Fetch strategy**:
--   - Supabase API (`supabase.co`) and `/api/` routes: bypassed entirely (network-only, never cached — auth tokens and live data must not be served stale).
+## Last Session (Session 25)
+- ### 1. `assets/css/magilib.css` — New CSS classes
+- **Copy-row (copies sheet):**
+- `.copy-thumb img` — cover fill
+- `.copy-info`, `.copy-info-top`, `.copy-info-top .book-condition-badge`
+- `.copy-price`, `.copy-meta`, `.copy-chevron`
+- `.copy-row .sold-badge`, `.copy-row .draft-badge` — compact context overrides
 
 **Known issues carried forward:**
-- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device.
-- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug).
+- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device. Carried forward since Session 13.
+- **Search dropdown author line**: author often missing — CONJURING_DB data gap, not a code bug.
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows.
 
 ---
@@ -68,6 +68,17 @@ Before running `handoff`, Claude Code MUST:
 - [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
 - [x] **Library detail pricing**: 2×2 button grid (Market Value · Check eBay · Edit Details · Mark Sold) + lazy Market Sync panel — **confirmed complete and locked for beta. Do NOT replace before Phase 2.**
 - [x] **Wishlist price label**: currency label fix shipped in Session 14
+
+### Session 25 — CSS Cleanup (cosmetic, no logic changes)
+- [x] Copy-row inline styles → `.copy-*` classes
+- [x] FAQ accordion inline styles → `.faq-*` classes
+- [x] Source evidence rows → `.src-*` classes
+- [x] Empty/loading states → `.catalog-loading` + fixes; Retry button stripped; empty search container stripped
+- [x] Loading spinner now flex-centered (both axes)
+
+### Session 26 — Next Priorities
+- [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
+- [ ] **CSS cleanup continued** (if time): book card grid, modal header
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -202,6 +213,9 @@ Before running `handoff`, Claude Code MUST:
 - **`_supa` availability in globals.js**: `_supa` is initialised in DOMContentLoaded in auth.js. `_mgQueueFlush()` is only called from `online` event (fired after page load) or `onAuthSuccess()` — `_supa` is always initialised by then.
 - **Offline banner z-index**: use `calc(var(--z-sheet) - 1)` = 999 so the banner sits above page content but below Magi-sheets (1000) and dialogs (2000).
 - **`body.offline-mode .nav`**: shift nav down by banner height (37px) to prevent content clip. Apply via class toggle on `document.body`, not inline style, so CSS transition applies.
+- **`text-align:center` ≠ truly centered**: horizontal only. Use `display:flex; align-items:center; justify-content:center` for full viewport centering of loading/empty states.
+- **Check for existing descendant CSS rules before writing inline styles**: `.empty-state button` was fully styled in CSS — the Retry button inline style was 100% redundant. Always grep the CSS file for the container class before adding inline styles to children.
+- **`last-child:border-none` as an inline style is a no-op**: it's interpreted as a CSS property name, not a selector. Must be written as `.foo:last-child { border-bottom:none }` in a stylesheet.
 
 ---
 

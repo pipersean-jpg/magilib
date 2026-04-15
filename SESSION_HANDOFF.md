@@ -1,78 +1,70 @@
-# SESSION HANDOFF — 2026-04-15 (Session 24)
+# SESSION HANDOFF — 2026-04-16 (Session 25)
 
 ## Session Summary
-P2 #6 Service Worker shipped in full: shell caching, offline reads via IndexedDB, offline banner, mutation queue with replay on reconnect. All syntax-clean.
+CSS formatting cleanup: moved inline styles from JS template strings into named CSS classes across catalog.js and ui.js. Five areas completed: copy-row (book detail copies sheet), FAQ accordion, source evidence rows, and catalog empty/loading states. No logic changes — purely cosmetic architecture.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `sw.js` — NEW: Service Worker
-- Cache name `magilib-sw-s13`; bumped each session alongside `?v=sN`.
-- **Install**: pre-caches 14 shell assets (HTML, CSS, logos, manifest, all JS files) without query strings.
-- **Activate**: deletes stale caches, claims all clients immediately.
-- **Fetch strategy**:
-  - Supabase API (`supabase.co`) and `/api/` routes: bypassed entirely (network-only, never cached — auth tokens and live data must not be served stale).
-  - CDN assets (Fuse.js, Google Fonts): cache-first.
-  - App shell and everything else: network-first with cache fallback. Versioned JS/CSS (e.g. `catalog.js?v=s13`) stored under bare pathname so any `?v=` variant is a cache hit offline.
-  - Navigation fallback: serves cached `/index.html` if all else fails.
+### 1. `assets/css/magilib.css` — New CSS classes
 
-### 2. `globals.js` — Offline state, IndexedDB helpers, mutation queue
-- `window._isOnline`: initialised from `navigator.onLine`; updated on `online`/`offline` events.
-- `online` event: hides banner, calls `_mgQueueFlush()`.
-- `offline` event: shows banner.
-- `_showOfflineBanner()` / `_hideOfflineBanner()`: toggle `#offlineBanner.is-visible` and `body.offline-mode`.
-- **IndexedDB helpers** (`_IDB_NAME='magilib'`, store `books_cache`, key = userId):
-  - `_idbOpen()` — opens/upgrades DB.
-  - `_idbSaveBooks(userId, rows)` — stores raw Supabase row array.
-  - `_idbLoadBooks(userId)` — retrieves cached rows.
-- **Mutation queue** (localStorage key `mgl_queue`):
-  - `_mgQueueLoad()` / `_mgQueueSave(q)` — persist queue entries.
-  - `_mgQueuePush({ op, id, payload, ts })` — enqueues one op.
-  - `_mgQueueFlush()` — async; replays all queued updates/deletes against Supabase; shows sync toast; calls `loadCatalog()` on success; keeps failed ops for retry.
+**Copy-row (copies sheet):**
+- `.copy-thumb img` — cover fill
+- `.copy-info`, `.copy-info-top`, `.copy-info-top .book-condition-badge`
+- `.copy-price`, `.copy-meta`, `.copy-chevron`
+- `.copy-row .sold-badge`, `.copy-row .draft-badge` — compact context overrides
 
-### 3. `catalog.js` — IDB integration in `loadCatalog()` + offline guard
-- On successful Supabase fetch: `_idbSaveBooks(userId, data)` fire-and-forget.
-- On Supabase error while offline: falls back to `_idbLoadBooks()`, maps rows identically to online path, shows "Offline — showing cached library" toast.
-- `toggleWishlistStatus()`: offline guard — queues update, applies optimistically, shows "will sync when online" toast.
+**Source evidence rows:**
+- `.src-evidence-wrap`, `.src-evidence-heading`
+- `.src-row`, `.src-row:last-of-type`, `.src-row-left`, `.src-row-price`
+- `.src-dot`, `.src-label`, `.src-link`, `.src-link-wrap`
+- `.src-price`, `.src-price-sub`, `.src-price-unavail`, `.src-legend`
 
-### 4. `books.js` — Offline guards on all write operations
-- `saveBook()` (insert): blocked offline — "You're offline — connect to save new books".
-- `saveEdit()` (update): offline-queued — builds `offlineFields`, calls `_mgQueuePush`, applies optimistic in-memory update, shows "Saved locally — will sync when online".
-- `_doToggleSold()` (update): offline-queued — optimistic update + "will sync when online" toast.
-- `confirmDelete()` (delete): blocked offline — "You're offline — connect to delete books".
+**Empty/loading states:**
+- `.catalog-loading` — flex-centered spinner wrapper (centers both axes, min-height:50vh)
+- `.empty-search-container` — added `width:100%`
 
-### 5. `index.html`
-- Added `#offlineBanner` element (wifi-off icon + text) before Cover Picker.
-- Added SW registration `<script>` block after publishers.js.
-- Bumped all `?v=s12` → `?v=s13` (8 script tags).
+**FAQ accordion:**
+- `.faq-item`, `.faq-item:last-child`, `.faq-btn`, `.faq-question`
+- `.faq-chevron`, `.faq-answer`, `.faq-answer-body`
 
-### 6. `assets/css/magilib.css`
-- `#offlineBanner`: fixed top, `z-index:999` (below sheets), dark amber background, hidden by default, flex when `.is-visible`.
-- `body.offline-mode .nav`: `margin-top:37px` to prevent nav overlapping banner.
+### 2. `catalog.js` — Inline styles removed
+- Copy-row template (~lines 897–915): 9 inline style attrs → classes
+- `buildSourceRow` function (~lines 1071–1116): 13 inline style attrs → classes
+- Loading state (line 520): inline div → `.catalog-loading`
+- Error state Retry button (line 598): inline styles removed (`.empty-state button` in CSS covers it)
+- Empty search container (line 701): 6 redundant inline style attrs stripped
+
+### 3. `ui.js` — Inline styles removed
+- FAQ template (~lines 800–810): 8 inline style attrs → `.faq-*` classes
+
+---
+
+## Bug Fixes
+- **Loading spinner centering**: was `text-align:center` only (horizontal). Now flex-centered both axes via `.catalog-loading`.
+- **FAQ last-item border**: `last-child:border-none` was a no-op invalid CSS property in the old inline style. Fixed with proper `.faq-item:last-child { border-bottom:none }` rule.
+- **Source evidence last row border**: no separator suppression existed before. Added `.src-row:last-of-type { border-bottom:none }`.
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device.
-- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug).
+- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device. Carried forward since Session 13.
+- **Search dropdown author line**: author often missing — CONJURING_DB data gap, not a code bug.
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows.
-- **QTTE/Penguin**: may have stale matches — Phase 2.
-- **FX rates**: hardcoded — Phase 2.
-- **Bulk operations offline**: bulk edit/move/delete not guarded (shows Supabase error naturally). Phase 2.
+- **Remaining inline styles**: book card grid (~783–794), modal header (~1175–1199), price review sheet row (~1432–1445), tutorial slides (ui.js ~226–259), feedback tab (ui.js ~817–824).
 
 ---
 
-## Next Session Priorities (Session 25)
+## Next Session Priorities (Session 26)
 
-1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device. Carried forward since Session 13. This is the real gate before beta launch.
-2. **Service Worker verification**: open Chrome DevTools → Application → Service Workers, confirm registration and cache contents. Also: toggle offline in DevTools, reload app, verify library loads from IDB.
+1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device. This is the real gate before beta launch.
+2. **Continue CSS cleanup** (optional, if walkthrough finds no blocking bugs): book card grid inline styles, then modal header.
 
 ---
 
 ## Model Learnings
-- **SW versioned-asset matching**: JS/CSS files requested with `?v=sN` query strings must be stored under their bare pathname in the SW cache so that `?v=s12` and `?v=s13` both hit the same cache entry offline. Use `ignoreSearch: true`-equivalent logic (strip search before `cache.put()`).
-- **IDB offline-first pattern**: fire-and-forget `_idbSaveBooks()` on every successful `loadCatalog()`; fall through to IDB only on error + `!navigator.onLine`. Don't try to sync IDB reads back to Supabase — that's a full CRDT problem.
-- **Mutation queue insert-block decision**: insert operations require server-assigned UUIDs and can't be queued safely without a local-ID-to-server-ID resolution step. Blocking inserts offline is the correct beta decision. Phase 2: assign client-side UUIDs (UUIDs v4) locally so inserts can also be queued.
-- **`_supa` not available at globals.js parse time**: `_supa` is initialised in a DOMContentLoaded handler in auth.js. `_mgQueueFlush()` is only ever called from the `online` event or from `onAuthSuccess()`, by which time `_supa` is initialised — safe to call directly.
+- **`.empty-state button` already fully styled in CSS** — the Retry button inline style was 100% redundant. When adding a button inside an existing well-classed container, check CSS for existing descendant rules before writing inline styles.
+- **`text-align:center` ≠ centered**: horizontal centering only. Use `display:flex; align-items:center; justify-content:center` for true viewport centering of loading states.
+- **`last-child:border-none` is not valid CSS** — it's a property name, not a selector. Only works as a selector: `.foo:last-child { border:none }`. Easy to miss when written inline.

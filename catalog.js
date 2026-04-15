@@ -517,7 +517,7 @@ function buildNotesWithInPrint(notes, inPrint) {
 async function loadCatalog(){
   const grid=document.getElementById('booksGrid');
   initScrollTopBtn();
-  grid.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-faint)"><span class="spinner dark"></span> Loading...</div>';
+  grid.innerHTML='<div class="catalog-loading"><span class="spinner dark"></span> Loading...</div>';
   if (!_supaUser) { grid.innerHTML=''; return; }
   try{
     const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
@@ -595,7 +595,7 @@ async function loadCatalog(){
         console.warn('[MagiLib] IDB fallback failed:', idbErr);
       }
     }
-    grid.innerHTML='<div class="empty-state"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p>'+e.message+'</p><button onclick="loadCatalog()">Retry</button></div>';
   }
 }
 function renderCatalog(){
@@ -698,7 +698,7 @@ function renderStatsRow() {
   if(!books.length){
     const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
     const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
-    grid.innerHTML = `<div class="empty-search-container" style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;width:100%;"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
+    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
     return;
   }
   const isListView = S.viewMode === 'list';
@@ -897,21 +897,21 @@ function openCopiesSheet(key) {
     return `<div class="copy-row" onclick="closeCopiesSheet();setTimeout(()=>openModal(${idx}),120);">
       <div class="copy-thumb">
         ${hasCover
-          ? `<img src="${b.coverUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
+          ? `<img src="${b.coverUrl}" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
           : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`}
       </div>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
-          <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}" style="font-size:10px;">${b.condition||'—'}</span>
-          ${b.price&&!isNaN(parseFloat(b.price))?`<span style="font-size:14px;font-weight:500;color:var(--ink);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
-          ${isSold?'<span class="sold-badge" style="font-size:9px;padding:2px 8px;border-radius:4px;font-weight:500;letter-spacing:normal;text-transform:none;">Sold</span>':''}
-          ${isDraft?'<span class="draft-badge" style="margin-left:0;">Draft</span>':''}
+      <div class="copy-info">
+        <div class="copy-info-top">
+          <span class="book-condition-badge ${condClasses[b.condition]||'cond-good'}">${b.condition||'—'}</span>
+          ${b.price&&!isNaN(parseFloat(b.price))?`<span class="copy-price">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
+          ${isSold?'<span class="sold-badge">Sold</span>':''}
+          ${isDraft?'<span class="draft-badge">Draft</span>':''}
         </div>
-        <div style="font-size:12px;color:var(--ink-faint);">
+        <div class="copy-meta">
           ${[b.edition, b.year, b.dateAdded?'Added '+b.dateAdded:''].filter(Boolean).map(s=>sanitize(s)).join(' · ')}
         </div>
       </div>
-      <span style="color:var(--ink-faint);font-size:18px;margin-left:8px;">›</span>
+      <span class="copy-chevron">›</span>
     </div>`;
   }).join('');
 
@@ -1068,7 +1068,7 @@ async function loadMarketSync(b) {
   const rowsHtml = SOURCES.map(({ key: srcKey, label, fallbackUrl }) => {
     const srcRows = bySource[srcKey] || [];
     const dotColor = srcRows.length ? dotFor(srcKey, srcRows) : '#ccc';
-    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin-right:10px;margin-top:2px;flex-shrink:0;"></span>`;
+    const dot = `<span class="src-dot" style="background:${dotColor};"></span>`;
 
     let priceHtml, linkUrl;
 
@@ -1076,39 +1076,39 @@ async function loadMarketSync(b) {
       if (srcKey === 'ebay_sold') {
         const prices = srcRows.map(r => toLocal(r.price, r.currency || 'USD'));
         const avg = prices.reduce((a, x) => a + x, 0) / prices.length;
-        priceHtml = `<span style="font-size:14px;font-weight:700;color:var(--ink);">${sym}${avg.toFixed(0)}</span>${prices.length > 1 ? `<div style="font-size:10px;color:var(--ink-faint);">avg of ${prices.length} sales</div>` : ''}`;
+        priceHtml = `<span class="src-price">${sym}${avg.toFixed(0)}</span>${prices.length > 1 ? `<div class="src-price-sub">avg of ${prices.length} sales</div>` : ''}`;
       } else {
         const local = toLocal(srcRows[0].price, srcRows[0].currency || 'USD');
-        priceHtml = `<span style="font-size:14px;font-weight:700;color:var(--ink);">${sym}${local.toFixed(0)}</span>`;
+        priceHtml = `<span class="src-price">${sym}${local.toFixed(0)}</span>`;
       }
       linkUrl = srcRows[0].url || fallbackUrl;
     } else {
-      priceHtml = `<span style="font-size:11px;color:var(--ink-faint);font-style:italic;">Price fetch not reliable</span>`;
+      priceHtml = `<span class="src-price-unavail">Price fetch not reliable</span>`;
       linkUrl = fallbackUrl;
     }
 
     const linkLabel = srcKey === 'ebay_sold' ? 'Check sold listings ↗' : 'View listing ↗';
     const linkHtml = linkUrl
-      ? `<a href="${linkUrl}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none;">${linkLabel}</a>`
+      ? `<a href="${linkUrl}" target="_blank" rel="noopener" class="src-link">${linkLabel}</a>`
       : '';
 
-    return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border);">
-      <div style="display:flex;align-items:flex-start;flex:1;min-width:0;">
+    return `<div class="src-row">
+      <div class="src-row-left">
         ${dot}
         <div>
-          <div style="font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;">${label}</div>
-          ${linkHtml ? `<div style="margin-top:3px;">${linkHtml}</div>` : ''}
+          <div class="src-label">${label}</div>
+          ${linkHtml ? `<div class="src-link-wrap">${linkHtml}</div>` : ''}
         </div>
       </div>
-      <div style="padding-left:12px;text-align:right;">${priceHtml}</div>
+      <div class="src-row-price">${priceHtml}</div>
     </div>`;
   }).join('');
 
   el.innerHTML = `
-    <div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);">
-      <div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Market Price Evidence</div>
+    <div class="src-evidence-wrap">
+      <div class="src-evidence-heading">Market Price Evidence</div>
       ${rowsHtml}
-      <div style="font-size:10px;color:var(--ink-faint);margin-top:10px;line-height:1.8;text-align:center;">
+      <div class="src-legend">
         <span style="color:#2a9d5c;">●</span> New &nbsp;
         <span style="color:#f5a623;">●</span> Pre-Owned &nbsp;
         <span style="color:#e05252;">●</span> Out of Print

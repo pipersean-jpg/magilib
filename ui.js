@@ -798,13 +798,13 @@ function openSupport(tab) {
     title.textContent = 'FAQ';
     subtitle.textContent = 'Common questions about MagiLib';
     body.innerHTML = FAQ_ITEMS.map((item, i) => `
-      <div style="border-bottom:0.5px solid var(--border);last-child:border-none;">
-        <button onclick="toggleFaq(${i})" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;">
-          <span style="font-size:13px;font-weight:500;color:var(--ink);line-height:1.4;">${item.q}</span>
-          <span id="faqChevron${i}" style="flex-shrink:0;font-size:12px;color:var(--ink-faint);transition:transform 0.2s;">▼</span>
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(${i})">
+          <span class="faq-question">${item.q}</span>
+          <span class="faq-chevron" id="faqChevron${i}">▼</span>
         </button>
-        <div id="faqAnswer${i}" style="display:none;padding:0 0 14px;">
-          <div style="font-size:13px;color:var(--ink-light);line-height:1.65;padding:12px 14px;background:var(--paper-warm);border-radius:8px;">${item.a}</div>
+        <div class="faq-answer" id="faqAnswer${i}">
+          <div class="faq-answer-body">${item.a}</div>
         </div>
       </div>
     `).join('');
