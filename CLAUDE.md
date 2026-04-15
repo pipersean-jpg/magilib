@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 21
+# MagiLib Project Status — Session 22
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,13 +29,12 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 21)
-- ### 1. `publishers.js` (new) + `index.html` — Publisher datalist extracted (P1 #2)
-- Created `/publishers.js`: defines `PUBLISHERS` array of 300+ publisher strings. IIFE injects `<option>` elements into `#publisher-list` on `DOMContentLoaded`, with duplicate-load guard (`dl.dataset.loaded`).
-- Removed 378 inline `<option>` lines from `index.html` (lines 269–647). Replaced with empty `<datalist id="publisher-list"><!-- populated by publishers.js --></datalist>`.
-- Added `<script src="/publishers.js?v=s12"></script>` after `ui.js` in `index.html`.
-- Both Add form (`#f-publisher`) and Edit modal (`#edit-publisher`) share the same `#publisher-list` datalist — both get autocomplete automatically.
-- ### 2. `globals.js` + `catalog.js` — `sanitize()` XSS helper (P4 #12)
+## Last Session (Session 22)
+- ### 1. `catalog.js` — `loading="lazy"` + `decoding="async"` on modal cover (P1 #3)
+- ### 2. `catalog.js` — `inputmode="decimal"` on two dynamic price inputs (P1 #4)
+- ### 3. `assets/css/magilib.css` — Splash pulse tightened 0.75→0.80 (P3 #7)
+- ### 4. `catalog.js` — iOS ghost-click double-rAF on price review sheet, cover picker, `#modalOverlay` (P3 #10)
+- ### 5. `index.html` + `catalog.js` + `books.js` + `pricing.js` + `ui.js` — Live condition price adjustment in Add + Edit (P3 #8): `S.priceBase` / `S.editPriceBase` stored on fetch; `_applyConditionAdjustment()` / `_applyEditConditionAdjustment()` recalculate price + show inline hint on condition change.
 
 **Known issues carried forward:**
 - **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug)
@@ -87,18 +86,18 @@ Before running `handoff`, Claude Code MUST:
 ### P1 — Performance & Load Time
 1. ~~**Lazy-load 4 static DB scripts after auth**~~ ✅ Done Session 20 — `loadStaticDBs()` in auth.js fires post-auth.
 2. ~~**Move publisher `<datalist>` to a JS array**~~ ✅ Done Session 21 — `publishers.js` injects options on DOMContentLoaded; 378 lines removed from `index.html`.
-3. **Add `loading="lazy"` to all book cover `<img>` tags** — In `catalog.js` `renderCatalog()`, ensure every `<img>` gets `loading="lazy"` and `decoding="async"`. Prevents memory spikes and jank on large libraries (500+ books) on older phones.
-4. **Add `inputmode="decimal"` to all price/cost inputs** — All `<input type="number">` for prices/costs (Add form, Edit modal, Wishlist quick-add, Price Review) need `inputmode="decimal"`. Forces iOS/Android decimal keypad instead of clunky full number keyboard.
+3. ~~**Add `loading="lazy"` to all book cover `<img>` tags**~~ ✅ Done Session 22 — all `<img>` tags in `catalog.js` have `loading="lazy"` and `decoding="async"`.
+4. ~~**Add `inputmode="decimal"` to all price/cost inputs**~~ ✅ Done Session 22 — all price/cost `<input type="number">` fields now have `inputmode="decimal"`.
 
 ### P2 — Data Integrity & Offline
 5. ~~**Fix currency switching to prevent mixed-currency data**~~ ✅ Done Session 20 — `magiConfirm` guard in `saveSettings()` requires explicit confirmation when switching currency with existing books.
 6. **Add a basic Service Worker for shell caching + offline read** — App has `<link rel="manifest">` but no service worker. Critical for use at book fairs with bad cell reception. Cache app shell (HTML, CSS, JS, fonts, logo); store Supabase library data in IndexedDB on fetch; serve cached data offline; show offline banner; queue mutations while offline and replay on reconnect.
 
 ### P3 — UX & Trust
-7. **Add spinner/pulse animation to splash screen** — `#splashScreen` shows static logo. Add a subtle CSS pulse (opacity breathe 0.8–1.0) to `#splashLogo` to signal loading is happening. Pure CSS, no JS.
-8. **Show live condition price adjustment in Add and Edit** — When user selects condition grade and a price estimate has been fetched, dynamically recalculate and display adjusted price in real-time (e.g. base $100 + Fair → shows $40 per preset). Makes condition multiplier tangible.
+7. ~~**Add spinner/pulse animation to splash screen**~~ ✅ Done Session 22 — `.splash-pulse` + `@keyframes splash-breathe` already wired in `ui.js`/CSS. Tightened range to 0.8–1.0.
+8. ~~**Show live condition price adjustment in Add and Edit**~~ ✅ Done Session 22 — `S.priceBase`/`S.editPriceBase` stored on fetch; `_applyConditionAdjustment()` recalculates price + shows inline hint on condition change.
 9. **Add batch queue progress indicator** — When "Add All to Drafts" or "Process next title" runs, show "Processing 2 of 5…" with progress bar or counter. AI vision takes seconds per image; current UI gives no feedback. Update `#queueCount` and add progress bar inside `#queuePanel`.
-10. **Replace iOS ghost-click `setTimeout` with `requestAnimationFrame`** — Current fix uses 300–400ms `setTimeout`. More robust: use double-rAF when toggling overlay visibility, aligned to browser paint cycle. Apply to `.modal-overlay`, `.magi-sheet-overlay`, and `#coverPickerOverlay` open/close handlers.
+10. ~~**Replace iOS ghost-click `setTimeout` with `requestAnimationFrame`**~~ ✅ Done Session 22 — double-rAF applied to price review sheet, `openCoverPicker`, `openCoverPickerForEdit`, and `openModal`.
 
 ### P4 — Code Quality & Accessibility
 11. ~~**Add `aria-label` to all icon-only buttons**~~ ✅ Done Session 21 — 10 buttons labelled across `index.html` + `catalog.js`.
@@ -185,6 +184,10 @@ Before running `handoff`, Claude Code MUST:
 - **`sanitize(str)`**: in `globals.js` (loaded first). Escapes `&<>"'`. Apply to all user-entered fields in innerHTML templates. Safe fields (UUIDs, parseFloat'd prices, fixed enums, cover URLs in `src=`) do not need it.
 - **datalist injection pattern**: build a `DocumentFragment`, append all `<option>` nodes, single `dl.appendChild(frag)` — one DOM write. Guard with `dl.dataset.loaded` to prevent double injection.
 - **aria-label audit scope**: check both static HTML and dynamically-created buttons in JS innerHTML strings — the price review sheet close button is easy to miss.
+- **`_applyConditionAdjustment` placement**: in `catalog.js` (where `getConditionPct` and `currSym` live) — no imports needed.
+- **`S.editPriceBase` reset timing**: reset in `openEditForm()`, not just on modal close — otherwise switching books in the same session carries over the previous fetch base.
+- **`fetchPrice()` does NOT apply condition**: returns raw market price. Condition adjustment is display-layer only via `_applyConditionAdjustment()`.
+- **double-rAF for ghost-click**: aligns to browser paint cycle; suitable for modern iOS where 300ms synthetic click delay is largely eliminated. Applied to price review sheet, cover picker, and `#modalOverlay`.
 - **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
 - **iOS scroll-to-top pattern:** `window.scrollTo({top:0,behavior:'instant'})` is unreliable on iOS Safari. Use: `window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;` — repeat in a 50ms `setTimeout` to override focus-triggered scroll.
 - **Cover picker z-index:** `#coverPickerOverlay` must be `--z-dialog` (2000+) to appear above `.modal-overlay` elements at `--z-sheet` (1000).
@@ -235,6 +238,11 @@ Before running `handoff`, Claude Code MUST:
 - Publisher datalist → `publishers.js`: 378 inline `<option>` lines removed from `index.html`
 - `sanitize(str)` XSS helper in `globals.js`: applied across all innerHTML user-data insertion points in `catalog.js`
 - `aria-label` on 10 icon-only buttons across `index.html` + `catalog.js`
+- `loading="lazy"` + `decoding="async"` on all book cover `<img>` tags in `catalog.js`
+- `inputmode="decimal"` on all price/cost `<input type="number">` fields
+- Splash pulse animation: `.splash-pulse` + `@keyframes splash-breathe` (0.8–1.0 range)
+- iOS ghost-click double-rAF: price review sheet, `openCoverPicker`, `openCoverPickerForEdit`, `openModal`
+- Live condition price adjustment: `_applyConditionAdjustment()` / `_applyEditConditionAdjustment()` in Add + Edit forms
 
 ---
 

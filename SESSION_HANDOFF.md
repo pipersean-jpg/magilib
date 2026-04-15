@@ -1,39 +1,39 @@
-# SESSION HANDOFF — 2026-04-15 (Session 21)
+# SESSION HANDOFF — 2026-04-15 (Session 22)
 
 ## Session Summary
-Three P1/P4 improvements shipped: publisher datalist extracted from HTML to a JS array, XSS sanitize() helper applied across all innerHTML user-data insertion points, and aria-label added to all icon-only buttons.
+Five targeted improvements shipped across P1 and P3 backlogs: lazy image loading on modal cover, decimal keyboard on two dynamic price inputs, iOS ghost-click suppression upgraded to double-rAF across three overlays, splash pulse range tightened, and live condition price adjustment added to both Add and Edit forms.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `publishers.js` (new) + `index.html` — Publisher datalist extracted (P1 #2)
-- Created `/publishers.js`: defines `PUBLISHERS` array of 300+ publisher strings. IIFE injects `<option>` elements into `#publisher-list` on `DOMContentLoaded`, with duplicate-load guard (`dl.dataset.loaded`).
-- Removed 378 inline `<option>` lines from `index.html` (lines 269–647). Replaced with empty `<datalist id="publisher-list"><!-- populated by publishers.js --></datalist>`.
-- Added `<script src="/publishers.js?v=s12"></script>` after `ui.js` in `index.html`.
-- Both Add form (`#f-publisher`) and Edit modal (`#edit-publisher`) share the same `#publisher-list` datalist — both get autocomplete automatically.
+### 1. `catalog.js` — `loading="lazy"` + `decoding="async"` on modal cover (P1 #3)
+- Added `loading="lazy" decoding="async"` to the book detail modal cover `<img class="ms-image">` (line ~1123).
+- All other `<img>` tags in `catalog.js` already had these attributes. Photo queue thumbnails (`dataUrl`) intentionally skipped.
 
-### 2. `globals.js` + `catalog.js` — `sanitize()` XSS helper (P4 #12)
-- Added `sanitize(str)` to `globals.js`: escapes `&`, `<`, `>`, `"`, `'` → safe for all HTML attribute and text content contexts.
-- Applied in `catalog.js` across all user-entered fields inserted via `innerHTML`:
-  - `renderCatalog()`: `b.title` (alt attr + cover placeholder + title text), `b.author`, `b.publisher`
-  - `openCopiesSheet()`: `title` (sheet header), `b.edition` / `b.dateAdded` (copy rows)
-  - `openModal()`: `b.title` (alt + heading), `b.author` / `b.artist` (subtitle), `b.publisher`, `b.location`, `b.flags`, `b.collectorNote`
-  - Price review sheet: `b.title`, `b.author`
-- Fields left unsanitized (safe): `b._id` (UUID), `b.price` (parseFloat'd), `b.condition` (fixed enum), `b.year` (numeric), cover URLs (in `src=`, not code-execution context).
+### 2. `catalog.js` — `inputmode="decimal"` on two dynamic price inputs (P1 #4)
+- Added `inputmode="decimal"` to the price review sheet per-book input (`class="review-price-input"`).
+- Added `inputmode="decimal"` to the `magiPrompt` dialog input (`#magiPromptInput`).
+- All static price inputs in `index.html` already had the attribute. Condition % inputs (integer %) intentionally skipped.
 
-### 3. `index.html` + `catalog.js` — `aria-label` on icon-only buttons (P4 #11)
-Added `aria-label` to 10 icon-only buttons:
-- `#userMenuBtn` → `"User menu"`
-- `#searchClear` → `"Clear search"`
-- `#viewToggleBtn` → `"Toggle grid/list view"`
-- Refresh library button → `"Refresh library"`
-- Close photo queue button → `"Close photo queue"`
-- Book detail sheet close → `"Close"`
-- Filter sheet close → `"Close filters"`
-- Cover picker close → `"Close cover picker"`
-- Copies sheet close → `"Close"`
-- Price review sheet close (catalog.js) → `"Close"`
+### 3. `assets/css/magilib.css` — Splash pulse range tightened (P3 #7)
+- `@keyframes splash-breathe` `50%` opacity: 0.75 → 0.80 (per spec: breathe 0.8–1.0).
+- `.splash-pulse` class and animation were already wired to the dynamically created splash overlay in `ui.js`.
+
+### 4. `catalog.js` — iOS ghost-click double-rAF (P3 #10)
+- Replaced `setTimeout(..., 400)` pointer-events suppression on price review sheet open with double `requestAnimationFrame`.
+- Added double-rAF ghost-click suppression to `openCoverPicker()` and `openCoverPickerForEdit()`.
+- Added double-rAF ghost-click suppression to `openModal()` on `#modalOverlay`.
+
+### 5. `index.html` + `catalog.js` + `books.js` + `pricing.js` + `ui.js` — Live condition price adjustment (P3 #8)
+- Added `<small id="condAdjHintAdd">` after `#f-price` in Add form (index.html).
+- Added `<small id="condAdjHintEdit">` after `#edit-price` in Edit modal (index.html).
+- `pricing.js` `fetchPrice()`: after setting `#f-price`, stores `S.priceBase = recommended` and calls `_applyConditionAdjustment()`.
+- `catalog.js` `setCondition(c)`: calls `_applyConditionAdjustment()`. New helper recalculates `#f-price = base × condPct` and shows hint: `"Base A$100 × 40% (Fair) = A$40"`.
+- `books.js` `setEditCondition(c)`: calls `_applyEditConditionAdjustment()`. Same logic for `#edit-price` + `#condAdjHintEdit`.
+- `ui.js` `fetchPriceForEdit()`: on confirm, stores `S.editPriceBase = newPrice` and calls `_applyEditConditionAdjustment()`.
+- `books.js` `clearForm()`: resets `S.priceBase = null`, hides `#condAdjHintAdd`.
+- `books.js` `openEditForm()`: resets `S.editPriceBase = null`, hides `#condAdjHintEdit`.
 
 ---
 
@@ -46,15 +46,16 @@ Added `aria-label` to 10 icon-only buttons:
 
 ---
 
-## Next Session Priorities (Session 22)
+## Next Session Priorities (Session 23)
 
-1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
-2. **`loading="lazy"` on book cover `<img>` tags** (P1 #3): in `catalog.js` `renderCatalog()`, ensure every `<img>` gets `loading="lazy"` and `decoding="async"`. Prevents memory spikes on large libraries.
-3. **`inputmode="decimal"` on price/cost inputs** (P1 #4): all `<input type="number">` for prices/costs need `inputmode="decimal"` for iOS/Android decimal keypad.
+1. **P4 #14 — `rel="preconnect"`**: add `<link rel="preconnect">` + `dns-prefetch` for Supabase domain and `cdn.jsdelivr.net` in `index.html`. Pure HTML, 2 min.
+2. **P3 #9 — Batch queue progress indicator**: "Processing 2 of 5…" counter + progress bar in `#queuePanel`. Read `processNextFromQueue` first.
+3. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device.
 
 ---
 
 ## Model Learnings
-- **`sanitize()` placement**: in `globals.js` (loaded first) so it's available to all subsequent scripts without any import.
-- **datalist injection pattern**: build a `DocumentFragment`, append all `<option>` nodes, then do a single `dl.appendChild(frag)` — one DOM write instead of N.
-- **aria-label scope**: both static HTML buttons (index.html) and dynamically-created buttons (catalog.js innerHTML) need auditing. The price review sheet close button was dynamic and easy to miss.
+- **`_applyConditionAdjustment` placement**: in `catalog.js` (where `getConditionPct` and `currSym` live) so it has access to both helpers without any extra imports.
+- **`S.editPriceBase` reset timing**: must reset in `openEditForm()` (not just on modal close) — otherwise switching between books in the same session carries over the previous fetch base.
+- **`fetchPrice()` does NOT apply condition**: it returns the raw market price. Condition adjustment is a display-layer concern applied by `_applyConditionAdjustment()`.
+- **double-rAF vs 400ms setTimeout for ghost-click**: double-rAF aligns to browser paint cycle; suitable for modern iOS where the 300ms synthetic click delay is largely eliminated. Applied to price review sheet, cover picker, and modal overlay.
