@@ -188,9 +188,16 @@ function conjuringFuzzyLookup(title) {
   return best;
 }
 
+// ── SOURCE CLASSIFIER ──
+// MagicRef entries have an `m` field (page URL). Conjuring Archive-only entries have
+// a C:-prefixed cover but no `m` field. Merged entries (both sources) count as MagicRef.
+function _isMagicRef(entry) { return !!(entry && entry.m); }
+
 // ── TOP N FUZZY MATCHES (for title dropdown) ──
 // Surfaces disambiguated variants (e.g. all "Tricks of the Trade" authors) first,
 // then fills remaining slots with fuzzy matches.
+// Source priority: MagicRef first-only. Fall back to Conjuring Archive only if zero
+// MagicRef results match. Never mix both sources in the same dropdown.
 function conjuringTopMatches(title, n) {
   if (typeof CONJURING_DB === 'undefined' || !title) return [];
   const normFn = s => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^(the|a|an)\s+/i, '').trim();
@@ -211,8 +218,13 @@ function conjuringTopMatches(title, n) {
   }
   fuzzy.sort((a, b) => b.score - a.score);
 
-  // Combine: exact variants first, then fuzzy, trim to n
-  return [...exactVariants, ...fuzzy].slice(0, n);
+  // Combine: exact variants first, then fuzzy
+  const all = [...exactVariants, ...fuzzy];
+
+  // Source filter: show MagicRef entries only; fall back to Conjuring Archive if none
+  const mrMatches = all.filter(m => _isMagicRef(m.entry));
+  const candidates = mrMatches.length > 0 ? mrMatches : all;
+  return candidates.slice(0, n);
 }
 // ── EXTRACT CONJURING ARCHIVE BOOK ID FROM URL ──
 function conjuringBookId(coverUrl) {

@@ -1,56 +1,54 @@
-# SESSION HANDOFF — 2026-04-13 (Session 19)
+# SESSION HANDOFF — 2026-04-15 (Session 20)
 
 ## Session Summary
-Two targeted UX fixes shipped under a 5% usage budget: photo scan de-branding + subtitle strip, and cover picker entry point overhaul.
+Full session with three impactful changes: lazy-loading 3.4 MB of static DB scripts post-auth, MagicRef-first search priority, and currency switching data corruption guard.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `index.html` + `catalog.js` — Photo scan UI: remove "Claude" mention
-- `index.html:186`: Static scan detail text changed from "Claude is reading the title, author, and edition from your photo." → "Reading title, author, and edition from your photo."
-- `catalog.js:366`: Same text in the JS reset path (runs before each scan) updated to match.
+### 1. `index.html` + `auth.js` — Lazy-load 4 static DB scripts post-auth (P1 #1)
+- Removed 4 `<script defer>` tags from `<head>`: `conjuring_db.js` (2.0 MB), `magilib_market_db.js` (1.2 MB), `magilib_disc_db.js` (140 KB), `magilib_price_db.js` (97 KB). Total: ~3.4 MB no longer downloaded before auth.
+- Added `loadStaticDBs()` to `auth.js:6`: dynamically injects `<script async>` tags on demand, with duplicate-load guard.
+- Called `loadStaticDBs()` at the top of `onAuthSuccess()` — fire and forget. DBs load during the 2.7-second splash screen window, ready before user can interact.
+- All DB usage sites already had `typeof X === 'undefined'` guards — no fallback code needed.
 
-### 2. `catalog.js` — Strip subtitle before DB/price lookups
-- After `json.title` is parsed from the AI scan response, a `searchTitle` is derived by stripping anything after `:`, `—`, or `–` (e.g. "Card College: Volume 1" → "Card College").
-- `searchTitle` is used for `fetchBookIntelligence()`, `conjuringFuzzyLookup()`, and `checkConjuringDB()`.
-- The full `json.title` (with subtitle) still populates the form field — only the search path is stripped.
+### 2. `conjuring.js` — MagicRef-first search priority
+- Added `_isMagicRef(entry)` helper: returns true if entry has an `m` field (MagicRef page URL). Entries from both sources count as MagicRef.
+- Modified `conjuringTopMatches()`: after building the full match list, splits into MagicRef vs Conjuring Archive-only entries. Returns MagicRef matches only; falls back to Conjuring Archive only if zero MagicRef matches found.
+- Never shows both collections in the same dropdown.
 
-### 3. `index.html` — Cover picker UX overhaul
-- `#coverFrame` made tappable: added `onclick="openCoverPicker()"` and `cursor:pointer`. Tapping the cover image area now opens the picker directly.
-- Placeholder text updated: "Cover appears here after scan or search" → "Tap to find cover image" — self-evident for new users.
-- "Sources" button removed from the `cover-actions-row` below the frame (frame tap is now the entry point). Upload and URL buttons remain.
-- In the picker modal (`coverPickerSourceBtns`): renamed "Google Images" → "Search by Title"; removed the Upload label (upload is still available in the row below the frame). Now exactly 2 options: Search by Title + The Pro Shelf.
+### 3. `catalog.js` — Currency switching guard (P2 #5)
+- `saveSettings()` now accepts a `skipCurrencyGuard` param.
+- When currency is changed AND user has books, calls `magiConfirm` with a warning: "You have N books with prices stored in X. Changing to Y will not convert existing prices."
+- If user cancels: reverts the dropdown to the saved currency, returns without saving.
+- If user confirms: calls `saveSettings(true)` to bypass the guard and complete the save.
 
 ### 4. `index.html` — Cache bust
-- Script version bumped `?v=s9` → `?v=s10` across all 8 script tags.
+- Script version bumped `?v=s10` → `?v=s11`.
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Search dropdown author line**: author often missing because many CONJURING_DB entries lack the `a` field — data gap, not a code bug
+- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug)
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
 - **QTTE/Penguin**: may have stale matches — Phase 2
 - **FX rates**: hardcoded — Phase 2
 
 ---
 
-## Next Session Priorities (Session 20)
-
-### Feature work (carried from Session 19)
-1. **Search priority**: MagicRef first-only. Fall back to Conjuring Archive only if zero MagicRef results. Never show both collections at once.
+## Next Session Priorities (Session 21)
 
 ### Pre-Beta Performance (outstanding from backlog)
-2. **Currency switching guard** (P2 #5): when library has books, require explicit confirmation before changing currency; show migration prompt warning about mixed-currency data corruption
-3. **Publisher `<datalist>` → `publishers.js` array** (P1 #2): extract 300+ `<option>` elements from `index.html` into a JS file injected on load
-4. **Lazy-load 4 static DB scripts after auth** (P1 #1): `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` → dynamic load post-auth only
-5. **`sanitize()` helper** (P4 #12): XSS guard for user content in DOM
-6. **`aria-label` on icon-only buttons** (P4 #11)
+1. **Publisher `<datalist>` → `publishers.js` array** (P1 #2): extract 300+ `<option>` elements from `index.html` into a JS file injected on load. Reduces initial document size.
+2. **`sanitize()` helper** (P4 #12): XSS guard for user content inserted into DOM via innerHTML (titles, notes, author names in renderCatalog, openModal, toasts)
+3. **`aria-label` on icon-only buttons** (P4 #11): audit search clear, modal close, cover picker close, zoom close, hamburger, user avatar, view toggle, refresh, sheet close buttons
+4. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
 
 ---
 
 ## Model Learnings
-- **Subtitle stripping scope**: Strip subtitles from `searchTitle` only — never from the form field value. Users expect to see the full title they scanned; the DB lookup is what benefits from a cleaner key.
-- **Cover entry point pattern**: Removing a dedicated "Sources" button in favour of a tappable cover frame requires updating both the HTML (adding onclick to the frame) AND the placeholder copy to signal the interaction. Without the copy change, the frame looks inert.
-- **Low-budget sessions**: With 5% usage, skip exploratory multi-file tasks (lazy-load, publishers.js). Target changes where you already know the exact line — HTML copy edits and single-function logic tweaks only.
+- **Lazy-load timing**: The splash screen runs for ~2.7 seconds post-auth. This is the ideal load window — DBs are ready before the user reaches any feature that needs them. No need for a loading state or retry.
+- **`_isMagicRef` rule**: Entries from both MagicRef and Conjuring Archive (merged entries) have the `m` field, so `!!entry.m` correctly identifies them as MagicRef. Conjuring Archive-only entries have a `C:`-prefixed cover and no `m`.
+- **Currency guard pattern**: Use `skipCurrencyGuard` param on `saveSettings` to bypass the guard after user confirms — avoids async complexity while keeping the guard logic inside the function.

@@ -1,5 +1,24 @@
 let _authMode = 'signin';
 
+// ── LAZY DB LOADER ──
+// Dynamically loads the 4 static DB scripts after successful auth only.
+// All usage sites guard with typeof X === 'undefined' so this is safe to call async.
+function loadStaticDBs() {
+  const scripts = [
+    '/conjuring_db.js',
+    '/magilib_price_db.js',
+    '/magilib_disc_db.js',
+    '/magilib_market_db.js'
+  ];
+  scripts.forEach(function(src) {
+    if (document.querySelector('script[src="' + src + '"]')) return; // already loaded
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    document.head.appendChild(s);
+  });
+}
+
 function authSwitchMode() {
   _authMode = _authMode === 'signin' ? 'signup' : 'signin';
   const isSignup = _authMode === 'signup';
@@ -115,6 +134,7 @@ async function authSubmit() {
 }
 
 async function onAuthSuccess() {
+  loadStaticDBs(); // fire-and-forget: 3.4 MB of DB scripts loaded only after auth
   const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
   S.profile = profile || {};
   updateUserMenu();

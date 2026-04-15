@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 19
+# MagiLib Project Status — Session 20
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,16 +29,16 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 19)
-- ### 1. `index.html` + `catalog.js` — Photo scan UI: remove "Claude" mention
-- `index.html:186`: Static scan detail text changed from "Claude is reading the title, author, and edition from your photo." → "Reading title, author, and edition from your photo."
-- `catalog.js:366`: Same text in the JS reset path (runs before each scan) updated to match.
-- ### 2. `catalog.js` — Strip subtitle before DB/price lookups
-- After `json.title` is parsed from the AI scan response, a `searchTitle` is derived by stripping anything after `:`, `—`, or `–` (e.g. "Card College: Volume 1" → "Card College").
-- `searchTitle` is used for `fetchBookIntelligence()`, `conjuringFuzzyLookup()`, and `checkConjuringDB()`.
+## Last Session (Session 20)
+- ### 1. `index.html` + `auth.js` — Lazy-load 4 static DB scripts post-auth (P1 #1)
+- Removed 4 `<script defer>` tags from `<head>`: `conjuring_db.js` (2.0 MB), `magilib_market_db.js` (1.2 MB), `magilib_disc_db.js` (140 KB), `magilib_price_db.js` (97 KB). Total: ~3.4 MB no longer downloaded before auth.
+- Added `loadStaticDBs()` to `auth.js:6`: dynamically injects `<script async>` tags on demand, with duplicate-load guard.
+- Called `loadStaticDBs()` at the top of `onAuthSuccess()` — fire and forget. DBs load during the 2.7-second splash screen window, ready before user can interact.
+- All DB usage sites already had `typeof X === 'undefined'` guards — no fallback code needed.
+- ### 2. `conjuring.js` — MagicRef-first search priority
 
 **Known issues carried forward:**
-- **Search dropdown author line**: author often missing because many CONJURING_DB entries lack the `a` field — data gap, not a code bug
+- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug)
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
 - **QTTE/Penguin**: may have stale matches — Phase 2
 
@@ -85,13 +85,13 @@ Before running `handoff`, Claude Code MUST:
 ## Pre-Beta Fix Backlog
 
 ### P1 — Performance & Load Time
-1. **Lazy-load 4 static DB scripts after auth** — `conjuring_db.js`, `magilib_price_db.js`, `magilib_disc_db.js`, `magilib_market_db.js` are all `<script defer>` in `<head>`, downloading before auth. Move to dynamic `import()` / `document.createElement('script')` calls that only fire after successful auth. Keep fallback `.includes()` search working without Fuse until `conjuring_db.js` loads.
+1. ~~**Lazy-load 4 static DB scripts after auth**~~ ✅ Done Session 20 — `loadStaticDBs()` in auth.js fires post-auth.
 2. **Move publisher `<datalist>` to a JS array** — 300+ `<option>` elements for `id="publisher-list"` are hardcoded in `index.html` (~250 lines). Extract to `publishers.js` as a plain array; inject into `<datalist>` on load. Reduces initial document size and keeps HTML clean.
 3. **Add `loading="lazy"` to all book cover `<img>` tags** — In `catalog.js` `renderCatalog()`, ensure every `<img>` gets `loading="lazy"` and `decoding="async"`. Prevents memory spikes and jank on large libraries (500+ books) on older phones.
 4. **Add `inputmode="decimal"` to all price/cost inputs** — All `<input type="number">` for prices/costs (Add form, Edit modal, Wishlist quick-add, Price Review) need `inputmode="decimal"`. Forces iOS/Android decimal keypad instead of clunky full number keyboard.
 
 ### P2 — Data Integrity & Offline
-5. **Fix currency switching to prevent mixed-currency data** — Changing currency in Settings only updates labels; existing `market_price` values keep old currency, causing silent data corruption. Either: (a) disable the currency dropdown when library has books + show a migration prompt (30-min guard), or (b) implement Phase 2 USD-storage spec now. At minimum, make `currencyChangeWarning` prominent and require explicit confirmation.
+5. ~~**Fix currency switching to prevent mixed-currency data**~~ ✅ Done Session 20 — `magiConfirm` guard in `saveSettings()` requires explicit confirmation when switching currency with existing books.
 6. **Add a basic Service Worker for shell caching + offline read** — App has `<link rel="manifest">` but no service worker. Critical for use at book fairs with bad cell reception. Cache app shell (HTML, CSS, JS, fonts, logo); store Supabase library data in IndexedDB on fetch; serve cached data offline; show offline banner; queue mutations while offline and replay on reconnect.
 
 ### P3 — UX & Trust
@@ -179,6 +179,9 @@ Before running `handoff`, Claude Code MUST:
 - **`updatePriceLabels(cur)`**: updates `priceLabelAdd`, `costLabelAdd`, `priceLabelEdit`, `costLabelEdit` — call on both `loadSettings` and `saveSettings`.
 - **Settings panel order**: Account → Security → Currency & Marketplace → Condition Presets → Library Settings → Price Refresh → Help & Feedback.
 - **eBay Finding API fetch-failed** = network block (not quota). Quota exhaustion returns a structured error response.
+- **Lazy DB load timing**: Splash runs ~2.7s post-auth. `loadStaticDBs()` fires at start of `onAuthSuccess()` — DBs are ready before user reaches any feature that needs them. No loading state needed.
+- **`_isMagicRef(entry)`**: `!!entry.m` — true if entry has a MagicRef page URL. Merged entries (both sources) also have `m`, so they correctly count as MagicRef. Conjuring Archive-only entries have `C:`-prefixed cover and no `m`.
+- **`saveSettings(skipCurrencyGuard)`**: pass `true` to bypass the currency change guard (used by the confirm callback to complete the save after user approval).
 - **FX rates:** Currently hardcoded (USD→AUD 1.55, GBP→AUD 2.02) in catalog.js + ui.js + pricing.js. Will migrate to `fx_rates` table.
 - **iOS scroll-to-top pattern:** `window.scrollTo({top:0,behavior:'instant'})` is unreliable on iOS Safari. Use: `window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;` — repeat in a 50ms `setTimeout` to override focus-triggered scroll.
 - **Cover picker z-index:** `#coverPickerOverlay` must be `--z-dialog` (2000+) to appear above `.modal-overlay` elements at `--z-sheet` (1000).

@@ -222,13 +222,29 @@ function loadSettings(){
     updatePriceLabels(s.currency);
   }catch(e){ console.warn('loadSettings error:', e); }
 }
-function saveSettings(){
+function saveSettings(skipCurrencyGuard){
   let existing = {};
   try { existing = JSON.parse(localStorage.getItem('arcana_books_v2')||'{}'); } catch(e){}
   const getVal   = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
   const getCheck = id => { const el=document.getElementById(id); return el ? el.checked : true; };
   const getNum   = (id, def) => { const el=document.getElementById(id); return el && el.value !== '' ? parseInt(el.value, 10) : def; };
   const currency = getVal('s-currency') || existing.currency || 'AUD';
+
+  // Currency change guard: if the user has books and is switching currency,
+  // require explicit confirmation to prevent silent mixed-currency data corruption.
+  if (!skipCurrencyGuard && existing.currency && currency !== existing.currency && S.books && S.books.length > 0) {
+    magiConfirm({
+      title: 'Change currency?',
+      message: 'You have ' + S.books.length + ' book' + (S.books.length === 1 ? '' : 's') + ' with prices stored in ' + existing.currency + '. Changing to ' + currency + ' will not convert existing prices — they will display incorrectly until updated manually.',
+      confirmText: 'Change Anyway',
+      onConfirm: function() { saveSettings(true); }
+    });
+    // Revert the dropdown to the current saved currency so the UI doesn't jump
+    const currEl = document.getElementById('s-currency');
+    if (currEl) currEl.value = existing.currency || 'AUD';
+    return;
+  }
+
   const s = {
     currency,
     marketplace:  getVal('s-marketplace') || existing.marketplace || 'EBAY_AU',
