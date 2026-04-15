@@ -31,7 +31,8 @@ function toggleDrafts(btn) {
   S.showWishlist = false;
   btn.classList.toggle('active', S.showDrafts);
   document.getElementById('showSoldChip').classList.remove('active');
-  document.getElementById('showWishlistChip').classList.remove('active');
+  const _wc = document.getElementById('showWishlistChip');
+  if (_wc) _wc.classList.remove('active');
   renderCatalog();
 }
 
@@ -120,6 +121,7 @@ async function quickAddFromQueue() {
   let failed = 0;
 
   if (btn) { btn.disabled = true; }
+  _setQueueProgress(`Processing 1 of ${total}…`, 0);
 
   // Process every photo in the queue sequentially
   while (photoQueue.length > 0) {
@@ -128,6 +130,7 @@ async function quickAddFromQueue() {
     done++;
 
     if (btn) btn.innerHTML = '<span class="spinner"></span> ' + done + ' / ' + total + '…';
+    _setQueueProgress(`Processing ${done} of ${total}…`, Math.round(done / total * 100));
 
     try {
       const compressed  = await compressImage(item.dataUrl, 300, 0.6);
@@ -168,6 +171,7 @@ async function quickAddFromQueue() {
 
   // All done — re-render once at the end
   renderCatalog();
+  _clearQueueProgress();
 
   if (btn) { btn.disabled = false; btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Quick Add All'; }
 

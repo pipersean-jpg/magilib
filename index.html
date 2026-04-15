@@ -170,6 +170,12 @@
         <input type="file" class="file-input" accept="image/*" onchange="addToQueue(event)">
       </label>
       <div id="queueThumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+      <div id="queueProgress" style="display:none;margin-bottom:10px;">
+        <div id="queueProgressLabel" style="font-size:11px;color:var(--ink-light);margin-bottom:4px;"></div>
+        <div style="height:4px;background:var(--border-med);border-radius:2px;overflow:hidden;">
+          <div id="queueProgressBar" style="height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.3s ease;"></div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
         <button onclick="quickAddFromQueue()" id="quickAddBtn" class="btn-queue-action btn-queue-gold">Add All to Drafts</button>
         <button onclick="processNextFromQueue()" id="processQueueBtn" class="btn-queue-action btn-queue-accent">Process next title</button>

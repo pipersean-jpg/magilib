@@ -1576,6 +1576,19 @@ function updateQueueUI() {
   const btn = document.getElementById('processQueueBtn');
   if (btn) btn.textContent = `Process next title`;
 }
+function _setQueueProgress(label, pct) {
+  const el = document.getElementById('queueProgress');
+  if (!el) return;
+  document.getElementById('queueProgressLabel').textContent = label;
+  document.getElementById('queueProgressBar').style.width = pct + '%';
+  el.style.display = 'block';
+}
+function _clearQueueProgress() {
+  const el = document.getElementById('queueProgress');
+  if (el) el.style.display = 'none';
+}
+window._setQueueProgress = _setQueueProgress;
+window._clearQueueProgress = _clearQueueProgress;
 function queueThumbAction(idx) {
   const overlay = document.getElementById('dialogOverlay');
   overlay.innerHTML = `
@@ -1612,8 +1625,10 @@ window.processSpecificFromQueue = processSpecificFromQueue;
 window.closeQueuePanel = closeQueuePanel;
 async function processNextFromQueue() {
   if (!photoQueue.length) { showToast('Queue is empty', 'info'); return; }
+  const total = photoQueue.length;
   const item = photoQueue.shift();
   updateQueueUI();
+  _setQueueProgress(`Processing 1 of ${total}…`, 40);
   clearForm();
   // Compress to thumbnail for display/storage
   await setCoverCompressed(item.dataUrl);
@@ -1652,11 +1667,14 @@ async function processNextFromQueue() {
     document.getElementById('scanTitle').innerHTML = `${populated} fields extracted <span class="confidence-badge ${confClass}">${parsed.confidence} confidence</span>`;
     document.getElementById('scanDetail').textContent = (photoQueue.length > 0 ? `${photoQueue.length} photo(s) still in queue. ` : '') + (parsed.notes || 'Verify details below before saving.');
     if (parsed.title && parsed.author) setTimeout(() => fetchPrice(), 800);
+    _setQueueProgress(`Done — ${photoQueue.length > 0 ? photoQueue.length + ' remaining' : 'queue empty'}`, 100);
+    setTimeout(_clearQueueProgress, 1200);
   } catch(err) {
     statusEl.className = 'scan-status error';
     document.getElementById('scanIcon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
     document.getElementById('scanTitle').textContent = 'Scan failed';
     document.getElementById('scanDetail').textContent = err.message || 'Could not read the cover.';
+    _clearQueueProgress();
   }
 }
 

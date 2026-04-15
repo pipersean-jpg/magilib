@@ -1,39 +1,25 @@
-# SESSION HANDOFF — 2026-04-15 (Session 22)
+# SESSION HANDOFF — 2026-04-15 (Session 23)
 
 ## Session Summary
-Five targeted improvements shipped across P1 and P3 backlogs: lazy image loading on modal cover, decimal keyboard on two dynamic price inputs, iOS ghost-click suppression upgraded to double-rAF across three overlays, splash pulse range tightened, and live condition price adjustment added to both Add and Edit forms.
+Three improvements shipped: batch queue progress indicator (P3 #9), and two bug fixes — the Drafts filter crash (null dereference on missing `#showWishlistChip`) and the preconnect tags confirmed already present (P4 #14 was already done).
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `catalog.js` — `loading="lazy"` + `decoding="async"` on modal cover (P1 #3)
-- Added `loading="lazy" decoding="async"` to the book detail modal cover `<img class="ms-image">` (line ~1123).
-- All other `<img>` tags in `catalog.js` already had these attributes. Photo queue thumbnails (`dataUrl`) intentionally skipped.
+### 1. `index.html` + `catalog.js` + `ui.js` — Batch queue progress indicator (P3 #9)
+- Added `#queueProgress` div inside `#queuePanel` (between thumbnails and action buttons): label + 4px accent fill bar, hidden by default.
+- Added `_setQueueProgress(label, pct)` and `_clearQueueProgress()` helpers in `catalog.js`, exposed on `window`.
+- `processNextFromQueue`: captures total before shift → shows "Processing 1 of N…" at 40% fill while Claude scans → "Done — N remaining" at 100% for 1.2s then clears (clears immediately on error).
+- `quickAddFromQueue`: shows "Processing 1 of N…" at 0% on start, increments to real progress "Processing 2 of 5…" as each item completes (proportional fill), clears on completion.
 
-### 2. `catalog.js` — `inputmode="decimal"` on two dynamic price inputs (P1 #4)
-- Added `inputmode="decimal"` to the price review sheet per-book input (`class="review-price-input"`).
-- Added `inputmode="decimal"` to the `magiPrompt` dialog input (`#magiPromptInput`).
-- All static price inputs in `index.html` already had the attribute. Condition % inputs (integer %) intentionally skipped.
+### 2. `ui.js` — Drafts filter crash fix
+- `toggleDrafts()` was calling `document.getElementById('showWishlistChip').classList.remove('active')` directly — `#showWishlistChip` doesn't exist in the HTML (wishlist is a tab, not a chip).
+- Null dereference caused a silent crash before `renderCatalog()` was reached, so the Drafts filter appeared to do nothing.
+- Fix: guard with `const _wc = document.getElementById('showWishlistChip'); if (_wc) _wc.classList.remove('active');`
 
-### 3. `assets/css/magilib.css` — Splash pulse range tightened (P3 #7)
-- `@keyframes splash-breathe` `50%` opacity: 0.75 → 0.80 (per spec: breathe 0.8–1.0).
-- `.splash-pulse` class and animation were already wired to the dynamically created splash overlay in `ui.js`.
-
-### 4. `catalog.js` — iOS ghost-click double-rAF (P3 #10)
-- Replaced `setTimeout(..., 400)` pointer-events suppression on price review sheet open with double `requestAnimationFrame`.
-- Added double-rAF ghost-click suppression to `openCoverPicker()` and `openCoverPickerForEdit()`.
-- Added double-rAF ghost-click suppression to `openModal()` on `#modalOverlay`.
-
-### 5. `index.html` + `catalog.js` + `books.js` + `pricing.js` + `ui.js` — Live condition price adjustment (P3 #8)
-- Added `<small id="condAdjHintAdd">` after `#f-price` in Add form (index.html).
-- Added `<small id="condAdjHintEdit">` after `#edit-price` in Edit modal (index.html).
-- `pricing.js` `fetchPrice()`: after setting `#f-price`, stores `S.priceBase = recommended` and calls `_applyConditionAdjustment()`.
-- `catalog.js` `setCondition(c)`: calls `_applyConditionAdjustment()`. New helper recalculates `#f-price = base × condPct` and shows hint: `"Base A$100 × 40% (Fair) = A$40"`.
-- `books.js` `setEditCondition(c)`: calls `_applyEditConditionAdjustment()`. Same logic for `#edit-price` + `#condAdjHintEdit`.
-- `ui.js` `fetchPriceForEdit()`: on confirm, stores `S.editPriceBase = newPrice` and calls `_applyEditConditionAdjustment()`.
-- `books.js` `clearForm()`: resets `S.priceBase = null`, hides `#condAdjHintAdd`.
-- `books.js` `openEditForm()`: resets `S.editPriceBase = null`, hides `#condAdjHintEdit`.
+### 3. P4 #14 — `rel="preconnect"` (confirmed already done)
+- Checked `index.html` — all four tags already present (lines 16–19): preconnect for Google Fonts + Supabase, dns-prefetch for Supabase + jsdelivr. No change needed.
 
 ---
 
@@ -46,16 +32,14 @@ Five targeted improvements shipped across P1 and P3 backlogs: lazy image loading
 
 ---
 
-## Next Session Priorities (Session 23)
+## Next Session Priorities (Session 24)
 
-1. **P4 #14 — `rel="preconnect"`**: add `<link rel="preconnect">` + `dns-prefetch` for Supabase domain and `cdn.jsdelivr.net` in `index.html`. Pure HTML, 2 min.
-2. **P3 #9 — Batch queue progress indicator**: "Processing 2 of 5…" counter + progress bar in `#queuePanel`. Read `processNextFromQueue` first.
-3. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device.
+1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device. This has been carried forward since Session 13.
+2. **P2 #6 — Service Worker**: shell caching + offline read. App has manifest but no SW. Critical for book fair use with bad cell reception.
+3. **P3 #9 — Queue progress visual QA**: test the new progress bar with a real multi-photo batch to confirm timing/UX feels right.
 
 ---
 
 ## Model Learnings
-- **`_applyConditionAdjustment` placement**: in `catalog.js` (where `getConditionPct` and `currSym` live) so it has access to both helpers without any extra imports.
-- **`S.editPriceBase` reset timing**: must reset in `openEditForm()` (not just on modal close) — otherwise switching between books in the same session carries over the previous fetch base.
-- **`fetchPrice()` does NOT apply condition**: it returns the raw market price. Condition adjustment is a display-layer concern applied by `_applyConditionAdjustment()`.
-- **double-rAF vs 400ms setTimeout for ghost-click**: double-rAF aligns to browser paint cycle; suitable for modern iOS where the 300ms synthetic click delay is largely eliminated. Applied to price review sheet, cover picker, and modal overlay.
+- **`toggleDrafts` null crash pattern**: `document.getElementById(id).classList` throws synchronously if the element doesn't exist — no error boundary catches it, so the function silently aborts. Always use `?.classList` or a null-guard `if` check when referencing elements that may not be present in all views.
+- **P4 #14 preconnect was already done**: before implementing "missing" backlog items, grep the target file first — this one was shipped in a prior session without being checked off.
