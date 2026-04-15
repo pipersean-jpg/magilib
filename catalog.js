@@ -549,10 +549,52 @@ async function loadCatalog(){
         inPrint,
       };
     });
+    // Cache rows in IndexedDB for offline access (fire-and-forget).
+    _idbSaveBooks(_supaUser.id, data || []);
     renderCatalog();
     showToast('Loaded '+S.books.length+' books','success',2000);
   }catch(e){
     console.error('Catalog load error:',e);
+    // Offline fallback: serve cached books from IndexedDB.
+    if (!navigator.onLine) {
+      try {
+        const cached = await _idbLoadBooks(_supaUser.id);
+        if (cached && cached.length > 0) {
+          S.books = cached.map(row => {
+            const { notes, inPrint } = parseInPrintFromNotes(row.notes || '');
+            return {
+              _id: row.id,
+              title: row.title || '',
+              author: row.author || '',
+              artist: row.artist_subject || '',
+              edition: row.edition || '',
+              year: row.year || '',
+              publisher: row.publisher || '',
+              isbn: row.isbn || '',
+              condition: row.condition || '',
+              price: row.market_price != null ? String(row.market_price) : '',
+              cost: row.purchase_price != null ? String(row.purchase_price) : '',
+              notes,
+              coverUrl: row.cover_url || '',
+              rawCover: row.cover_url || '',
+              dateAdded: row.date_added || '',
+              flags: row.condition_flags || '',
+              sold: row.sold_status || '',
+              star: row.star_rating != null ? String(row.star_rating) : '',
+              collectorNote: row.collectors_note || '',
+              location: row.where_acquired || '',
+              draft: row.draft_status || '',
+              inPrint,
+            };
+          });
+          renderCatalog();
+          showToast('Offline \u2014 showing cached library', 'info', 4000);
+          return;
+        }
+      } catch(idbErr) {
+        console.warn('[MagiLib] IDB fallback failed:', idbErr);
+      }
+    }
     grid.innerHTML='<div class="empty-state"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p>'+e.message+'</p><button onclick="loadCatalog()" style="margin-top:12px;padding:10px 20px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">Retry</button></div>';
   }
 }
@@ -1512,6 +1554,14 @@ async function toggleWishlistStatus() {
   const b = S.books[S.currentModalIdx];
   if (!b) return;
   const newStatus = (b.sold === 'Wishlist') ? '' : 'Wishlist';
+  if (!window._isOnline) {
+    _mgQueuePush({ op: 'update', id: b._id, payload: { sold_status: newStatus }, ts: Date.now() });
+    b.sold = newStatus;
+    closeModal();
+    renderCatalog();
+    showToast((newStatus === 'Wishlist' ? 'Moved to wishlist' : 'Returned to library') + ' \u2014 will sync when online', 'info', 3500);
+    return;
+  }
   const { error } = await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
   if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
   b.sold = newStatus;

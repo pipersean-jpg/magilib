@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 23
+# MagiLib Project Status — Session 24
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 23)
-- ### 1. `index.html` + `catalog.js` + `ui.js` — Batch queue progress indicator (P3 #9)
-- Added `#queueProgress` div inside `#queuePanel` (between thumbnails and action buttons): label + 4px accent fill bar, hidden by default.
-- Added `_setQueueProgress(label, pct)` and `_clearQueueProgress()` helpers in `catalog.js`, exposed on `window`.
-- `processNextFromQueue`: captures total before shift → shows "Processing 1 of N…" at 40% fill while Claude scans → "Done — N remaining" at 100% for 1.2s then clears (clears immediately on error).
-- `quickAddFromQueue`: shows "Processing 1 of N…" at 0% on start, increments to real progress "Processing 2 of 5…" as each item completes (proportional fill), clears on completion.
-- ### 2. `ui.js` — Drafts filter crash fix
+## Last Session (Session 24)
+- ### 1. `sw.js` — NEW: Service Worker
+- Cache name `magilib-sw-s13`; bumped each session alongside `?v=sN`.
+- **Install**: pre-caches 14 shell assets (HTML, CSS, logos, manifest, all JS files) without query strings.
+- **Activate**: deletes stale caches, claims all clients immediately.
+- **Fetch strategy**:
+-   - Supabase API (`supabase.co`) and `/api/` routes: bypassed entirely (network-only, never cached — auth tokens and live data must not be served stale).
 
 **Known issues carried forward:**
-- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug)
-- **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows
-- **QTTE/Penguin**: may have stale matches — Phase 2
+- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device.
+- **Search dropdown author line**: author often missing — many CONJURING_DB entries lack the `a` field (data gap, not a code bug).
+- **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows.
 
 ---
 
@@ -92,7 +92,7 @@ Before running `handoff`, Claude Code MUST:
 
 ### P2 — Data Integrity & Offline
 5. ~~**Fix currency switching to prevent mixed-currency data**~~ ✅ Done Session 20 — `magiConfirm` guard in `saveSettings()` requires explicit confirmation when switching currency with existing books.
-6. **Add a basic Service Worker for shell caching + offline read** — App has `<link rel="manifest">` but no service worker. Critical for use at book fairs with bad cell reception. Cache app shell (HTML, CSS, JS, fonts, logo); store Supabase library data in IndexedDB on fetch; serve cached data offline; show offline banner; queue mutations while offline and replay on reconnect.
+6. ~~**Add a basic Service Worker for shell caching + offline read**~~ ✅ Done Session 24 — `sw.js` ships shell pre-cache + network-first strategy; `_idbSaveBooks`/`_idbLoadBooks` in `globals.js`; `loadCatalog()` IDB fallback; offline banner; mutation queue (`_mgQueuePush`/`_mgQueueFlush`) for updates/deletes; inserts blocked offline.
 
 ### P3 — UX & Trust
 7. ~~**Add spinner/pulse animation to splash screen**~~ ✅ Done Session 22 — `.splash-pulse` + `@keyframes splash-breathe` already wired in `ui.js`/CSS. Tightened range to 0.8–1.0.
@@ -195,6 +195,13 @@ Before running `handoff`, Claude Code MUST:
 - **External links:** all external URLs must use `window.open(url, '_blank')`. Never `location.href`. Universal rule across all link handlers and `<a>` tags.
 - **`toggleDrafts` null crash**: `#showWishlistChip` doesn't exist (wishlist is a tab, not a filter chip). Always null-guard `getElementById` calls in toggle functions that reset sibling chips — use `const el = getElementById(id); if (el) el.classList.remove('active')`.
 - **Queue progress helpers**: `_setQueueProgress(label, pct)` + `_clearQueueProgress()` in `catalog.js`, exposed on `window` so `ui.js` can call them without imports.
+- **SW versioned-asset cache key**: JS/CSS with `?v=sN` must be stored under bare pathname (`url.pathname`) so any version variant hits the same cache entry offline. Strip the query string on `cache.put()` only.
+- **SW bypass for Supabase/API**: return early (no `event.respondWith`) for Supabase and `/api/` routes — returning even a 503 response would interfere with Supabase SDK retry logic.
+- **IDB offline fallback pattern**: `_idbSaveBooks` on every successful `loadCatalog()`; fall through to IDB only on `catch + !navigator.onLine`. Don't try to sync IDB reads back to Supabase.
+- **Mutation queue insert-block**: inserts require server-assigned UUIDs and can't be queued safely without local-ID resolution. Block inserts offline; queue only updates/deletes (which have stable `b._id`).
+- **`_supa` availability in globals.js**: `_supa` is initialised in DOMContentLoaded in auth.js. `_mgQueueFlush()` is only called from `online` event (fired after page load) or `onAuthSuccess()` — `_supa` is always initialised by then.
+- **Offline banner z-index**: use `calc(var(--z-sheet) - 1)` = 999 so the banner sits above page content but below Magi-sheets (1000) and dialogs (2000).
+- **`body.offline-mode .nav`**: shift nav down by banner height (37px) to prevent content clip. Apply via class toggle on `document.body`, not inline style, so CSS transition applies.
 
 ---
 
@@ -248,6 +255,7 @@ Before running `handoff`, Claude Code MUST:
 - Live condition price adjustment: `_applyConditionAdjustment()` / `_applyEditConditionAdjustment()` in Add + Edit forms
 - Batch queue progress indicator: `#queueProgress` label + fill bar in `#queuePanel`; `_setQueueProgress`/`_clearQueueProgress` helpers in `catalog.js`
 - Drafts filter crash fix: null-guarded `#showWishlistChip` in `toggleDrafts()` — element doesn't exist in HTML
+- Service Worker (P2 #6): `sw.js` shell pre-cache + network-first strategy; IndexedDB catalog cache (`_idbSaveBooks`/`_idbLoadBooks`); offline banner + `body.offline-mode`; mutation queue (`_mgQueuePush`/`_mgQueueFlush`) for updates/deletes; inserts blocked offline
 
 ---
 

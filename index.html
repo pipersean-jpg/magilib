@@ -730,15 +730,28 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s12"></script>
-<script src="/globals.js?v=s12"></script>
-<script src="/auth.js?v=s12"></script>
-<script src="/catalog.js?v=s12"></script>
-<script src="/books.js?v=s12"></script>
-<script src="/pricing.js?v=s12"></script>
-<script src="/conjuring.js?v=s12"></script>
-<script src="/ui.js?v=s12"></script>
-<script src="/publishers.js?v=s12"></script>
+<script src="/supabase.min.js?v=s13"></script>
+<script src="/globals.js?v=s13"></script>
+<script src="/auth.js?v=s13"></script>
+<script src="/catalog.js?v=s13"></script>
+<script src="/books.js?v=s13"></script>
+<script src="/pricing.js?v=s13"></script>
+<script src="/conjuring.js?v=s13"></script>
+<script src="/ui.js?v=s13"></script>
+<script src="/publishers.js?v=s13"></script>
+
+<!-- SERVICE WORKER REGISTRATION -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('[MagiLib] SW registered:', reg.scope);
+    }).catch(function(err) {
+      console.warn('[MagiLib] SW registration failed:', err);
+    });
+  });
+}
+</script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--status-sold);color:white;padding:14px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -749,6 +762,12 @@
     </div>
   </div>
   <button onclick="dismissError()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">Dismiss</button>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner">
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+  You're offline &mdash; viewing cached library
 </div>
 
 <!-- COVER PICKER MODAL -->

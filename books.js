@@ -121,6 +121,52 @@ async function saveEdit() {
   const btn = document.getElementById('editSaveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
 
+  // Offline: apply the edit locally and queue for later sync.
+  if (!window._isOnline) {
+    const _rawNotesOffline = document.getElementById('edit-notes').value.trim();
+    const _editInPrintOffline = S.editInPrint !== undefined ? S.editInPrint : (b.inPrint !== undefined ? b.inPrint : null);
+    const _savedNotesOffline = (b.sold === 'Wishlist')
+      ? buildNotesWithInPrint(_rawNotesOffline, _editInPrintOffline)
+      : _rawNotesOffline;
+    const offlineFields = {
+      title:          document.getElementById('edit-title').value.trim(),
+      author:         document.getElementById('edit-author').value.trim(),
+      artist_subject: document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
+      edition:        document.getElementById('edit-edition').value.trim(),
+      year:           document.getElementById('edit-year').value.trim(),
+      publisher:      document.getElementById('edit-publisher').value.trim(),
+      isbn:           document.getElementById('edit-isbn').value.trim(),
+      condition:      S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
+      market_price:   parseFloat(document.getElementById('edit-price').value) || null,
+      purchase_price: parseFloat(document.getElementById('edit-cost').value) || null,
+      notes:          _savedNotesOffline,
+      cover_url:      S.editCoverUrl || b.coverUrl || '',
+      condition_flags:(S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
+      collectors_note:(document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
+      where_acquired: (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
+      updated_at:     new Date().toISOString(),
+    };
+    _mgQueuePush({ op: 'update', id: b._id, payload: offlineFields, ts: Date.now() });
+    // Optimistic in-memory update so the UI reflects the change immediately.
+    S.books[idx] = { ...b,
+      title: offlineFields.title, author: offlineFields.author,
+      artist: offlineFields.artist_subject, edition: offlineFields.edition,
+      year: offlineFields.year, publisher: offlineFields.publisher,
+      isbn: offlineFields.isbn, condition: offlineFields.condition,
+      price: offlineFields.market_price != null ? String(offlineFields.market_price) : '',
+      cost: offlineFields.purchase_price != null ? String(offlineFields.purchase_price) : '',
+      notes: _rawNotesOffline, coverUrl: offlineFields.cover_url, rawCover: offlineFields.cover_url,
+      flags: offlineFields.condition_flags, collectorNote: offlineFields.collectors_note,
+      location: offlineFields.where_acquired, inPrint: _editInPrintOffline,
+    };
+    renderCatalog();
+    _editDirty = false;
+    showToast('Saved locally \u2014 will sync when online', 'info', 3500);
+    closeEditModal();
+    btn.disabled = false; btn.textContent = 'Save Changes';
+    return;
+  }
+
   const _rawNotes   = document.getElementById('edit-notes').value.trim();
   const _editInPrint = S.editInPrint !== undefined ? S.editInPrint : (b.inPrint !== undefined ? b.inPrint : null);
   // For wishlist items, encode In Print status into the notes field (no dedicated DB column)
@@ -382,6 +428,11 @@ async function saveBook() {
     draft_status: '',
   };
 
+  if (!window._isOnline) {
+    showToast("You're offline \u2014 connect to save new books", 'error', 4000);
+    return;
+  }
+
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
 
@@ -424,6 +475,16 @@ async function toggleSold() {
 async function _doToggleSold(b, isSold) {
   const newStatus = isSold ? '' : 'Sold';
   if (!b._id) { showToast('Could not update sold status', 'error'); return; }
+  if (!window._isOnline) {
+    _mgQueuePush({ op: 'update', id: b._id, payload: { sold_status: newStatus }, ts: Date.now() });
+    b.sold = newStatus;
+    const btn = document.getElementById('modalSoldBtn');
+    if (btn) btn.textContent = isSold ? 'Mark Sold' : 'Return to Library';
+    renderCatalog();
+    showToast((isSold ? 'Returned to library' : 'Marked as sold') + ' \u2014 will sync when online', 'info', 3500);
+    closeModal();
+    return;
+  }
   await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
   b.sold = newStatus;
   const btn = document.getElementById('modalSoldBtn');
@@ -447,6 +508,7 @@ function toggleShowSold(btn) {
 
 // ── DELETE BOOK ──
 async function confirmDelete() {
+  if (!window._isOnline) { showToast("You're offline \u2014 connect to delete books", 'error', 3500); return; }
   const idx = S.currentModalIdx;
   const b = S.books[idx];
   if (!b) return;
