@@ -100,7 +100,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
     <!-- Avatar -->
-    <button class="user-menu-btn" id="userMenuBtn" onclick="toggleUserMenu()" style="display:none;">?</button>
+    <button class="user-menu-btn" id="userMenuBtn" onclick="toggleUserMenu()" style="display:none;" aria-label="User menu">?</button>
     </div>
     <div class="nav-menu" id="navMenu">
       <div class="nav-menu-item" onclick="showView('entry');closeNavMenu();">
@@ -163,7 +163,7 @@
     <div id="queuePanel" style="display:none;margin-top:14px;padding:12px;background:var(--paper-warm);border-radius:var(--radius);border:0.5px solid var(--border-med);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <span style="font-size:12px;font-weight:500;color:var(--ink);">Photo queue <span id="queueLimitHint" style="color:var(--ink-faint);font-weight:400;"></span></span>
-        <button onclick="closeQueuePanel()" style="background:none;border:none;font-size:18px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;" title="Close queue">✕</button>
+        <button onclick="closeQueuePanel()" style="background:none;border:none;font-size:18px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;" title="Close queue" aria-label="Close photo queue">✕</button>
       </div>
       <label style="display:block;width:100%;text-align:center;padding:10px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--accent);cursor:pointer;margin-bottom:10px;box-sizing:border-box;">
         + Load another title
@@ -266,385 +266,7 @@
           <div class="field"><label>Year published</label><input type="text" id="f-year" placeholder="e.g. 1902"/></div>
         </div>
         <div class="field-row two">
-          <div class="field"><label>Publisher</label><input type="text" id="f-publisher" list="publisher-list" onblur="applyTitleCase('f-publisher')" placeholder="Type to search…" autocomplete="off"/><datalist id="publisher-list"><option value="A &quot;Magic Wand&quot; Publication">
-<option value="A ConCam Production">
-<option value="A G Films Production">
-<option value="A G-M Publication">
-<option value="A Goodliffe Publication">
-<option value="A Mark Leveridge Magic Publication">
-<option value="A Martini's Magic Company Release">
-<option value="A Salon de Magie Book, Ken Klosterman">
-<option value="A Talon Publication">
-<option value="A Top Magic Publication">
-<option value="A-1 MagicalMedia">
-<option value="A. M. Wilson, M. D.">
-<option value="Aaron Fisher Magic">
-<option value="Abbott's Magic">
-<option value="Abraxas">
-<option value="Ace Place Magic">
-<option value="Agency of World Entertainment">
-<option value="Al Mann Exclusives">
-<option value="Aladdin's Magic Shop">
-<option value="Alakazam">
-<option value="Alan Sands Entertainment">
-<option value="Alexander de Cova Productions">
-<option value="Alta California Book and Job Printing House">
-<option value="An Andi Gladwin Production">
-<option value="Anthony Brahams">
-<option value="Antinomy Magic">
-<option value="Aplar Publishing">
-<option value="Arcas Publications">
-<option value="Arthur P. Felsman">
-<option value="Astor">
-<option value="avanT-Garde Magic">
-<option value="B.S. Publications">
-<option value="BammoMagic">
-<option value="Beat & Roy Books">
-<option value="Ben Harris Magic Publications">
-<option value="Benchmark Magic Production">
-<option value="Berland Presents">
-<option value="BHM Industries / New Directions Publishing">
-<option value="Binary Star Publications">
-<option value="Blue Bikes Production">
-<option value="Bob King Magic">
-<option value="Bob Lynn">
-<option value="Bob Lynn / Tony Raven">
-<option value="Bodean Enterprises">
-<option value="Borden Publishing Company">
-<option value="Borwig & Horster">
-<option value="Bradbury, Agnew & Co.">
-<option value="Brunel White">
-<option value="BW Magic Publishing">
-<option value="C. Arthur Pearson Limited">
-<option value="C.C. Éditions">
-<option value="Caddy Manufacturing Company">
-<option value="Calostro Publications">
-<option value="Camirand Academy of Magic">
-<option value="Card-Shark">
-<option value="Carl Waring Jones">
-<option value="Catman Publications">
-<option value="Cecil E. Griffin">
-<option value="CEDAM">
-<option value="Chambers Magic Company">
-<option value="Charles Scribner’s Sons">
-<option value="Charlsen + Johansen & Others">
-<option value="Chas. C. Eastman">
-<option value="ChicagoMagicBash Publications">
-<option value="China Productions">
-<option value="Chuck Martinez">
-<option value="Clandestine Productions">
-<option value="Cold Deck Company">
-<option value="Coleccion Renglones">
-<option value="Collectors' Workshop">
-<option value="Columbia Magic Shop Inc.">
-<option value="Conjuring Arts Research Center">
-<option value="Conjurors' Library">
-<option value="Conundrum Publishing">
-<option value="Corinda's Magic Studio">
-<option value="Crown Publishers, Inc.">
-<option value="CYMYS">
-<option value="D. Robbins & Co., Inc.">
-<option value="Dan and Dave Industries, Inc.">
-<option value="Daniel's Den Publication">
-<option value="Danny Korem">
-<option value="Dark Arts Press">
-<option value="David Kemp & Company">
-<option value="David Meyer Magic Books">
-<option value="DeCovaMagic">
-<option value="Developmental Productions Press">
-<option value="dfgrd ediciones">
-<option value="Divine Goddess 23 Productions">
-<option value="DMB Publications">
-<option value="Docc Co.">
-<option value="Docc Hilford Productions">
-<option value="Donald Holmes">
-<option value="Donnybrook Enterprises, Inc.">
-<option value="Dover Publications">
-<option value="DTrik">
-<option value="Dutton & Co.">
-<option value="E. F. Rybolt">
-<option value="East Coast Super Session">
-<option value="Eckhard Böttchers Zauber-Butike">
-<option value="Ed Mellon">
-<option value="Ediciones El Espectador">
-<option value="ediciones famulus">
-<option value="ediciones Marré">
-<option value="Ediciones Vernet Magic">
-<option value="Edition Olms">
-<option value="Editions Techniques du Spectacle">
-<option value="Editorial El Caballo del Malo">
-<option value="Editorial Frakson">
-<option value="Edward Bagshawe & Co.">
-<option value="El Duco">
-<option value="Electro Fun">
-<option value="Emerson & West">
-<option value="Empire">
-<option value="Every Trick in the Book Inc.">
-<option value="Excelsior!! Productions">
-<option value="F. G. Thayer">
-<option value="Faber & Faber">
-<option value="FASDIU Enterprises">
-<option value="Fire Cat Studios">
-<option value="Fleming Book Company">
-<option value="Flora & Company">
-<option value="Florence Art Edizioni">
-<option value="FOCM Publication">
-<option value="Fort Worth Magicians' Club">
-<option value="Frank Werner">
-<option value="Full Moon Magic Books">
-<option value="Fun Inc.">
-<option value="G & E Enterprises">
-<option value="GBC Press">
-<option value="Gene Gordon">
-<option value="Genii">
-<option value="Geo-Mar Publications">
-<option value="George G. Harrap & Co., Ltd.">
-<option value="George Snyder Jr">
-<option value="George Starke">
-<option value="Goldshadow Industries">
-<option value="GrupoKaps">
-<option value="Hermetic Press">
-<option value="Guy Bavli - Perfect Magic">
-<option value="I Saw That!">
-<option value="Illuma - Illusion Management">
-<option value="International Magic">
-<option value="International Magic House">
-<option value="Invisible Man Productions">
-<option value="Invisible Practice Production">
-<option value="Irv Weiner">
-<option value="J A Enterprises">
-<option value="Jahoda & Siegel">
-<option value="Jeff Busby Magic, Inc.">
-<option value="Jeff McBride, Inc.">
-<option value="Jerry Mentzer (Magic Methods)">
-<option value="John King - S. David Walker">
-<option value="Jose's Studio">
-<option value="Julius Sussmann, Hamburg">
-<option value="Juris Druck + Verlag Zürich">
-<option value="JustJoshinMagic">
-<option value="Jörg Alexander ZauberKunst">
-<option value="KANDA Publications">
-<option value="Kanter's Magic Shop">
-<option value="Kardyro-Torino Creations">
-<option value="Kaufman and Company">
-<option value="Kaufman and Greenberg">
-<option value="Kee-West Productions">
-<option value="Kennedy Enterprises">
-<option value="Kerwin Benson Publishing">
-<option value="Kreations & Trx">
-<option value="L&L Publishing">
-<option value="L. Davenport & Co.">
-<option value="La boutique de l'illusion">
-<option value="Laughing Room Only">
-<option value="Lee Jacobs Productions">
-<option value="Lehmann & Schüppel, Leipzig">
-<option value="Lesclapart">
-<option value="Levy & Müller">
-<option value="Little, Brown and Company">
-<option value="Louis Tannen">
-<option value="Lybrary.com">
-<option value="M. S. Messinger Printing">
-<option value="M.C.M. Editora">
-<option value="Magic Art Studio">
-<option value="Magic by Boretti">
-<option value="Magic City">
-<option value="Magic Communication">
-<option value="Magic House">
-<option value="Magic Inspirations">
-<option value="Magic Limited">
-<option value="MAGIC Magazine">
-<option value="Magic Methods">
-<option value="Magic, Inc.">
-<option value="Magical Publications">
-<option value="Magicana">
-<option value="Magick Enterprises">
-<option value="Magicland, Tokyo">
-<option value="Magico Magazine">
-<option value="Magicseen Magazine">
-<option value="Magicshop Vienna">
-<option value="Magie">
-<option value="Malbrough Magic">
-<option value="Malek Enterprises">
-<option value="ManusKrypt">
-<option value="Marchand de Trucs">
-<option value="Mark Wilson Publications">
-<option value="Martin Breese">
-<option value="Max Abrams">
-<option value="Max Andrews (Vampire) LTD.">
-<option value="Max Holden">
-<option value="Mayette Magie Moderne">
-<option value="Maynestream Productions">
-<option value="Me and the other Guy Productions">
-<option value="Media T Marketing">
-<option value="Meir Yedid Magic">
-<option value="Mephisto Huis">
-<option value="Metempirical Magic">
-<option value="Micky Hades">
-<option value="Micky Hades Enterprises">
-<option value="Micky Hades International">
-<option value="Mike Caveney's Magic Words">
-<option value="Mike Powers Magic">
-<option value="Million Dollar Productions">
-<option value="Mind Tapped Productions, LLC">
-<option value="Miracle Makers">
-<option value="Miracle Press">
-<option value="Miracles Productions">
-<option value="Montandon Magic">
-<option value="Morissey Magic LTD.">
-<option value="Murphy's Magic Supplies, Inc.">
-<option value="Mystica">
-<option value="MZvD">
-<option value="Namlips Enterprises">
-<option value="Nat Louis">
-<option value="Necromancer Press">
-<option value="Nelson & Nelson Ltd.">
-<option value="Nelson Enterprises">
-<option value="Neukomm & Zimmermann">
-<option value="New Jinx Publication">
-<option value="Nick Bolton">
-<option value="Nightmare Alley Productions">
-<option value="Obie O'Brien">
-<option value="Ohmigosh Productions">
-<option value="Old-Guy-In-The-Bathroom Productions">
-<option value="Oliver Erens - œ">
-<option value="Ortiz Publications">
-<option value="Out of the Blue">
-<option value="Owen Bros.">
-<option value="Owen Magic Supreme">
-<option value="Palooka Productions">
-<option value="Paradigm Press">
-<option value="Paraninfo">
-<option value="Patrick Page Magic Limited">
-<option value="Paul Diamond">
-<option value="Pavel-Magic">
-<option value="Penny's Publishing">
-<option value="Penshaw Press">
-<option value="PH Marketing Publication">
-<option value="Philip R. Willmarth">
-<option value="Piccadilly Books, Ltd">
-<option value="Popular Magic Publications">
-<option value="Princeton University Press">
-<option value="Printed for T. Moore, London">
-<option value="Private View">
-<option value="Pro Print">
-<option value="Producciones El Asombro, S.L.">
-<option value="Professor Presto">
-<option value="Psychic Entertainers Association">
-<option value="Páginas">
-<option value="R.O.P.S. Press">
-<option value="Radio Free Atlantis Production">
-<option value="Random House">
-<option value="Rauscher & Cie AG">
-<option value="Raw-Press">
-<option value="Ray Gamble & W. Herbert Schuh">
-<option value="Real Miracle Publication">
-<option value="Red Silk Variety Productions">
-<option value="Reed Swans Collective">
-<option value="Reginald Scot Books">
-<option value="Regow's House of Enchantment">
-<option value="RFA Production">
-<option value="Roche Magic Studio">
-<option value="Rudolf Braunmüller">
-<option value="Sacred Chao Productions">
-<option value="San Francisco Book Company">
-<option value="Sankey Magic">
-<option value="Saturn Magic Ltd">
-<option value="Savaco, Ltd.">
-<option value="Scapegrace Press">
-<option value="Schwabacher'sche Verlagsbuchhandlung">
-<option value="Schweizerisches Jugendschriftenwerk Zürich">
-<option value="Secrets of Dr. Dee">
-<option value="Sedgehill Industries">
-<option value="Selfpublished">
-<option value="Silk King Studios">
-<option value="simsalabonn">
-<option value="Slydini Studio of Magic">
-<option value="Smiling Mule Productions">
-<option value="Sorcerer's Apprentice">
-<option value="Sound of Magic">
-<option value="Spade and Archer">
-<option value="Sphinx Publishing Corporation">
-<option value="Squash Publishing">
-<option value="St. Pierre Enterprises">
-<option value="Star Magic Co.">
-<option value="Sterling Magic Company">
-<option value="Steve Burton">
-<option value="Steve Reynolds Magic">
-<option value="Stevens Magic Emporium">
-<option value="Syzygy Press">
-<option value="Tannen Magic Inc.">
-<option value="Taurus Magic Supply">
-<option value="TCC">
-<option value="Tenkai Prize Committee">
-<option value="Tenyo">
-<option value="Tesmar Zauberartikel">
-<option value="The Cardician Press">
-<option value="The Conjurors' Convention Corporation">
-<option value="The Enchantment">
-<option value="The False Deal (Mark Tams)">
-<option value="The FM Factory">
-<option value="The Genii Corporation">
-<option value="The Impossible Co.">
-<option value="The Ireland Magic Co.">
-<option value="The Journal of Psience">
-<option value="The Kee Publishing Co.">
-<option value="The Kent & Surrey Press">
-<option value="The London Magical Co.">
-<option value="The Magic Apple">
-<option value="The Magic Art Book Co.">
-<option value="The Magic Circle">
-<option value="The Magic Circle Foundation">
-<option value="The Magic Corner">
-<option value="The Magic Fun Factory">
-<option value="the magic hands editions">
-<option value="The Magic Wand Office">
-<option value="The MasterMind Group">
-<option value="The Merchant of Magic Ltd.">
-<option value="The Miracle Factory">
-<option value="The Neat Review">
-<option value="The Presto Place">
-<option value="The Second Deal (Jason Alford)">
-<option value="The Secret Service">
-<option value="The Sid Lorraine Hat & Rabbit Club">
-<option value="The Supreme Magic Company">
-<option value="The Tom-Foolery, Inc.">
-<option value="The Usual Suspect">
-<option value="The Welworth Company">
-<option value="The Williamson Press, Inc.">
-<option value="The Yogi Magic Mart">
-<option value="Theory and Art of Magic Press">
-<option value="Thinkers' Press">
-<option value="Thomas van Büren Lenger">
-<option value="Tokyodo Shuppan">
-<option value="Trapdoor Productions">
-<option value="Trik-Kard Specialties">
-<option value="TVMagic.co.uk">
-<option value="U. F. Grant">
-<option value="Ultra Neat Ltd.">
-<option value="Underground Collective">
-<option value="Unikorn Magik">
-<option value="Unique Magic Studio">
-<option value="unknown publisher">
-<option value="Vanishing Inc.">
-<option value="Verlag Magischer Zirkel Hamburg">
-<option value="Verlag Magischer Zirkel Leipzig">
-<option value="Verlag O. Stolina">
-<option value="W. H. Allen, London">
-<option value="Weerd! Publishing">
-<option value="Westbrook Publishing">
-<option value="Wiener Spielkartenfabrik Fred. Piatnik & Söhne">
-<option value="Will Goldston, Ltd.">
-<option value="Wizard Publishing Company">
-<option value="Wolfe Publishing Limited">
-<option value="Wonder Workshop Berlin">
-<option value="Wunderwinkel">
-<option value="Zauberbuch-Verlag">
-<option value="Zauberkabinett Shop">
-<option value="Zauberkunst">
-<option value="Zauberschrank">
-<option value="Zauberzentrale München">
-<option value="Zentralhaus für Kulturarbeit">
-<option value="Édition Ch. Eggimann, Genève"></datalist></div>
+          <div class="field"><label>Publisher</label><input type="text" id="f-publisher" list="publisher-list" onblur="applyTitleCase('f-publisher')" placeholder="Type to search…" autocomplete="off"/><datalist id="publisher-list"><!-- populated by publishers.js --></datalist></div>
         </div>
       </div>
     </div>
@@ -698,12 +320,12 @@
     <div class="toolbar-row-1">
       <div class="search-bar">
         <input type="text" id="catalogSearch" placeholder="Search your library…" oninput="filterCatalog();catalogSearchInput(this)"/>
-        <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear search"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear search" aria-label="Clear search"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         <span class="search-icon" id="searchIcon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       </div>
       <div class="toolbar-btn-group">
-        <button onclick="toggleView()" id="viewToggleBtn" class="view-toggle" title="Toggle grid/list view">⊞</button>
-        <button onclick="loadCatalog()" class="view-toggle" title="Refresh library"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg></button>
+        <button onclick="toggleView()" id="viewToggleBtn" class="view-toggle" title="Toggle grid/list view" aria-label="Toggle grid/list view">⊞</button>
+        <button onclick="loadCatalog()" class="view-toggle" title="Refresh library" aria-label="Refresh library"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg></button>
       </div>
     </div>
     <!-- Row 2: Edit | Move | Filters (each flex:1) -->
@@ -1028,7 +650,7 @@
 <div class="magi-sheet-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="magi-sheet">
     <div class="magi-sheet-handle"></div>
-    <button class="sheet-close-btn" onclick="closeModal()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <button class="sheet-close-btn" onclick="closeModal()" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-actions magi-sheet-content" id="modalActionsArea" style="display:block;padding:12px 16px 0;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -1050,7 +672,7 @@
     <div style="padding:16px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;">Filters</div>
-        <button onclick="closeFilterSheet()" style="background:none;border:none;font-size:20px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+        <button onclick="closeFilterSheet()" style="background:none;border:none;font-size:20px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;" aria-label="Close filters">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div>
@@ -1110,6 +732,7 @@
 <script src="/pricing.js?v=s12"></script>
 <script src="/conjuring.js?v=s12"></script>
 <script src="/ui.js?v=s12"></script>
+<script src="/publishers.js?v=s12"></script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--status-sold);color:white;padding:14px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -1128,7 +751,7 @@
     <div class="modal-handle"></div>
     <div class="modal-header">
       <div class="modal-title">Find Cover Image</div>
-      <button class="modal-close" onclick="closeCoverPicker()" style="display:flex;align-items:center;justify-content:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" onclick="closeCoverPicker()" style="display:flex;align-items:center;justify-content:center;" aria-label="Close cover picker"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
@@ -1269,7 +892,7 @@
     <div class="modal-handle"></div>
     <div class="modal-header">
       <div class="modal-title" id="copiesSheetTitle">Copies</div>
-      <button class="modal-close" onclick="closeCopiesSheet()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" onclick="closeCopiesSheet()" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div id="copiesSheetBody" style="overflow-y:auto;flex:1;"></div>
     <div style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:0.5px solid var(--border);">

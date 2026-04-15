@@ -1,5 +1,14 @@
 const S={condition:'',coverUrl:'',books:[],filterCondition:'all',settings:{},currentModalUrl:''};
 
+function sanitize(str) {
+  return (str == null ? '' : String(str))
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── KEY CHANGE: all Claude API calls go through /api/claude-proxy (Netlify function) ──
 async function callClaude(messages, maxTokens=800){
   const resp=await fetch('/api/claude-proxy',{
