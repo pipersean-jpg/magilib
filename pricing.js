@@ -165,34 +165,6 @@ async function scrapeCollectingMagicBooks(title, author, edition) {
   return results;
 }
 
-// ── LOCAL DATABASE LOOKUPS ──
-function normForDB(s) {
-  if (!s) return '';
-  return s.toLowerCase()
-    .replace(/\s+by\s+.*/i, '')       // strip "by Author"
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ').trim()
-    .replace(/^(the|a|an)\s+/, '');
-}
-
-function lookupPriceDB(title) {
-  if (typeof PRICE_DB === 'undefined' || !title) return null;
-  const key = normForDB(title);
-  if (PRICE_DB[key]) return PRICE_DB[key];
-  // Try without volume/edition suffix (e.g. "card college volume 1" -> "card college")
-  const shortKey = key.replace(/\s+(volume|vol|book|part|no|number)\s+\d+.*$/, '').trim();
-  if (shortKey !== key && PRICE_DB[shortKey]) return PRICE_DB[shortKey];
-  return null;
-}
-
-function lookupDiscontinued(title) {
-  if (typeof DISCONTINUED_DB === 'undefined' || !title) return false;
-  const key = normForDB(title);
-  if (DISCONTINUED_DB[key]) return true;
-  const shortKey = key.replace(/\s+(volume|vol|book|part|no|number)\s+\d+.*$/, '').trim();
-  return shortKey !== key && !!DISCONTINUED_DB[shortKey];
-}
-
 // ── LOCAL BOOK DATABASE LOOKUPS ──
 
 function normBookTitle(s) {

@@ -32,7 +32,10 @@ function openEditForm(bookId) {
   S.editCoverUrl = b.rawCover || b.coverUrl || '';
 
   // Clear ALL edit fields first before populating
-  S.editPriceBase = null;
+  // Derive base price from stored price + condition so condition changes adjust price in Edit
+  const _storedPrice = parseFloat(b.price);
+  const _storedCondPct = getConditionPct(b.condition);
+  S.editPriceBase = (_storedPrice && _storedCondPct) ? Math.round((_storedPrice / _storedCondPct) * 100) / 100 : null;
   const _ceh = document.getElementById('condAdjHintEdit');
   if (_ceh) { _ceh.textContent = ''; _ceh.style.display = 'none'; }
   ['edit-title','edit-author','edit-artist','edit-edition','edit-year',
@@ -104,7 +107,13 @@ function closeEditModal(e) {
   // Ignore bubbled clicks from inner elements
   if (!fromBackdrop && !fromProgrammatic) return;
   if (_editDirty && fromBackdrop) {
-    if (!confirm('Leave without saving? Your changes will be lost.')) return;
+    magiConfirm({
+      title: 'Leave without saving?',
+      message: 'Your changes will be lost.',
+      confirmText: 'Leave',
+      onConfirm: () => { _editDirty = false; overlay.classList.add('hidden'); }
+    });
+    return;
   }
   _editDirty = false;
   overlay.classList.add('hidden');
@@ -329,7 +338,7 @@ function showAiInfoCard(html) {
 function checkLocalDBBadges(title) {
   if (!title) return;
   const inPrice = lookupPriceDB(title);
-  const inDisc  = !inPrice && lookupDiscontinued(title);
+  const inDisc  = !inPrice && lookupDiscDB(title);
   const badge   = document.getElementById('localDBBadge');
   if (!badge) return;
   if (inPrice) {
@@ -507,21 +516,23 @@ function toggleShowSold(btn) {
 }
 
 // ── DELETE BOOK ──
-async function confirmDelete() {
+function confirmDelete() {
   if (!window._isOnline) { showToast("You're offline \u2014 connect to delete books", 'error', 3500); return; }
   const idx = S.currentModalIdx;
   const b = S.books[idx];
   if (!b) return;
-  const confirmed = window.confirm(`Delete "${b.title}"?\n\nThis cannot be undone.`);
-  if (!confirmed) return;
-
-  if (b._id) {
-    await _supa.from('books').delete().eq('id', b._id);
-  }
-  S.books.splice(idx, 1);
-  closeModal();
-  renderCatalog();
-  showToast('Book deleted ✓', 'success');
+  magiConfirm({
+    title: 'Delete book?',
+    message: `"${sanitize(b.title)}" will be permanently removed. This cannot be undone.`,
+    confirmText: 'Delete',
+    onConfirm: async () => {
+      if (b._id) await _supa.from('books').delete().eq('id', b._id);
+      S.books.splice(idx, 1);
+      closeModal();
+      renderCatalog();
+      showToast('Book deleted ✓', 'success');
+    }
+  });
 }
 
 // ── EDIT COVER HELPERS ──
