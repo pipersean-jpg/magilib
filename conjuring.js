@@ -294,6 +294,13 @@ async function applyConjuringMatch(match, scanSource) {
       await scrapeMagicRefMetadata(mrUrl);
     }
   }
+
+  // Ensure status never stays frozen on "checking for more…"
+  if (statusEl && scanSource === 'scan' && statusEl.textContent.includes('checking for more')) {
+    statusEl.textContent = filledFromDB > 0
+      ? 'Local database: ' + filledFromDB + ' field' + (filledFromDB !== 1 ? 's' : '') + ' filled.'
+      : 'Matched in local database.';
+  }
 }
 
 // ── SCRAPE CONJURING ARCHIVE METADATA ──

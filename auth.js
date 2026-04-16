@@ -25,6 +25,8 @@ function authSwitchMode() {
   document.getElementById('authTitle').textContent = isSignup ? 'Create your account' : 'Welcome back';
   document.getElementById('authSub').textContent = isSignup ? 'Start cataloguing your magic collection' : 'Sign in to your MagiLib collection';
   document.getElementById('authUsernameField').style.display = isSignup ? '' : 'none';
+  document.getElementById('authConfirmField').style.display = isSignup ? '' : 'none';
+  document.getElementById('authConfirmPassword').value = '';
   document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
   document.getElementById('authToggle').innerHTML = isSignup
     ? 'Already have an account? <a onclick="authSwitchMode()">Sign in</a>'
@@ -82,10 +84,15 @@ async function changePasswordFromSettings(btn) {
 async function forgotPassword() {
   const email = document.getElementById('authEmail').value.trim();
   const successEl = document.getElementById('authSuccess');
+  const btn = document.getElementById('authForgotLink');
   successEl.classList.remove('show');
   document.getElementById('authError').classList.remove('show');
   if (!email) { showAuthError('Enter your email address above first.'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
   const { error } = await _supa.auth.resetPasswordForEmail(email, { redirectTo: 'https://magilib.vercel.app' });
+  btn.disabled = false;
+  btn.textContent = 'Forgot password?';
   if (error) { showAuthError(error.message || 'Could not send reset email.'); return; }
   successEl.textContent = 'Check your email for a password reset link.';
   successEl.classList.add('show');
@@ -105,11 +112,16 @@ async function authSubmit() {
   const btn = document.getElementById('authSubmitBtn');
   if (!email || !password) { showAuthError('Email and password are required.'); return; }
   if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  if (_authMode === 'signup') {
+    const confirmPw = document.getElementById('authConfirmPassword').value;
+    if (password !== confirmPw) { showAuthError('Passwords do not match.'); return; }
+  }
   btn.disabled = true;
   btn.textContent = _authMode === 'signup' ? 'Creating account…' : 'Signing in…';
   document.getElementById('authError').classList.remove('show');
   try {
     if (_authMode === 'signup') {
+      await _supa.auth.signOut(); // ensure clean session before creating new account
       const { data, error } = await _supa.auth.signUp({ email, password, options: { data: { username: username || null } } });
       if (error) throw error;
       if (data.user && !data.session) {
@@ -134,6 +146,7 @@ async function authSubmit() {
 }
 
 async function onAuthSuccess() {
+  S.books = []; // clear any stale library data from previous session
   loadStaticDBs(); // fire-and-forget: 3.4 MB of DB scripts loaded only after auth
   const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
   S.profile = profile || {};

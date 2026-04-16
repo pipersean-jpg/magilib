@@ -406,14 +406,13 @@ async function fetchPrice(){
     const discEntry = MARKET_DB.disc[key];
     if (discEntry) {
       document.getElementById('priceDisplay').innerHTML =
-        '<span style="font-size:12px;color:var(--tier3);">⚠ Possibly Out of Print</span>';
+        '<span style="font-size:12px;color:var(--ink-faint);">Not found in local price history</span>';
       document.getElementById('priceRange').textContent =
-        'Found on discontinued list. Not currently listed on any dealer site.';
+        'No price data in local database. Search for sold listings below.';
       document.getElementById('f-price').value = '';
       showAiInfoCard(
-        '<span style="color:var(--tier3);font-weight:600;">Possibly Out of Print</span><br>' +
-        '<span style="font-size:11px;color:var(--ink-light);">Found on discontinued list. ' +
-        'Not currently listed on any dealer site.<br>Unable to calculate market value — check eBay sold listings manually.</span>'
+        '<span style="font-weight:600;color:var(--ink);">Not found in local price history</span><br>' +
+        '<span style="font-size:11px;color:var(--ink-light);">No sale data found. Use the search buttons below to find current market value on eBay.</span>'
       );
       const sb = document.getElementById('sourceBreakdown');
       if (sb) sb.style.display = 'none';

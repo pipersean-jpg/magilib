@@ -176,10 +176,26 @@ async function quickAddFromQueue() {
   if (btn) { btn.disabled = false; btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Quick Add All'; }
 
   const added = total - failed;
-  if (failed === 0) {
-    showToast('✓ ' + added + ' draft' + (added !== 1 ? 's' : '') + ' added', 'success', 3500);
-  } else {
-    showToast(added + ' added, ' + failed + ' failed — check queue', 'info', 4000);
+  const summary = failed === 0
+    ? added + ' draft' + (added !== 1 ? 's' : '') + ' added to your library.'
+    : added + ' added, ' + failed + ' failed.';
+  showToast('✓ ' + summary, failed === 0 ? 'success' : 'info', 3500);
+
+  if (added > 0) {
+    setTimeout(() => {
+      magiConfirm({
+        title: 'Batch complete',
+        message: summary + ' Go to Library to fill in details?',
+        confirmText: 'View Drafts',
+        cancelText: 'Stay here',
+        onConfirm: () => {
+          showView('catalog');
+          setTimeout(() => {
+            S.showDrafts = true; S.showSold = false; S.showWishlist = false; renderCatalog();
+          }, 300);
+        }
+      });
+    }, 600);
   }
 }
 
@@ -1086,17 +1102,17 @@ function renderWizardStep() {
       </div>
       <div style="display:flex;gap:10px;">
         <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="display:flex;justify-content:center;margin-bottom:4px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <div style="font-size:12px;font-weight:500;color:var(--ink);">Scan cover</div>
           <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
         </div>
         <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">✍️</div>
+          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">✍️</div>
           <div style="font-size:12px;font-weight:500;color:var(--ink);">Type title</div>
           <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Manual entry</div>
         </div>
         <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">📋</div>
+          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">📋</div>
           <div style="font-size:12px;font-weight:500;color:var(--ink);">Batch add</div>
           <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Queue multiple</div>
         </div>

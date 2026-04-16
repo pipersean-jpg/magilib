@@ -1,66 +1,84 @@
-# SESSION HANDOFF — 2026-04-16 (Session 26)
+# SESSION HANDOFF — 2026-04-16 (Session 27)
 
 ## Session Summary
-Two workstreams: continued CSS formatting cleanup (FAQ bug fix, source evidence rows, empty/loading states), then diagnosed and fixed a cover image display bug affecting the library grid on iOS Safari.
+Beta walkthrough in progress (Sections 1 & 2). Multiple bugs found and fixed across auth, onboarding, Add flow, cover picker, and batch queue.
 
 ---
 
 ## What Was Built/Changed This Session
 
 ### 1. `assets/css/magilib.css`
-- **`.book-cover img`**: removed `display:none` — was causing iOS Safari to skip lazy-loading images entirely when CSS `display:none` was present even though inline `style="display:block"` overrode it. Now just `width:100%;height:100%;object-fit:cover`.
-- **`.catalog-loading`**: new — flex-centered spinner wrapper (`display:flex;align-items:center;justify-content:center;min-height:50vh`)
-- **`.empty-search-container`**: added `width:100%`
-- **`.src-evidence-wrap/heading/row/dot/label/link/price`** etc: 16 new source evidence row classes
-- **`.faq-item/btn/question/chevron/answer/answer-body`**: 7 new FAQ accordion classes (plus `:last-child` border fix)
-- **`.copy-thumb img`**, **`.copy-info`**, **`.copy-info-top`**, **`.copy-price`**, **`.copy-meta`**, **`.copy-chevron`**, context overrides for `.sold-badge`/`.draft-badge` in copy rows
+- **`.book-cover-ph`**: added `position:absolute;top:0;left:0` — placeholder now overlays the image so `display:none` is no longer needed on the img, fixing the iOS lazy-load block
+- **`.welcome-btn-secondary`**: `border:0.5px` → `border:1px` — sub-pixel border was invisible on some iOS displays
+- **`.btn-queue-action`**: added `justify-content:center;text-align:center` — batch queue buttons now have centred text
 
 ### 2. `catalog.js`
-- **Book card cover template** (line ~785): switched from CSS `display:none` + inline `display:block` pattern to `onload`/`onerror` pattern:
-  - img starts `style="display:none"` 
-  - `onload`: `this.style.display='block'; this.nextSibling.style.display='none'` — reveals img, hides placeholder atomically
-  - `onerror`: `this.nextSibling.style.display='flex'` — shows placeholder
-  - `.book-cover-ph` no longer conditionally inline-hidden — shows as skeleton while image loads
-- **Loading state** (line 520): inline div → `.catalog-loading`
-- **Error state Retry button** (line 598): inline styles removed (`.empty-state button` covers it)
-- **Empty search container** (line 701): 6 redundant inline style attrs stripped
-- **Source evidence rows** (`buildSourceRow`, lines ~1068–1116): 13 inline style attrs → `.src-*` classes
-- **Copy-row template** (lines ~897–915): 9 inline attrs → `.copy-*` classes
+- **Book cover template** (line ~785): removed `style="display:none"` from img; `onload` hides placeholder; `onerror` hides img. Placeholder is now `position:absolute` so it overlays the img naturally — no display:none + lazy-load conflict
+- **Empty library state** (line ~699): when `S.books.length === 0` (truly empty), shows "Your library is empty. Tap Add…" instead of "No books match your filters."
+- **Magic Sources cover picker** (line ~1963): Conjuring Archive images now fetched via `/api/fetch-proxy?action=image` (same as MagicRef) to bypass hotlink blocking
 
-### 3. `ui.js`
-- **FAQ template** (~lines 800–810): 8 inline style attrs → `.faq-*` classes
-- **`toggleFaq`** (line 868): fixed `answer.style.display !== 'none'` → `answer.style.display === 'block'` — first-tap-does-nothing bug caused by CSS `display:none` initial state not matching inline style check
+### 3. `auth.js`
+- **`authSubmit()`**: added password confirm field validation for signup mode
+- **`authSubmit()`**: `await _supa.auth.signOut()` before `signUp()` — prevents new account inheriting old session (security fix)
+- **`onAuthSuccess()`**: `S.books = []` at entry — clears stale library data on every auth transition
+- **`authSwitchMode()`**: shows/hides `#authConfirmField`; clears confirm password on mode switch
+- **`forgotPassword()`**: button now disables + shows "Sending…" while request is in flight
+
+### 4. `index.html`
+- **Auth form**: added `#authConfirmField` / `#authConfirmPassword` — shown in signup mode only
+- **Cover frame** (`#coverFrame`): added persistent edit icon badge (bottom-right, semi-transparent circle) so users know the cover is tappable
+- **Cover picker source buttons**: both buttons now `flex:1` + `justify-content:center` — fill 50% width each
+- **"The Pro Shelf"** → **"Magic Sources"**
+- **Google Images iOS warning**: updated note to explain that opening Google Images will close the PWA on iOS
+
+### 5. `ui.js`
+- **Wizard Step 2**: all three icon containers now `height:28px;display:flex;align-items:center;justify-content:center` — consistent vertical alignment
+- **`quickAddFromQueue()`**: after completion, shows `magiConfirm` dialog prompting user to view Drafts in Library; "View Drafts" navigates to Library and activates draft filter
+- **`dismissWelcome()`** path: no change needed — already calls `showView('catalog')`
+
+### 6. `pricing.js`
+- **"Possibly Out of Print" message**: replaced with "Not found in local price history. Search for results below." — removed misleading OOP label
+
+### 7. `conjuring.js`
+- **`applyConjuringMatch()`**: after live scrape completes (success or silent fail), status is always resolved — "checking for more…" can no longer freeze
 
 ---
 
 ## Bug Fixes
 
-- **FAQ first-tap bug**: `toggleFaq` checked `!== 'none'` but `.faq-answer` had no inline style initially (CSS-only `display:none`). Empty string `!== 'none'` evaluated as "open", causing first tap to be a no-op. Fixed by checking `=== 'block'` instead.
-- **Book covers not showing on iOS**: `.book-cover img { display:none }` in CSS + `loading="lazy"` caused iOS Safari to skip lazy loading. Fixed with `onload`/`onerror` reveal pattern and removing `display:none` from CSS.
-- **Loading spinner centering**: was `text-align:center` only. Fixed with flex-centering in `.catalog-loading`.
-- **FAQ last-item border**: `last-child:border-none` in old inline style was a no-op invalid CSS property. Fixed with proper `.faq-item:last-child { border-bottom:none }` rule.
-- **Source evidence last row border**: no suppression existed. Added `.src-row:last-of-type { border-bottom:none }`.
+- **Security: new account showing old user's library** — `signOut()` before `signUp()` + `S.books = []` in `onAuthSuccess()` ensures clean session on every auth transition
+- **Book covers still not showing on iOS** — real fix: `position:absolute` on placeholder means img never needs `display:none`; lazy loading now works
+- **"checking for more…" frozen** — scrape functions could silently fail leaving status stuck; now always resolves after awaits
+- **FAQ first-tap no-op** — already fixed Session 26
+- **Password confirm missing on signup** — added confirm field
+- **Forgot password no feedback** — button now shows loading state
+- **Empty library unfriendly** — "Your library is empty. Tap Add…" for truly empty state
+- **Conjuring Archive covers blank** — hotlink blocking bypassed via proxy
+- **Batch complete: no confirmation** — magiConfirm dialog + Drafts filter shortcut
+- **Batch button text not centred** — CSS fix
+- **Cover frame: no tap hint** — edit icon overlay added
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device. Carried forward since Session 13.
+- **Beta walkthrough**: Sections 3–8 still needed (Library, Edit, Status, Pricing, Settings, Onboarding)
+- **Google Images → blank screen on iOS**: confirmed iOS PWA limitation — opening external link restarts app. Warning text added; no JS fix possible.
+- **Password reset link opens browser**: iOS PWA limitation — email links always open Safari. Not fixable in a web app.
 - **Search dropdown author line**: author often missing — CONJURING_DB data gap, not a code bug.
 - **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows.
-- **Remaining inline styles**: book card grid (~783–794 minor items), modal header (~1175–1199), price review sheet row (~1432–1445), tutorial slides (ui.js ~226–259), feedback tab (ui.js ~817–824).
-- **CONJURING_DB bad entry**: one entry has `"c":"Image Address"` which stores a non-URL as cover_url. Low priority — affects one book.
 
 ---
 
-## Next Session Priorities (Session 27)
+## Next Session Priorities (Session 28)
 
-1. **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device. This is the real gate before beta launch.
-2. **Verify cover fix**: confirm book covers now display correctly on device after the `onload`/`onerror` pattern change.
+1. **Continue beta walkthrough** — Sections 3–8: Library, Edit, Status, Pricing, Settings, Onboarding
+2. **Verify cover fix on device** — confirm placeholder/img proxy pattern works in iOS Safari
 
 ---
 
 ## Model Learnings
-- **`loading="lazy"` + CSS `display:none` on iOS Safari**: even when an inline `style="display:block"` overrides the CSS, some iOS Safari builds skip lazy loading the image because they evaluate the CSS rule `display:none` before inline styles. Fix: remove `display:none` from CSS entirely; control initial visibility with inline style + `onload`/`onerror` handlers.
-- **`toggleFaq` CSS initial state**: when element visibility is controlled by CSS (not inline style), JS checks like `el.style.display !== 'none'` return the wrong answer — `el.style` only reflects inline styles, not computed styles. Always check `el.style.display === 'block'` (positive match) rather than `!== 'none'` (negative match on empty string).
-- **`onload`/`onerror` cover pattern**: img starts `display:none` (inline), `onload` shows img + hides placeholder, `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS fighting inline styles.
+- **`display:none` + `position:absolute` for skeleton pattern**: the correct fix for the cover lazy-load bug is making the placeholder `position:absolute` (overlays the img) so the img never needs `display:none`. Previous fix still used `display:none` inline — same root problem.
+- **`signOut()` before `signUp()`**: Supabase may not cleanly switch sessions when `signUp()` is called while a session is already active. Always sign out first.
+- **`S.books = []` in `onAuthSuccess()`**: ensures no stale library data is ever visible during the auth transition window.
+- **`toggleDrafts(btn)`**: expects a DOM element — never call with `null`. Set `S.showDrafts` directly instead.

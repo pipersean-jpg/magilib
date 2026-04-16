@@ -696,9 +696,13 @@ function renderStatsRow() {
   const condClasses={'Fine':'cond-fine','Very Good':'cond-vg','Good':'cond-good','Fair':'cond-fair'};
   const grid=document.getElementById('booksGrid');
   if(!books.length){
-    const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
-    const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
-    grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
+    if (!S.books.length) {
+      grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p style="font-weight:600;margin-bottom:6px;">Your library is empty</p><p style="font-size:13px;margin-top:0;">Tap <strong>Add</strong> in the menu to add your first book.</p></div>`;
+    } else {
+      const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
+      const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
+      grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
+    }
     return;
   }
   const isListView = S.viewMode === 'list';
@@ -782,7 +786,7 @@ function renderStatsRow() {
       : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" style="display:none" onload="this.style.display='block';this.nextSibling.style.display='none'" onerror="this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onload="this.nextSibling.style.display='none'" onerror="this.style.display='none'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
@@ -1956,16 +1960,26 @@ async function searchCoverSource(source) {
           if (fuzz) entry = CONJURING_DB[fuzz.key];
         }
         if (entry) {
-          // Get Conjuring Archive cover URL
+          // Get Conjuring Archive cover URL — fetch via proxy to avoid hotlink blocking
+          var caRawUrl = '';
           if (typeof entry === 'string') {
-            // Old plain-string format
-            caUrl = entry;
+            caRawUrl = entry;
           } else {
-            // New sparse object format
-            if (entry.c) caUrl = _xpandUrl(entry.c);
-            else if (entry.i && entry.i[0]) caUrl = _xpandUrl(entry.i[0]);
-            // Get MagicRef page URL
-            if (entry.m) {
+            if (entry.c) caRawUrl = _xpandUrl(entry.c);
+            else if (entry.i && entry.i[0]) caRawUrl = _xpandUrl(entry.i[0]);
+          }
+          if (caRawUrl) {
+            try {
+              statusEl.textContent = 'Fetching Magic Sources cover…';
+              var caImgResp = await fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(caRawUrl));
+              var caImgData = await caImgResp.json();
+              if (caImgData.success && caImgData.dataUrl) {
+                caUrl = caImgData.dataUrl;
+              }
+            } catch(caErr) { /* silently fall back to direct URL */ caUrl = caRawUrl; }
+          }
+          // Get MagicRef page URL
+          if (entry.m) {
               var mrPageUrl = _xpandUrl(entry.m);
               if (mrPageUrl.includes('magicref.net/magicbooks/')) {
                 statusEl.textContent = 'Fetching MagicRef cover...';

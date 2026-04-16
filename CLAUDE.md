@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 26
+# MagiLib Project Status — Session 27
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 26)
+## Last Session (Session 27)
 - ### 1. `assets/css/magilib.css`
-- **`.book-cover img`**: removed `display:none` — was causing iOS Safari to skip lazy-loading images entirely when CSS `display:none` was present even though inline `style="display:block"` overrode it. Now just `width:100%;height:100%;object-fit:cover`.
-- **`.catalog-loading`**: new — flex-centered spinner wrapper (`display:flex;align-items:center;justify-content:center;min-height:50vh`)
-- **`.empty-search-container`**: added `width:100%`
-- **`.src-evidence-wrap/heading/row/dot/label/link/price`** etc: 16 new source evidence row classes
-- **`.faq-item/btn/question/chevron/answer/answer-body`**: 7 new FAQ accordion classes (plus `:last-child` border fix)
+- **`.book-cover-ph`**: added `position:absolute;top:0;left:0` — placeholder now overlays the image so `display:none` is no longer needed on the img, fixing the iOS lazy-load block
+- **`.welcome-btn-secondary`**: `border:0.5px` → `border:1px` — sub-pixel border was invisible on some iOS displays
+- **`.btn-queue-action`**: added `justify-content:center;text-align:center` — batch queue buttons now have centred text
+- ### 2. `catalog.js`
+- **Book cover template** (line ~785): removed `style="display:none"` from img; `onload` hides placeholder; `onerror` hides img. Placeholder is now `position:absolute` so it overlays the img naturally — no display:none + lazy-load conflict
 
 **Known issues carried forward:**
-- **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device. Carried forward since Session 13.
-- **Search dropdown author line**: author often missing — CONJURING_DB data gap, not a code bug.
-- **eBay API**: fetch-failed on network — 2,021 manual CSV rows in price_db, 0 live API rows.
+- **Beta walkthrough**: Sections 3–8 still needed (Library, Edit, Status, Pricing, Settings, Onboarding)
+- **Google Images → blank screen on iOS**: confirmed iOS PWA limitation — opening external link restarts app. Warning text added; no JS fix possible.
+- **Password reset link opens browser**: iOS PWA limitation — email links always open Safari. Not fixable in a web app.
 
 ---
 
@@ -81,10 +81,15 @@ Before running `handoff`, Claude Code MUST:
 - [x] FAQ first-tap bug fixed (`=== 'block'` check)
 - [x] Book cover display bug fixed — `onload`/`onerror` pattern, removed CSS `display:none` conflict with `loading="lazy"`
 
-### Session 27 — Next Priorities
-- [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
-- [ ] **Verify cover fix on device**
-- [ ] **CSS cleanup continued** (if time): modal header, tutorial slides
+### Session 27 — Beta Walkthrough (Sections 1 & 2) ✅
+- [x] Auth bugs fixed (password confirm, forgot password spinner, security)
+- [x] Cover display fixed (real fix: position:absolute placeholder)
+- [x] Onboarding polish (wizard alignment, welcome button border)
+- [x] Add flow bugs fixed (frozen scan status, price message, cover picker, batch queue)
+
+### Session 28 — Next Priorities
+- [ ] **Continue beta walkthrough**: Sections 3–8 (Library, Edit, Status, Pricing, Settings, Onboarding)
+- [ ] **Verify cover fix on device** before proceeding
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -223,6 +228,10 @@ Before running `handoff`, Claude Code MUST:
 - **Check for existing descendant CSS rules before writing inline styles**: `.empty-state button` was fully styled in CSS — the Retry button inline style was 100% redundant. Always grep the CSS file for the container class before adding inline styles to children.
 - **`last-child:border-none` as an inline style is a no-op**: it's interpreted as a CSS property name, not a selector. Must be written as `.foo:last-child { border-bottom:none }` in a stylesheet.
 - **`loading="lazy"` + CSS `display:none` on iOS Safari**: even when inline `style="display:block"` overrides CSS `display:none`, iOS Safari may skip lazy loading the image by evaluating the CSS rule before inline styles. Fix: remove `display:none` from CSS; control initial visibility with inline style + `onload`/`onerror` handlers.
+- **Real cover fix — `position:absolute` skeleton pattern**: the correct approach is making `.book-cover-ph` `position:absolute;top:0;left:0` so it overlays the img. The img never needs `display:none`. `onload` hides the placeholder; `onerror` hides the img. Any approach that puts `display:none` on the img (CSS or inline) will break lazy loading on iOS.
+- **`signOut()` before `signUp()`**: Supabase does not cleanly switch sessions when `signUp()` is called while a session is active. Always `await _supa.auth.signOut()` first.
+- **`S.books = []` in `onAuthSuccess()`**: clears stale library data from any previous session before the new user's catalog loads.
+- **`toggleDrafts(btn)`**: expects a real DOM element — calling with `null` crashes. Set `S.showDrafts = true` directly and call `renderCatalog()` instead.
 - **`el.style.display` reflects inline styles only, not computed styles**: `el.style.display !== 'none'` returns `true` when display is CSS-only (no inline style set), because `el.style.display` is `''`. Always use positive match `=== 'block'` for toggle checks.
 - **`onload`/`onerror` cover reveal pattern**: img starts `style="display:none"` (inline); `onload` sets `display:block` + hides placeholder; `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS vs inline style conflict.
 

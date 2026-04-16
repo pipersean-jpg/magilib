@@ -49,6 +49,10 @@
       <label>Password</label>
       <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()"/>
     </div>
+    <div class="auth-field" id="authConfirmField" style="display:none;">
+      <label>Confirm Password</label>
+      <input type="password" id="authConfirmPassword" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSubmit()"/>
+    </div>
     <button class="auth-forgot" id="authForgotLink" onclick="forgotPassword()">Forgot password?</button>
     <div class="auth-success" id="authSuccess"></div>
     <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">Sign In</button>
@@ -227,12 +231,13 @@
     <div class="el-cover">
       <div class="form-section">
         <div class="section-title">Cover Image</div>
-        <div class="cover-frame" id="coverFrame" onclick="openCoverPicker()" style="cursor:pointer;">
+        <div class="cover-frame" id="coverFrame" onclick="openCoverPicker()" style="cursor:pointer;position:relative;">
           <img id="coverImg" alt="Book cover"/>
           <div class="cover-placeholder" id="coverPlaceholder">
             <div class="book-icon"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
             <p>Tap to find<br>cover image</p>
           </div>
+          <div style="position:absolute;bottom:6px;right:6px;width:26px;height:26px;background:rgba(0,0,0,0.52);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
         </div>
         <div class="cover-actions-row">
           <label class="cover-btn" style="cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload<input type="file" style="display:none" accept="image/*" onchange="uploadCover(event)"></label>
@@ -779,9 +784,9 @@ if ('serviceWorker' in navigator) {
       <button class="modal-close" onclick="closeCoverPicker()" style="display:flex;align-items:center;justify-content:center;" aria-label="Close cover picker"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div style="padding:16px 20px;border-bottom:0.5px solid var(--border);">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="coverPickerSourceBtns">
-        <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search by Title</button>
-        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;gap:6px;">The Pro Shelf</button>
+      <div style="display:flex;gap:8px;" id="coverPickerSourceBtns">
+        <button onclick="searchCoverSource('images')" class="btn-primary" id="pickerGoogleBtn" style="flex:1;font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search by Title</button>
+        <button onclick="searchCoverSource('conjuring')" class="btn-secondary" style="flex:1;font-size:12px;padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">Magic Sources</button>
       </div>
       <!-- Google Images instruction card — shown when Google Images is active -->
       <div id="googleImagesCard" style="display:none;margin-top:14px;background:var(--paper-warm);border-radius:10px;padding:16px 20px;border:1.5px dashed var(--border-med);cursor:pointer;" onclick="openGoogleImagesTab()">
@@ -793,7 +798,7 @@ if ('serviceWorker' in navigator) {
           <li>Select <strong style="color:var(--ink);">Copy Image Address</strong></li>
           <li>Paste in the URL field below</li>
         </ol>
-        <p style="font-size:11px;color:var(--ink-faint);margin:10px 0 0;text-align:center;">* Google Image option works best on desktop application</p>
+        <p style="font-size:11px;color:var(--ink-faint);margin:10px 0 0;text-align:center;">⚠ On iOS: opening Google will close the app. Use the URL field to paste an image address instead.</p>
       </div>
       <!-- Always-visible URL field -->
       <div id="pickerUrlArea" style="display:none;margin-top:10px;">
