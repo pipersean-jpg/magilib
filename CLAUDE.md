@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 29
+# MagiLib Project Status — Session 30
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 29)
-- ### 1. `index.html`
-- **Script version bump**: `?v=s14` → `?v=s15`
-- **Edit modal footer**: Removed "Fetch Price" button (redundant). Changed 3-col grid → 2-col (Cancel / Save).
-- **Edit modal Delete danger zone**: Added "Delete Book" button at bottom of scroll area (red border, danger style).
-- ### 2. `books.js`
-- **`closeEditModal` dirty-check**: Replaced `window.confirm` with `magiConfirm` styled dialog.
+## Last Session (Session 30)
+- ### 1. `scripts/scrape-qtte-inventory.py` (NEW — magilib repo)
+- Full QTTE catalog scraper using Python + Playwright (same engine as the user-provided script that proved reliable)
+- Paginates all QTTE book listings (`/all/books?sort_by=newest`)
+- Output CSV columns: `title, author, publisher, year, source, price, currency, url`
+- `source` hardcoded to `qtte_secondary`, `currency` to `USD`
+- HTML entity decoding (`&amp;` → `&`) via `html.unescape()`
 
 **Known issues carried forward:**
-- **Section 4 (Edit) dirty-check dialog**: User reported it looks "system issued" — likely SW caching old `books.js`. Should resolve after force-close/reopen PWA with s15 bump.
-- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — not yet tested.
-- **CA covers on old books**: Books with raw `conjuringarchive.com` URLs in `cover_url` show title placeholder (CA blocks hotlinking). Fix path: Edit book → Update Cover → pick from Magic Sources. Not a code bug.
+- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — not yet tested (was Session 30 priority, deferred for this side quest)
+- **Section 4 dirty-check dialog reconfirm**: verify styled dialog after s15 PWA reload
+- **CA covers on old books**: existing `books` rows with raw CA URLs in `cover_url` still broken. Fix path: Edit → Update Cover. Not a code bug.
 
 ---
 
@@ -100,10 +100,22 @@ Before running `handoff`, Claude Code MUST:
 - [x] **Cover picker deduplication**: CA + MagicRef same-image dedup
 - [ ] **Section 4 reconfirm**: dirty-check dialog verify after PWA reload
 
-### Session 30 — Next Priorities
-- [ ] **Reconfirm Section 4**: dirty-check dialog styled correctly after s15 reload
-- [ ] **Continue beta walkthrough**: Sections 5–8 (Status, Pricing, Settings, Onboarding)
-- [ ] **CA cover migration** (optional): auto-proxy CA URLs at save time in Edit flow
+### Session 30 — Side Quest ✅ (partial)
+- [x] **QTTE inventory scraper**: Python/Playwright, full catalog, publisher+year included
+- [x] **Admin portal upsert fix**: insert → upsert on (norm_key, source)
+- [x] **book_catalog architecture**: all decisions locked, full Supabase audit completed
+
+### Session 31 — book_catalog Build
+- [ ] **SQL migration**: create `book_catalog` table in Supabase (Sean runs in SQL Editor)
+- [ ] **Seed script** (`scripts/seed-book-catalog.js`): CONJURING_DB → 10,495 rows, MagicRef hotlink + CA download→Storage
+- [ ] **Price merge script** (`scripts/merge-price-db.js`): join price_db into book_catalog price columns
+- [ ] **Admin portal**: Book Catalog section — stats, CSV upload targeting book_catalog
+- [ ] **Validate**: sample well-known titles, confirm cover/price/publisher populated
+
+### Session 32+ — Wire book_catalog into App
+- [ ] **Add flow**: query book_catalog on title entry → auto-fill all fields
+- [ ] **"Not found" toast**: "Not found in local database. Add information manually."
+- [ ] **Reconfirm Section 4** + **beta walkthrough Sections 5–8**
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -171,6 +183,17 @@ Before running `handoff`, Claude Code MUST:
   - **Migration**: one-time batch script converts existing `market_price` values to USD using rate at migration time. After that, only new book additions convert on write. Run once; no ongoing UI impact.
 
 ---
+
+## book_catalog Architecture (locked Session 30)
+- **Schema**: `norm_key` (PK), `title`, `author`, `publisher`, `year`, `cover_url`, `cover_source`, `in_print`, `price_msrp`, `price_secondary`, `price_ebay`, `price_retail`, `updated_at`
+- **Seed source**: CONJURING_DB (`conjuring_db.js`) — 10,495 entries, primary seed
+- **Cover priority**: ConjuringArchive (download→Supabase Storage) → MagicRef (hotlink) → Murphy's → Penguin → Vanishing Inc
+- **CA download rule**: only for books with no MagicRef cover (`m` field absent). ~2,000–2,500 images, ≤80KB each, ~200–250MB storage.
+- **normKey**: standard `title:author` format (same as price_db/scrapers). NOT the aggressive title-only variant in pricing.js/ui.js.
+- **Murphy's author mismatch**: existing price_db Murphy's rows use Last-First author format → won't match book_catalog norm_keys. Migrate forward; don't fix backward.
+- **Admin update path**: scraper → CSV → magilib-admin CSV upload → upserts book_catalog. No server needed.
+- **"Not found" UX**: toast "Not found in local database. Add information manually." Falls through to manual entry.
+- **book_catalog confirmed absent**: `count: exact, head: true` returning `null` ≠ table exists. Confirmed absent via `select()`.
 
 ## Dead Code to Remove (Phase 1 cleanup)
 - **Cloudinary**: `s-cloudName`, `s-cloudPreset`, `testCloudinaryUpload()`, all Cloudinary upload logic — users no longer need this
@@ -250,6 +273,11 @@ Before running `handoff`, Claude Code MUST:
 - **`onload`/`onerror` cover reveal pattern**: img starts `style="display:none"` (inline); `onload` sets `display:block` + hides placeholder; `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS vs inline style conflict.
 - **Never proxy-fetch inside `onerror` on list/grid items**: triggers a waterfall of simultaneous async HTTP requests (one per visible book card). Only proxy at save time. Instant `this.style.display='none'` is the correct `onerror` for grid cards.
 - **`node --check` after every deeply nested async block**: extra `}` in deeply nested try/if/for structures is invisible to the eye but kills the JS parser. Always validate before deploying.
+- **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
+- **CONJURING_DB cover compression**: `"M:filename.jpg"` = MagicRef (hotlink fine). `"C:NNN"` = ConjuringArchive (download + re-host). `m` field presence = has MagicRef page → skip CA download.
+- **QTTE scraper data quality**: publisher fragments under 4 chars are regex garbage (e.g. "The" captured mid-sentence). `html.unescape()` required for HTML entities in scraped text.
+- **Murphy's price_db norm_key uses Last-First author**: `Artist/Magician` CSV field stored as-is. Won't match book_catalog (First Last). Migrate forward; don't fix backward.
+- **magilib-admin has no GitHub remote**: commits are local only. `git push` will fail silently.
 
 ---
 
