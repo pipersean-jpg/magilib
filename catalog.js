@@ -343,6 +343,26 @@ function _applyConditionAdjustment(){
 }
 function currSym(){return{AUD:'A$',USD:'$',GBP:'£',EUR:'€'}[S.settings.currency||'AUD']||'$';}
 
+// Cover image error handler: if the URL is from a hotlink-blocking domain,
+// attempt to re-fetch via proxy and swap the src to the returned data URL.
+// Falls back to hiding the img (placeholder stays visible) on any failure.
+function _imgErr(el) {
+  const src = el.src || '';
+  const isBlocked = src.includes('conjuringarchive.com') || src.includes('magicref.net');
+  if (isBlocked) {
+    fetch('/api/fetch-proxy?action=image&url=' + encodeURIComponent(src))
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.dataUrl) { el.src = d.dataUrl; }
+        else { el.style.display = 'none'; }
+      })
+      .catch(() => { el.style.display = 'none'; });
+  } else {
+    el.style.display = 'none';
+  }
+}
+window._imgErr = _imgErr;
+
 function renderSources(sources){
   const bd=document.getElementById('sourceBreakdown');
   const rows=document.getElementById('sourceRows');
@@ -786,7 +806,7 @@ function renderStatsRow() {
       : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onload="this.nextSibling.style.display='none'" onerror="this.style.display='none'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onload="this.nextSibling.style.display='none'" onerror="_imgErr(this)">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>
@@ -901,7 +921,7 @@ function openCopiesSheet(key) {
     return `<div class="copy-row" onclick="closeCopiesSheet();setTimeout(()=>openModal(${idx}),120);">
       <div class="copy-thumb">
         ${hasCover
-          ? `<img src="${b.coverUrl}" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
+          ? `<img src="${b.coverUrl}" onerror="_imgErr(this)" loading="lazy" decoding="async"/>`
           : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`}
       </div>
       <div class="copy-info">
@@ -1180,7 +1200,7 @@ function openModal(idx){
       ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid var(--tier3);background:var(--tier3-bg);border-radius:0 6px 6px 0;opacity:0.9;"><span style="flex-shrink:0;color:var(--tier3);"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg></span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tier3);letter-spacing:0.02em;">Already in your library</span></div>` : ''}
       <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'zoomCover(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
         ${modalCoverSrc
-          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onerror="_imgErr(this)">`
           : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;opacity:0.15;background:var(--paper-warm);border-radius:6px;color:var(--ink-faint);"><svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg></div>`}
       </div>
       <div class="ms-title">${sanitize(b.title)}</div>
