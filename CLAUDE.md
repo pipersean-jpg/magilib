@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 28
+# MagiLib Project Status — Session 29
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 28)
-- ### 1. `catalog.js`
-- **Splash hang fix**: Removed stray `}` at line ~2024 that closed the outer `try {` (opened at line 1932) prematurely inside the `source === 'conjuring'` cover picker block. JS failed to parse → static HTML splash never dismissed.
-- **Cover onerror revert**: Added then reverted `_imgErr` proxy fallback. Proxy-fetching every failed CA cover URL on page load created a waterfall of slow HTTP requests. Reverted all three `onerror` calls back to `this.style.display='none'`.
-- ### 2. `index.html`
-- **Script version bump**: `?v=s13` → `?v=s14` to bust service worker cache for the catalog.js syntax fix.
-- ### 3. `assets/css/magilib.css`
+## Last Session (Session 29)
+- ### 1. `index.html`
+- **Script version bump**: `?v=s14` → `?v=s15`
+- **Edit modal footer**: Removed "Fetch Price" button (redundant). Changed 3-col grid → 2-col (Cancel / Save).
+- **Edit modal Delete danger zone**: Added "Delete Book" button at bottom of scroll area (red border, danger style).
+- ### 2. `books.js`
+- **`closeEditModal` dirty-check**: Replaced `window.confirm` with `magiConfirm` styled dialog.
 
 **Known issues carried forward:**
-- **Beta walkthrough Sections 4–8**: Edit, Status, Pricing, Settings, Onboarding — not yet tested
-- **CA covers on old books**: Books with raw `conjuringarchive.com` URLs in `cover_url` show title placeholder (CA blocks hotlinking). Fix path: Edit book → Update Cover → pick from Magic Sources (stores base64 data URL). Not a code bug — correct fast fallback.
-- **Stat bar $ values show `—`**: Correct when books have no `market_price` in Supabase. Values appear once a price estimate is fetched via Add or Edit flow.
+- **Section 4 (Edit) dirty-check dialog**: User reported it looks "system issued" — likely SW caching old `books.js`. Should resolve after force-close/reopen PWA with s15 bump.
+- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — not yet tested.
+- **CA covers on old books**: Books with raw `conjuringarchive.com` URLs in `cover_url` show title placeholder (CA blocks hotlinking). Fix path: Edit book → Update Cover → pick from Magic Sources. Not a code bug.
 
 ---
 
@@ -92,8 +92,17 @@ Before running `handoff`, Claude Code MUST:
 - [x] **Filter pill active CSS**: `.filter-pill.active` rules added
 - [x] **Cover proxy revert**: `_imgErr` fallback caused waterfall of slow proxy fetches — reverted to instant `display:none`
 
-### Session 29 — Next Priorities
-- [ ] **Continue beta walkthrough**: Sections 4–8 (Edit, Status, Pricing, Settings, Onboarding)
+### Session 29 — Beta Walkthrough (Section 4 Edit) ✅ (partial)
+- [x] **Proactive review**: 4 bugs found and fixed before device testing
+- [x] **Edit modal cleanup**: Fetch Price removed, Delete Book added, 2-col footer
+- [x] **`confirmDelete` + `closeEditModal`**: `window.confirm` → `magiConfirm`
+- [x] **Condition adjustment in Edit**: `editPriceBase` seeded from stored price
+- [x] **Cover picker deduplication**: CA + MagicRef same-image dedup
+- [ ] **Section 4 reconfirm**: dirty-check dialog verify after PWA reload
+
+### Session 30 — Next Priorities
+- [ ] **Reconfirm Section 4**: dirty-check dialog styled correctly after s15 reload
+- [ ] **Continue beta walkthrough**: Sections 5–8 (Status, Pricing, Settings, Onboarding)
 - [ ] **CA cover migration** (optional): auto-proxy CA URLs at save time in Edit flow
 
 ### Beta Launch Checklist
