@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 27
+# MagiLib Project Status — Session 28
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 27)
-- ### 1. `assets/css/magilib.css`
-- **`.book-cover-ph`**: added `position:absolute;top:0;left:0` — placeholder now overlays the image so `display:none` is no longer needed on the img, fixing the iOS lazy-load block
-- **`.welcome-btn-secondary`**: `border:0.5px` → `border:1px` — sub-pixel border was invisible on some iOS displays
-- **`.btn-queue-action`**: added `justify-content:center;text-align:center` — batch queue buttons now have centred text
-- ### 2. `catalog.js`
-- **Book cover template** (line ~785): removed `style="display:none"` from img; `onload` hides placeholder; `onerror` hides img. Placeholder is now `position:absolute` so it overlays the img naturally — no display:none + lazy-load conflict
+## Last Session (Session 28)
+- ### 1. `catalog.js`
+- **Splash hang fix**: Removed stray `}` at line ~2024 that closed the outer `try {` (opened at line 1932) prematurely inside the `source === 'conjuring'` cover picker block. JS failed to parse → static HTML splash never dismissed.
+- **Cover onerror revert**: Added then reverted `_imgErr` proxy fallback. Proxy-fetching every failed CA cover URL on page load created a waterfall of slow HTTP requests. Reverted all three `onerror` calls back to `this.style.display='none'`.
+- ### 2. `index.html`
+- **Script version bump**: `?v=s13` → `?v=s14` to bust service worker cache for the catalog.js syntax fix.
+- ### 3. `assets/css/magilib.css`
 
 **Known issues carried forward:**
-- **Beta walkthrough**: Sections 3–8 still needed (Library, Edit, Status, Pricing, Settings, Onboarding)
-- **Google Images → blank screen on iOS**: confirmed iOS PWA limitation — opening external link restarts app. Warning text added; no JS fix possible.
-- **Password reset link opens browser**: iOS PWA limitation — email links always open Safari. Not fixable in a web app.
+- **Beta walkthrough Sections 4–8**: Edit, Status, Pricing, Settings, Onboarding — not yet tested
+- **CA covers on old books**: Books with raw `conjuringarchive.com` URLs in `cover_url` show title placeholder (CA blocks hotlinking). Fix path: Edit book → Update Cover → pick from Magic Sources (stores base64 data URL). Not a code bug — correct fast fallback.
+- **Stat bar $ values show `—`**: Correct when books have no `market_price` in Supabase. Values appear once a price estimate is fetched via Add or Edit flow.
 
 ---
 
@@ -87,9 +87,14 @@ Before running `handoff`, Claude Code MUST:
 - [x] Onboarding polish (wizard alignment, welcome button border)
 - [x] Add flow bugs fixed (frozen scan status, price message, cover picker, batch queue)
 
-### Session 28 — Next Priorities
-- [ ] **Continue beta walkthrough**: Sections 3–8 (Library, Edit, Status, Pricing, Settings, Onboarding)
-- [ ] **Verify cover fix on device** before proceeding
+### Session 28 — Beta Walkthrough (Section 3) ✅
+- [x] **Splash hang fix**: syntax error (`try` missing catch) in cover picker block — `node --check` caught it
+- [x] **Filter pill active CSS**: `.filter-pill.active` rules added
+- [x] **Cover proxy revert**: `_imgErr` fallback caused waterfall of slow proxy fetches — reverted to instant `display:none`
+
+### Session 29 — Next Priorities
+- [ ] **Continue beta walkthrough**: Sections 4–8 (Edit, Status, Pricing, Settings, Onboarding)
+- [ ] **CA cover migration** (optional): auto-proxy CA URLs at save time in Edit flow
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -234,6 +239,8 @@ Before running `handoff`, Claude Code MUST:
 - **`toggleDrafts(btn)`**: expects a real DOM element — calling with `null` crashes. Set `S.showDrafts = true` directly and call `renderCatalog()` instead.
 - **`el.style.display` reflects inline styles only, not computed styles**: `el.style.display !== 'none'` returns `true` when display is CSS-only (no inline style set), because `el.style.display` is `''`. Always use positive match `=== 'block'` for toggle checks.
 - **`onload`/`onerror` cover reveal pattern**: img starts `style="display:none"` (inline); `onload` sets `display:block` + hides placeholder; `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS vs inline style conflict.
+- **Never proxy-fetch inside `onerror` on list/grid items**: triggers a waterfall of simultaneous async HTTP requests (one per visible book card). Only proxy at save time. Instant `this.style.display='none'` is the correct `onerror` for grid cards.
+- **`node --check` after every deeply nested async block**: extra `}` in deeply nested try/if/for structures is invisible to the eye but kills the JS parser. Always validate before deploying.
 
 ---
 
