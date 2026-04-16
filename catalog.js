@@ -2021,7 +2021,6 @@ async function searchCoverSource(source) {
             }
           }
         }
-      }
 
       // 2. Render exactly two cards: Conjuring Archive + MagicRef
       var cardHtml = '';
