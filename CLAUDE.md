@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 25
+# MagiLib Project Status — Session 26
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,13 +29,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 25)
-- ### 1. `assets/css/magilib.css` — New CSS classes
-- **Copy-row (copies sheet):**
-- `.copy-thumb img` — cover fill
-- `.copy-info`, `.copy-info-top`, `.copy-info-top .book-condition-badge`
-- `.copy-price`, `.copy-meta`, `.copy-chevron`
-- `.copy-row .sold-badge`, `.copy-row .draft-badge` — compact context overrides
+## Last Session (Session 26)
+- ### 1. `assets/css/magilib.css`
+- **`.book-cover img`**: removed `display:none` — was causing iOS Safari to skip lazy-loading images entirely when CSS `display:none` was present even though inline `style="display:block"` overrode it. Now just `width:100%;height:100%;object-fit:cover`.
+- **`.catalog-loading`**: new — flex-centered spinner wrapper (`display:flex;align-items:center;justify-content:center;min-height:50vh`)
+- **`.empty-search-container`**: added `width:100%`
+- **`.src-evidence-wrap/heading/row/dot/label/link/price`** etc: 16 new source evidence row classes
+- **`.faq-item/btn/question/chevron/answer/answer-body`**: 7 new FAQ accordion classes (plus `:last-child` border fix)
 
 **Known issues carried forward:**
 - **Beta readiness walkthrough**: auth → add → search → edit → price → settings — still needed on device. Carried forward since Session 13.
@@ -76,9 +76,15 @@ Before running `handoff`, Claude Code MUST:
 - [x] Empty/loading states → `.catalog-loading` + fixes; Retry button stripped; empty search container stripped
 - [x] Loading spinner now flex-centered (both axes)
 
-### Session 26 — Next Priorities
+### Session 26 — CSS Cleanup + Cover Fix ✅
+- [x] Copy-row, FAQ accordion, source evidence rows, empty/loading states → named CSS classes
+- [x] FAQ first-tap bug fixed (`=== 'block'` check)
+- [x] Book cover display bug fixed — `onload`/`onerror` pattern, removed CSS `display:none` conflict with `loading="lazy"`
+
+### Session 27 — Next Priorities
 - [ ] **Beta readiness walkthrough**: auth → add → search → edit → price → settings — full end-to-end QA on device
-- [ ] **CSS cleanup continued** (if time): book card grid, modal header
+- [ ] **Verify cover fix on device**
+- [ ] **CSS cleanup continued** (if time): modal header, tutorial slides
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -216,6 +222,9 @@ Before running `handoff`, Claude Code MUST:
 - **`text-align:center` ≠ truly centered**: horizontal only. Use `display:flex; align-items:center; justify-content:center` for full viewport centering of loading/empty states.
 - **Check for existing descendant CSS rules before writing inline styles**: `.empty-state button` was fully styled in CSS — the Retry button inline style was 100% redundant. Always grep the CSS file for the container class before adding inline styles to children.
 - **`last-child:border-none` as an inline style is a no-op**: it's interpreted as a CSS property name, not a selector. Must be written as `.foo:last-child { border-bottom:none }` in a stylesheet.
+- **`loading="lazy"` + CSS `display:none` on iOS Safari**: even when inline `style="display:block"` overrides CSS `display:none`, iOS Safari may skip lazy loading the image by evaluating the CSS rule before inline styles. Fix: remove `display:none` from CSS; control initial visibility with inline style + `onload`/`onerror` handlers.
+- **`el.style.display` reflects inline styles only, not computed styles**: `el.style.display !== 'none'` returns `true` when display is CSS-only (no inline style set), because `el.style.display` is `''`. Always use positive match `=== 'block'` for toggle checks.
+- **`onload`/`onerror` cover reveal pattern**: img starts `style="display:none"` (inline); `onload` sets `display:block` + hides placeholder; `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS vs inline style conflict.
 
 ---
 

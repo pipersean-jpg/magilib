@@ -782,7 +782,7 @@ function renderStatsRow() {
       : '';
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
       <div class="book-cover">
-        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" style="display:block" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph" style="${hasCover?'display:none':''}"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
+        ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" style="display:none" onload="this.style.display='block';this.nextSibling.style.display='none'" onerror="this.nextSibling.style.display='flex'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
         ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       </div>

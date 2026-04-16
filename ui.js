@@ -865,7 +865,7 @@ function closeSupport() {
 function toggleFaq(i) {
   const answer = document.getElementById('faqAnswer' + i);
   const chevron = document.getElementById('faqChevron' + i);
-  const isOpen = answer.style.display !== 'none';
+  const isOpen = answer.style.display === 'block';
   answer.style.display = isOpen ? 'none' : 'block';
   chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
