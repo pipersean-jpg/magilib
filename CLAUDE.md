@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 33
+# MagiLib Project Status — Session 34
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,17 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 33)
+## Last Session (Session 34)
 - ### 1. `catalog.js` (MODIFIED)
-- **Magic Sources rewrite** — `searchCoverSource('conjuring')` block overhauled:
--   - **Step 1**: Query `book_catalog` by title prefix → use `cover_url` directly based on `cover_source`: `supabase_storage` → `caUrl`, `magicref` → `mrUrl`. No more MagicRef page scraping.
--   - **Step 2**: CONJURING_DB lookup for CA cover — now correctly scans `entry.i[]` for `C:` prefixed codes first, then `entry.c` only if it's `C:` prefixed. Previously used `entry.c` even when it was `M:` (MagicRef URL), causing wrong "Courtesy of Conjuring Archive" attribution.
--   - **Current cover card**: prepended before the option cards when a cover is already set (`S.editCoverUrl` / `S.coverUrl`). Dimmed, dashed border, labeled "Current / Your selection", non-interactive. Separated from options by a vertical `1px` divider. Results area switches to `display:flex` for this layout.
--   - `makeCard()` updated to accept `isCurrentCard` flag — current card omits `onclick` and uses `cursor:default`.
+- **"+ Wishlist" button added** to library book modal (`ms-actions-secondary` full-width ghost button, below the locked 2×2 grid). Calls `toggleWishlistStatus()`.
+- **"Move to Library" button added** to wishlist book modal (`ms-actions-secondary` full-width ghost button, between primary actions and the hr separator). Calls `toggleWishlistStatus()`.
+- **`deleteBook` console.log removed** — debug `console.log("Delete triggered for:", bookId)` and `console.warn` removed.
+- **Version bumped** `?v=s33` → `?v=s34`
+- ### 2. `ui.js` (MODIFIED)
 
 **Known issues carried forward:**
-- **Beta walkthrough Sections 5–8** — Status, Pricing, Settings, Onboarding — still not tested
-- **Section 4 dirty-check dialog reconfirm** — verify styled dialog after PWA reload
-- **`enrichCoversFromCatalog` console.logs** — still present, remove once confirmed working
+- **Section 4 dirty-check**: verify styled `magiConfirm` dialog fires correctly after PWA reload (code is correct)
+- **Beta launch checklist**: all sections now reviewed — ready for device walkthrough
 
 ---
 
@@ -126,10 +125,18 @@ Before running `handoff`, Claude Code MUST:
 - [x] **CA attribution fix**: scan `entry.i[]` for `C:` codes; don't use `M:`-prefixed `entry.c` as CA
 - [x] **Current cover card**: reference card + vertical divider prepended to Magic Sources results
 
-### Session 34 — Beta QA
-- [ ] Confirm cover enrichment working (remove console.logs)
-- [ ] **Beta readiness walkthrough**: Status → Pricing → Settings → Onboarding (Sections 5–8)
-- [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload
+### Session 34 — Beta QA ✅ (partial)
+- [x] **Sections 5–8 code review**: Status, Pricing, Settings, Onboarding — all reviewed, one bug fixed
+- [x] **"+ Wishlist" / "Move to Library" buttons**: missing from modals — added to both library and wishlist book views
+- [x] **Duplicate `toggleWishlistStatus` removed** from `ui.js`
+- [x] **Console.logs cleaned**: `deleteBook` debug log removed; `enrichCoversFromCatalog` was already clean
+- [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload (code correct, needs device test)
+- [ ] **Full device walkthrough**: end-to-end beta checklist on device
+
+### Session 35 — Device Walkthrough & Beta Sign-off
+- [ ] Full device walkthrough: auth → add → library → edit (dirty-check) → status → pricing → settings → onboarding
+- [ ] Section 4 dirty-check: verify `magiConfirm` fires after PWA reload
+- [ ] Beta launch checklist sign-off (see checklist below)
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -295,6 +302,8 @@ Before running `handoff`, Claude Code MUST:
 - **`entry.c` in CONJURING_DB is primary cover, not necessarily CA**: can be `M:filename` (MagicRef image). Scan `entry.i[]` for `C:` codes to find actual CA images. Only use `entry.c` as CA if it starts with `C:`.
 - **`book_catalog.cover_source` values**: `'supabase_storage'` = CA image in Supabase bucket; `'magicref'` = hotlink to magicref.net. Query `cover_url` directly — far more reliable than scraping MagicRef page HTML via proxy.
 - **Flex override in grid container**: set `resultsEl.style.display='flex'` inline to override CSS `display:grid`. `resetPickerState()` restores `display:grid` — no cleanup needed in the conjuring handler.
+- **Duplicate `window.fn =` overwrites silently**: if two files both define `function toggleWishlistStatus()` and one does `window.toggleWishlistStatus = toggleWishlistStatus`, the last-loaded file wins. Check for cross-file duplicates when a feature appears wired but doesn't fire as expected.
+- **`ms-actions-secondary` full-width button**: `display:grid;grid-template-columns:1fr 1fr` applies to the container — override per-button with `style="width:100%"` (or `grid-column:1/-1`) when you want a single full-width button in the secondary row.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
 - **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.
 - **Supabase upsert INSERT path hits NOT NULL constraint**: even when all target rows exist, Supabase upsert may attempt INSERT for some rows. For known-existing rows, use concurrent `.update().eq()` calls instead of upsert.

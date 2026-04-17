@@ -1290,6 +1290,9 @@ function openModal(idx){
           <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
           <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
         </div>
+        <div class="ms-actions-secondary">
+          <button class="btn-ghost" style="width:100%" onclick="toggleWishlistStatus()">Move to Library</button>
+        </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
           <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
@@ -1301,6 +1304,9 @@ function openModal(idx){
           <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
           <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
           <button class="btn-action" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+        </div>
+        <div class="ms-actions-secondary">
+          <button class="btn-ghost" id="modalWishlistBtn" style="width:100%" onclick="toggleWishlistStatus()">+ Wishlist</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
@@ -2713,9 +2719,8 @@ window.magiPrompt = magiPrompt;
  * Enhanced Delete Logic (Brand Safe)
  */
 async function deleteBook(bookId) {
-  console.log("Delete triggered for:", bookId);
   const book = S.books.find(b => b._id === bookId);
-  if (!book) { console.warn("deleteBook: no book found for id", bookId); return; }
+  if (!book) return;
   magiConfirm({
     title: 'Delete Book?',
     message: `This will permanently remove "<strong>${book.title}</strong>" from your collection. This cannot be undone.`,

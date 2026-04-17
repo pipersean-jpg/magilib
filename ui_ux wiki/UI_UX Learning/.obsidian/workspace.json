@@ -1,0 +1,209 @@
+{
+  "main": {
+    "id": "09905ae609bdd3ba",
+    "type": "split",
+    "children": [
+      {
+        "id": "ec6a90b16f8f9387",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "765610fdd473e010",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "7ca8f79c8c76511f",
+    "type": "split",
+    "children": [
+      {
+        "id": "c4de4b0e6c2d1039",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f6f6bf5e02f0cd2e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "de81ba4f3154ead7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "002d025b63f8d53b",
+            "type": "leaf",
+            "state": {
+              "type": "bases",
+              "state": {
+                "file": "Untitled.base",
+                "viewName": "Table"
+              },
+              "icon": "lucide-table",
+              "title": "Untitled"
+            }
+          },
+          {
+            "id": "126538c185c324e8",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "01ad358fc18be8b3",
+    "type": "split",
+    "children": [
+      {
+        "id": "066ffbfadfa34875",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c62cc62dc7d8a431",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "e581f9df6ccdbad5",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "9b430826c55d6f1c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "724e230a960961f4",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "21fb5a1616e7f884",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "765610fdd473e010",
+  "lastOpenFiles": [
+    "Mobile App Ux Design_ Tips to Improve Your User Experience.md",
+    "Untitled.canvas",
+    "2026-04-18.md",
+    "Untitled.base",
+    "Clippings/10 UX and UI best practices to build better business apps.md",
+    "Untitled.md",
+    "Clippings",
+    "What platforms and practices do you use for user testing in UX research_.md",
+    "Mobile App Usability Testing_ Methods, Tools, Best Practices.md",
+    "App Testing Best Practices for Optimal UX, Performance, and Security.md",
+    "Mobile App Usability Testing_ A Practical Guide & Testing Tools.md",
+    "Tips For Effective App UI Usability Testing.md",
+    "Welcome.md"
+  ]
+}

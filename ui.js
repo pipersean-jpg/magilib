@@ -36,22 +36,6 @@ function toggleDrafts(btn) {
   renderCatalog();
 }
 
-// ── WISHLIST TOGGLE ──
-async function toggleWishlistStatus() {
-  const idx = S.currentModalIdx;
-  const b = S.books[idx];
-  if (!b) return;
-  const isWishlist = b.sold === 'Wishlist';
-  const newStatus = isWishlist ? '' : 'Wishlist';
-  if (!b._id) { showToast('Could not update wishlist status', 'error'); return; }
-  await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
-  b.sold = newStatus;
-  const btn = document.getElementById('modalWishlistBtn');
-  if (btn) btn.textContent = isWishlist ? '+ Wishlist' : 'In Wishlist ✓';
-  renderCatalog();
-  showToast(isWishlist ? 'Removed from wishlist' : 'Added to wishlist ✓', 'success');
-  closeModal();
-}
 
 // ── STAR RATING ──
 function renderModalStars(book) {
