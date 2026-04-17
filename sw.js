@@ -1,6 +1,6 @@
 // MagiLib Service Worker — Shell caching + offline read
 // Version bumped each session alongside ?v=sN script tags.
-const CACHE_NAME = 'magilib-sw-s13';
+const CACHE_NAME = 'magilib-sw-s32d';
 
 // App shell: pre-cache these on install (no query string — matched ignoring search).
 const SHELL_ASSETS = [
@@ -55,17 +55,10 @@ self.addEventListener('fetch', event => {
   // Claude API proxy — always network-only.
   if (url.pathname.startsWith('/api/')) return;
 
-  // CDN assets (fuse.js, Google Fonts CSS+files) — cache-first.
-  if (
-    url.hostname === 'cdn.jsdelivr.net' ||
-    url.hostname === 'fonts.googleapis.com' ||
-    url.hostname === 'fonts.gstatic.com'
-  ) {
-    event.respondWith(_cacheFirst(req));
-    return;
-  }
+  // External origins (CDN, fonts, cover images) — let the browser handle directly.
+  if (url.origin !== self.location.origin) return;
 
-  // App shell and everything else — network-first, cache as fallback.
+  // App shell — network-first, cache as fallback.
   event.respondWith(_networkFirst(req));
 });
 

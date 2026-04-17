@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 31
+# MagiLib Project Status — Session 32
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 31)
-- ### 1. `scripts/migrate-create-book-catalog.sql` (NEW)
-- Creates `book_catalog` table with locked schema
-- RLS enabled, public SELECT policy, service role bypasses for writes
-- Indexes on `lower(title)` and `lower(author)`
-- CHECK constraints on `cover_source` and `in_print`
-- Sean ran this in Supabase SQL Editor — confirmed success
+## Last Session (Session 32)
+- ### 1. `conjuring.js` (MODIFIED)
+- Added `queryBookCatalog(title)` — queries `book_catalog` by `ilike` prefix match on title
+- Added `_fillFromCatalogRow(row)` — fills empty f-author, f-year, f-publisher, cover, S.priceBase from a catalog row
+- Added step 6 to `applyConjuringMatch` — after live scrape completes, enriches any still-empty fields from `book_catalog`
+- Added `onTitleBlur()` — on title field blur: applies title case, then if author still empty queries `book_catalog`. If found fills fields; if not found shows "Not found in local database. Add information manually." toast
+- ### 2. `index.html` (MODIFIED)
 
 **Known issues carried forward:**
-- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — still not tested
-- **Section 4 dirty-check dialog reconfirm**: verify styled dialog after PWA reload
-- **CA covers on old books**: existing `books` rows with raw CA URLs in `cover_url` still broken. Fix path: Edit → Update Cover. Not a code bug.
+- **Old SW still controlling page for Sean** — needs manual DevTools → Application → Service Workers → Unregister, then reload. SW version bumps alone don't evict old SWs reliably.
+- **`enrichCoversFromCatalog` coverage** — norm_key pass matches books that have author stored. Books with no stored author won't match pass 1; pass 2 (title prefix) should catch most. Coverage not fully confirmed.
+- **Beta walkthrough Sections 5–8** — Status, Pricing, Settings, Onboarding — still not tested
 
 ---
 
@@ -113,10 +113,18 @@ Before running `handoff`, Claude Code MUST:
 - [x] **Admin portal**: Book Catalog section — stats + CSV upload in `magilib-admin`
 - [x] **Validate**: Royal Road $21 · Strong Magic $139 · Paper Engine $46 · Card College 1 $246
 
-### Session 32 — Wire book_catalog into App
-- [ ] **Add flow**: query book_catalog on title entry → auto-fill all fields
-- [ ] **"Not found" toast**: "Not found in local database. Add information manually."
+### Session 32 — Wire book_catalog into App ✅ (partial)
+- [x] **Add flow**: `onTitleBlur()` queries `book_catalog` on title blur → auto-fill author/publisher/year/cover
+- [x] **`applyConjuringMatch` enrichment**: step 6 fills publisher/price from `book_catalog` after live scrape
+- [x] **"Not found" toast**: "Not found in local database. Add information manually."
+- [x] **Cover fix**: SW was CSP-blocking external image fetches — fixed by bypassing SW for all external origins
+- [x] **`enrichCoversFromCatalog()`**: post-load pass fills missing/CA covers from `book_catalog` (norm_key + clean-title prefix)
 - [ ] **Reconfirm Section 4** + **beta walkthrough Sections 5–8**
+
+### Session 33 — Beta QA
+- [ ] Confirm cover enrichment working (remove console.logs)
+- [ ] **Beta readiness walkthrough**: Status → Pricing → Settings → Onboarding (Sections 5–8)
+- [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -274,6 +282,11 @@ Before running `handoff`, Claude Code MUST:
 - **`onload`/`onerror` cover reveal pattern**: img starts `style="display:none"` (inline); `onload` sets `display:block` + hides placeholder; `onerror` shows placeholder. Placeholder visible during load = natural skeleton. No CSS vs inline style conflict.
 - **Never proxy-fetch inside `onerror` on list/grid items**: triggers a waterfall of simultaneous async HTTP requests (one per visible book card). Only proxy at save time. Instant `this.style.display='none'` is the correct `onerror` for grid cards.
 - **`node --check` after every deeply nested async block**: extra `}` in deeply nested try/if/for structures is invisible to the eye but kills the JS parser. Always validate before deploying.
+- **SW `fetch()` is subject to `connect-src` CSP, not `img-src`**: when the SW intercepts an image request and calls `fetch()`, the browser applies `connect-src`. Images loaded via `<img src>` use `img-src`. Fix: return early (no `event.respondWith`) for all `url.origin !== self.location.origin` requests.
+- **`nextElementSibling` > `nextSibling` in inline handlers**: `nextSibling` can return a text node. `nextElementSibling` always returns an Element — always use it in `onload`/`onerror` inline handlers.
+- **Supabase `.or()` breaks on special chars in values**: apostrophes, commas, colons, parens in book titles cause PostgREST parse errors. Use `.in('norm_key', keys)` for exact matches; only use `.or()` with pre-cleaned `[a-z0-9 ]` strings.
+- **SW version bumps don't reliably evict old SWs**: `skipWaiting()` + `clients.claim()` may not be enough. Users may need manual Unregister in DevTools. Consider `registration.update()` on page load.
+- **`const` redeclaration crash**: two JS files both declaring `const PUBLISHERS` throws SyntaxError on the second load — the entire file fails to parse. Keep constants in one canonical file.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
 - **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.
 - **Supabase upsert INSERT path hits NOT NULL constraint**: even when all target rows exist, Supabase upsert may attempt INSERT for some rows. For known-existing rows, use concurrent `.update().eq()` calls instead of upsert.

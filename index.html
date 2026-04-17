@@ -264,7 +264,7 @@
       <div class="form-section">
         <div class="section-title">Details</div>
         <div class="field-row">
-          <div class="field" style="position:relative;"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="applyTitleCase('f-title')" autocomplete="off" oninput="debouncedConjuringCheck(this.value)" onkeydown="handleTitleKey(event)"/><div id="titleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:350px;overflow-y:auto;margin-top:2px;"></div></div>
+          <div class="field" style="position:relative;"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. The Expert at the Card Table" onblur="onTitleBlur()" autocomplete="off" oninput="debouncedConjuringCheck(this.value)" onkeydown="handleTitleKey(event)"/><div id="titleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:350px;overflow-y:auto;margin-top:2px;"></div></div>
         </div>
         <div class="field-row">
           <div class="field"><label>Author *</label><input type="text" id="f-author" placeholder="e.g. S. W. Erdnase" onblur="applyTitleCase('f-author')" autocomplete="off"/></div>
@@ -735,15 +735,15 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s15"></script>
-<script src="/globals.js?v=s15"></script>
-<script src="/auth.js?v=s15"></script>
-<script src="/catalog.js?v=s15"></script>
-<script src="/books.js?v=s15"></script>
-<script src="/pricing.js?v=s15"></script>
-<script src="/conjuring.js?v=s15"></script>
-<script src="/ui.js?v=s15"></script>
-<script src="/publishers.js?v=s15"></script>
+<script src="/supabase.min.js?v=s32"></script>
+<script src="/globals.js?v=s32"></script>
+<script src="/auth.js?v=s32"></script>
+<script src="/catalog.js?v=s32"></script>
+<script src="/books.js?v=s32"></script>
+<script src="/pricing.js?v=s32"></script>
+<script src="/conjuring.js?v=s32"></script>
+<script src="/ui.js?v=s32"></script>
+<script src="/publishers.js?v=s32"></script>
 
 <!-- SERVICE WORKER REGISTRATION -->
 <script>

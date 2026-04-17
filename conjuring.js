@@ -193,6 +193,40 @@ function conjuringFuzzyLookup(title) {
 // a C:-prefixed cover but no `m` field. Merged entries (both sources) count as MagicRef.
 function _isMagicRef(entry) { return !!(entry && entry.m); }
 
+// ── BOOK CATALOG LOOKUP (Supabase) ──
+async function queryBookCatalog(title) {
+  if (!title || typeof _supa === 'undefined') return null;
+  const { data, error } = await _supa
+    .from('book_catalog')
+    .select('title,author,publisher,year,cover_url,price_ebay,price_msrp')
+    .ilike('title', title.trim() + '%')
+    .order('title')
+    .limit(1);
+  if (error || !data || !data.length) return null;
+  return data[0];
+}
+
+function _fillFromCatalogRow(row) {
+  const fill = (id, val) => {
+    if (!val) return;
+    const el = document.getElementById(id);
+    if (el && !el.value.trim()) {
+      el.value = val;
+      el.classList.add('field-populated');
+      setTimeout(() => el.classList.remove('field-populated'), 3000);
+    }
+  };
+  if (row.author)    fill('f-author',    toTitleCase(row.author));
+  if (row.year)      fill('f-year',      String(row.year));
+  if (row.publisher) fill('f-publisher', toTitleCasePublisher(row.publisher));
+  if (row.cover_url && !S.coverUrl) {
+    setCover(row.cover_url);
+    S.coverUrl = row.cover_url;
+  }
+  const price = row.price_ebay || row.price_msrp;
+  if (price && !S.priceBase) S.priceBase = price;
+}
+
 // ── TOP N FUZZY MATCHES (for title dropdown) ──
 // Surfaces disambiguated variants (e.g. all "Tricks of the Trade" authors) first,
 // then fills remaining slots with fuzzy matches.
@@ -301,6 +335,10 @@ async function applyConjuringMatch(match, scanSource) {
       ? 'Local database: ' + filledFromDB + ' field' + (filledFromDB !== 1 ? 's' : '') + ' filled.'
       : 'Matched in local database.';
   }
+
+  // 6. Fill any still-empty fields (publisher, price) from book_catalog
+  const catalogRow = await queryBookCatalog(canonical);
+  if (catalogRow) _fillFromCatalogRow(catalogRow);
 }
 
 // ── SCRAPE CONJURING ARCHIVE METADATA ──
@@ -510,5 +548,23 @@ function handleTitleKey(e) {
   if (e.key === 'Enter' && activeIdx >= 0) {
     e.preventDefault();
     items[activeIdx].dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  }
+}
+
+// ── TITLE FIELD BLUR ──
+// After user leaves title field: if no conjuring match auto-filled the author,
+// try book_catalog directly. Toast if nothing found.
+async function onTitleBlur() {
+  applyTitleCase('f-title');
+  const titleEl = document.getElementById('f-title');
+  const title = titleEl ? titleEl.value.trim() : '';
+  if (title.length < 3) return;
+  const authorEl = document.getElementById('f-author');
+  if (authorEl && authorEl.value.trim()) return; // already filled by conjuring match
+  const row = await queryBookCatalog(title);
+  if (row) {
+    _fillFromCatalogRow(row);
+  } else {
+    if (typeof showToast === 'function') showToast('Not found in local database. Add information manually.');
   }
 }
