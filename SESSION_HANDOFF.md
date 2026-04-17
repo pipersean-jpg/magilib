@@ -1,67 +1,63 @@
-# SESSION HANDOFF — 2026-04-18 (Session 32)
+# SESSION HANDOFF — 2026-04-18 (Session 33)
 
 ## Session Summary
-Wired `book_catalog` into the Add flow (title blur auto-fill + post-match enrichment). Fixed cover display in library: SW was intercepting external image requests and CSP-blocking them. Covers now load. Cover enrichment from `book_catalog` partially working (norm_key pass + clean-title prefix pass).
+Fixed the Magic Sources cover picker: replaced unreliable MagicRef page-scraping with direct `book_catalog` queries, fixed wrong CA attribution caused by `M:` cover codes, added a "Current cover" reference card with vertical divider separator.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `conjuring.js` (MODIFIED)
-- Added `queryBookCatalog(title)` — queries `book_catalog` by `ilike` prefix match on title
-- Added `_fillFromCatalogRow(row)` — fills empty f-author, f-year, f-publisher, cover, S.priceBase from a catalog row
-- Added step 6 to `applyConjuringMatch` — after live scrape completes, enriches any still-empty fields from `book_catalog`
-- Added `onTitleBlur()` — on title field blur: applies title case, then if author still empty queries `book_catalog`. If found fills fields; if not found shows "Not found in local database. Add information manually." toast
+### 1. `catalog.js` (MODIFIED)
+- **Magic Sources rewrite** — `searchCoverSource('conjuring')` block overhauled:
+  - **Step 1**: Query `book_catalog` by title prefix → use `cover_url` directly based on `cover_source`: `supabase_storage` → `caUrl`, `magicref` → `mrUrl`. No more MagicRef page scraping.
+  - **Step 2**: CONJURING_DB lookup for CA cover — now correctly scans `entry.i[]` for `C:` prefixed codes first, then `entry.c` only if it's `C:` prefixed. Previously used `entry.c` even when it was `M:` (MagicRef URL), causing wrong "Courtesy of Conjuring Archive" attribution.
+  - **Current cover card**: prepended before the option cards when a cover is already set (`S.editCoverUrl` / `S.coverUrl`). Dimmed, dashed border, labeled "Current / Your selection", non-interactive. Separated from options by a vertical `1px` divider. Results area switches to `display:flex` for this layout.
+  - `makeCard()` updated to accept `isCurrentCard` flag — current card omits `onclick` and uses `cursor:default`.
+- Script versions bumped `?v=s32` → `?v=s33`
 
 ### 2. `index.html` (MODIFIED)
-- `f-title` `onblur` changed from `applyTitleCase('f-title')` → `onTitleBlur()`
-- All script versions bumped `?v=s15` → `?v=s32`
+- All script version tags bumped `?v=s32` → `?v=s33`
 
-### 3. `catalog.js` (MODIFIED)
-- Added `enrichCoversFromCatalog()` — called after `loadCatalog()` renders, queries `book_catalog` in two passes:
-  - Pass 1: exact `norm_key` via `.in()` (handles special chars)
-  - Pass 2: clean-title prefix via `.or('norm_key.ilike.cleanTitle:%,...')` for unmatched books
-  - Re-renders only if any covers changed
-- Fixed `nextSibling` → `nextElementSibling` in card cover img `onload` handler
-- Removed duplicate `PUBLISHERS` const (was redeclaring `publishers.js`'s const — commented out)
+---
 
-### 4. `sw.js` (MODIFIED)
-- **Root fix**: SW was intercepting ALL external requests and attempting `fetch()` on them, which CSP `connect-src` blocks. Added early return for any `url.origin !== self.location.origin` — external images/CDN/fonts now bypass SW entirely and load via browser's `img-src`/`script-src` (which allow `https:`)
-- Removed CDN `_cacheFirst` block (was causing CSP violations for fuse.js and Google Fonts)
-- Cache version bumped to `magilib-sw-s32d`
+## Root Cause Found: CONJURING_DB `entry.c` vs `entry.i`
+
+Key discovery: for books with both CA and MagicRef entries, `entry.c` holds the **primary cover code** which may be `M:filename.jpg` (MagicRef image), while `entry.i[]` holds additional images including `C:NNNN` (CA image ID). Example — "Versatile Card Magic" by Frank Simon:
+- `entry.c = "M:simonfrankversatilecard.jpg"` — MagicRef primary
+- `entry.i = ["C:2182"]` — CA image at `conjuringarchive.com/images/covers/2182a.jpg`
+
+The old code used `entry.c` blindly and labeled it "Conjuring Archive" regardless. Fix: scan `entry.i` for `C:` codes first; fall through to `entry.c` only if it's also `C:` prefixed.
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Old SW still controlling page for Sean** — needs manual DevTools → Application → Service Workers → Unregister, then reload. SW version bumps alone don't evict old SWs reliably.
-- **`enrichCoversFromCatalog` coverage** — norm_key pass matches books that have author stored. Books with no stored author won't match pass 1; pass 2 (title prefix) should catch most. Coverage not fully confirmed.
 - **Beta walkthrough Sections 5–8** — Status, Pricing, Settings, Onboarding — still not tested
 - **Section 4 dirty-check dialog reconfirm** — verify styled dialog after PWA reload
+- **`enrichCoversFromCatalog` console.logs** — still present, remove once confirmed working
+- **CA covers not in Supabase Storage for MagicRef books** — books with `m` field had CA download skipped during seed. The picker now finds CA via `entry.i` proxy fetch, but these aren't in storage. Could batch-download in a future session if quality matters.
 
 ---
 
-## Next Session Plan (Session 33)
+## Next Session Plan (Session 34)
 
-### 1. Confirm cover enrichment working after SW unregister
-- Check console for `[covers]` logs if still needed
-- Remove console.log lines from `enrichCoversFromCatalog` once confirmed working
-
-### 2. Beta walkthrough Sections 5–8
+### 1. Beta walkthrough Sections 5–8
 - Status: Mark Sold, Wishlist, Move to Library
 - Pricing: Fetch estimate (Add) + stored price display + eBay link (Library)
 - Settings: profile, security, currency, condition presets, stat cards, CSV export/import
 - Onboarding: welcome + feature tour for new users
 
-### 3. Section 4 reconfirm
+### 2. Section 4 reconfirm
 - Dirty-check dialog verify after PWA reload
+
+### 3. Clean up console.logs
+- Remove `[covers]` debug logs from `enrichCoversFromCatalog` once confirmed working
 
 ---
 
 ## Model Learnings This Session
 
-- **SW `fetch()` is subject to `connect-src` CSP, not `img-src`**: when a SW intercepts an image request and tries to re-fetch it via `fetch()`, the browser applies `connect-src` restrictions. External images loaded via `<img src>` use `img-src`. Fix: return early (no `event.respondWith`) for all external origins so images bypass the SW.
-- **`nextElementSibling` > `nextSibling` in inline handlers**: `nextSibling` can return a text node if there's any whitespace. `nextElementSibling` always returns the next Element, making it safer for onload handlers in template-literal HTML.
-- **Supabase `.or()` filter breaks on special chars in values**: apostrophes, commas, colons, parens in book titles cause PostgREST parse errors. Use `.in('norm_key', keys)` for exact matches (client handles encoding); only use `.or()` with pre-cleaned `[a-z0-9 ]` strings.
-- **SW version bumps don't reliably evict old SWs**: `skipWaiting()` + `clients.claim()` should work but the old SW may still handle in-flight requests. Users may need to manually Unregister in DevTools. Consider adding `registration.update()` on page load to force the check.
-- **`const` redeclaration crash**: if two JS files loaded in the same page both declare `const PUBLISHERS`, the second one throws a SyntaxError and the file fails to load entirely. Keep constants in one canonical file.
+- **`entry.c` in CONJURING_DB is the primary cover code, not necessarily CA**: it can be `M:filename` (MagicRef image) for books where MagicRef is the primary source. `entry.i[]` array contains additional image codes — always scan `entry.i` for `C:` codes to find actual CA images.
+- **Direct `book_catalog` query > MagicRef page scraping**: `book_catalog.cover_url` stores the final resolved image URL. Querying it directly is instant and reliable vs scraping page HTML via proxy which is slow and fragile.
+- **`cover_source` values**: `'supabase_storage'` = CA image in our Supabase bucket; `'magicref'` = hotlink to `magicref.net/images/books/`; others (`'murphys'`, `'penguin'`, `'vanishing'`) also possible.
+- **Flex override in grid container**: setting `resultsEl.style.display = 'flex'` inline overrides the CSS `display:grid` on `#coverPickerResults`. `resetPickerState()` already restores `display:grid`, so no cleanup needed in the conjuring handler.

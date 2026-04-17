@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 32
+# MagiLib Project Status — Session 33
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,18 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 32)
-- ### 1. `conjuring.js` (MODIFIED)
-- Added `queryBookCatalog(title)` — queries `book_catalog` by `ilike` prefix match on title
-- Added `_fillFromCatalogRow(row)` — fills empty f-author, f-year, f-publisher, cover, S.priceBase from a catalog row
-- Added step 6 to `applyConjuringMatch` — after live scrape completes, enriches any still-empty fields from `book_catalog`
-- Added `onTitleBlur()` — on title field blur: applies title case, then if author still empty queries `book_catalog`. If found fills fields; if not found shows "Not found in local database. Add information manually." toast
-- ### 2. `index.html` (MODIFIED)
+## Last Session (Session 33)
+- ### 1. `catalog.js` (MODIFIED)
+- **Magic Sources rewrite** — `searchCoverSource('conjuring')` block overhauled:
+-   - **Step 1**: Query `book_catalog` by title prefix → use `cover_url` directly based on `cover_source`: `supabase_storage` → `caUrl`, `magicref` → `mrUrl`. No more MagicRef page scraping.
+-   - **Step 2**: CONJURING_DB lookup for CA cover — now correctly scans `entry.i[]` for `C:` prefixed codes first, then `entry.c` only if it's `C:` prefixed. Previously used `entry.c` even when it was `M:` (MagicRef URL), causing wrong "Courtesy of Conjuring Archive" attribution.
+-   - **Current cover card**: prepended before the option cards when a cover is already set (`S.editCoverUrl` / `S.coverUrl`). Dimmed, dashed border, labeled "Current / Your selection", non-interactive. Separated from options by a vertical `1px` divider. Results area switches to `display:flex` for this layout.
+-   - `makeCard()` updated to accept `isCurrentCard` flag — current card omits `onclick` and uses `cursor:default`.
 
 **Known issues carried forward:**
-- **Old SW still controlling page for Sean** — needs manual DevTools → Application → Service Workers → Unregister, then reload. SW version bumps alone don't evict old SWs reliably.
-- **`enrichCoversFromCatalog` coverage** — norm_key pass matches books that have author stored. Books with no stored author won't match pass 1; pass 2 (title prefix) should catch most. Coverage not fully confirmed.
 - **Beta walkthrough Sections 5–8** — Status, Pricing, Settings, Onboarding — still not tested
+- **Section 4 dirty-check dialog reconfirm** — verify styled dialog after PWA reload
+- **`enrichCoversFromCatalog` console.logs** — still present, remove once confirmed working
 
 ---
 
@@ -121,7 +121,12 @@ Before running `handoff`, Claude Code MUST:
 - [x] **`enrichCoversFromCatalog()`**: post-load pass fills missing/CA covers from `book_catalog` (norm_key + clean-title prefix)
 - [ ] **Reconfirm Section 4** + **beta walkthrough Sections 5–8**
 
-### Session 33 — Beta QA
+### Session 33 — Cover Picker Fix ✅
+- [x] **Magic Sources rewrite**: `book_catalog` direct query replaces MagicRef page scraping
+- [x] **CA attribution fix**: scan `entry.i[]` for `C:` codes; don't use `M:`-prefixed `entry.c` as CA
+- [x] **Current cover card**: reference card + vertical divider prepended to Magic Sources results
+
+### Session 34 — Beta QA
 - [ ] Confirm cover enrichment working (remove console.logs)
 - [ ] **Beta readiness walkthrough**: Status → Pricing → Settings → Onboarding (Sections 5–8)
 - [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload
@@ -287,6 +292,9 @@ Before running `handoff`, Claude Code MUST:
 - **Supabase `.or()` breaks on special chars in values**: apostrophes, commas, colons, parens in book titles cause PostgREST parse errors. Use `.in('norm_key', keys)` for exact matches; only use `.or()` with pre-cleaned `[a-z0-9 ]` strings.
 - **SW version bumps don't reliably evict old SWs**: `skipWaiting()` + `clients.claim()` may not be enough. Users may need manual Unregister in DevTools. Consider `registration.update()` on page load.
 - **`const` redeclaration crash**: two JS files both declaring `const PUBLISHERS` throws SyntaxError on the second load — the entire file fails to parse. Keep constants in one canonical file.
+- **`entry.c` in CONJURING_DB is primary cover, not necessarily CA**: can be `M:filename` (MagicRef image). Scan `entry.i[]` for `C:` codes to find actual CA images. Only use `entry.c` as CA if it starts with `C:`.
+- **`book_catalog.cover_source` values**: `'supabase_storage'` = CA image in Supabase bucket; `'magicref'` = hotlink to magicref.net. Query `cover_url` directly — far more reliable than scraping MagicRef page HTML via proxy.
+- **Flex override in grid container**: set `resultsEl.style.display='flex'` inline to override CSS `display:grid`. `resetPickerState()` restores `display:grid` — no cleanup needed in the conjuring handler.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
 - **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.
 - **Supabase upsert INSERT path hits NOT NULL constraint**: even when all target rows exist, Supabase upsert may attempt INSERT for some rows. For known-existing rows, use concurrent `.update().eq()` calls instead of upsert.
