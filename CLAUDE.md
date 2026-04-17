@@ -108,7 +108,7 @@ Before running `handoff`, Claude Code MUST:
 ### Session 31 — book_catalog Build ✅
 - [x] **SQL migration**: `book_catalog` table created in Supabase
 - [x] **Seed script** (`scripts/seed-book-catalog.js`): 10,495 rows upserted; 6,509 MagicRef · 2,243 raw CA · 1,742 no cover
-- [x] **CA cover download**: batch 1 complete (1,000); batch 2 running in background (1,243) — resumable
+- [x] **CA cover download**: all 2,243 CA images downloaded, compressed, uploaded to Supabase Storage — 0 failures
 - [x] **Price merge script** (`scripts/merge-price-db.js`): 866 entries priced (804 eBay · 92 Penguin · 12 Murphy's)
 - [x] **Admin portal**: Book Catalog section — stats + CSV upload in `magilib-admin`
 - [x] **Validate**: Royal Road $21 · Strong Magic $139 · Paper Engine $46 · Card College 1 $246

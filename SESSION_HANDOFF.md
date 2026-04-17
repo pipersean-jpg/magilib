@@ -47,11 +47,9 @@ book_catalog fully built. SQL migration, 10,495-row seed, price merge, admin por
 ## CA Cover Download — IN PROGRESS
 
 - Batch 1 (1,000 images): complete — 1000/1000, 0 failed
-- Batch 2 (1,243 images): running in background, PID 7955, log at `/tmp/ca-covers-2.log`
-- Monitor: `tail -f /tmp/ca-covers-2.log`
-- Expected finish: ~35–40 min from session end
-- If process dies: re-run `cd /Users/seanpiper/magilib/scripts && node seed-book-catalog.js --download-ca-covers` — it resumes automatically
-- When complete: `cover_source` updated to `supabase_storage` for all completed rows
+- Batch 2 (1,243 images): **COMPLETE** — 1243/1243, 0 failed
+- All 2,243 CA covers now at `acuehbwbwsbbxuqcmnrp.supabase.co/storage/v1/object/public/book-covers/ca/`
+- `cover_source = 'supabase_storage'` for all rehomed rows
 
 ---
 
