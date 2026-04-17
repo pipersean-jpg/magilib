@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 30
+# MagiLib Project Status — Session 31
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,17 +29,17 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 30)
-- ### 1. `scripts/scrape-qtte-inventory.py` (NEW — magilib repo)
-- Full QTTE catalog scraper using Python + Playwright (same engine as the user-provided script that proved reliable)
-- Paginates all QTTE book listings (`/all/books?sort_by=newest`)
-- Output CSV columns: `title, author, publisher, year, source, price, currency, url`
-- `source` hardcoded to `qtte_secondary`, `currency` to `USD`
-- HTML entity decoding (`&amp;` → `&`) via `html.unescape()`
+## Last Session (Session 31)
+- ### 1. `scripts/migrate-create-book-catalog.sql` (NEW)
+- Creates `book_catalog` table with locked schema
+- RLS enabled, public SELECT policy, service role bypasses for writes
+- Indexes on `lower(title)` and `lower(author)`
+- CHECK constraints on `cover_source` and `in_print`
+- Sean ran this in Supabase SQL Editor — confirmed success
 
 **Known issues carried forward:**
-- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — not yet tested (was Session 30 priority, deferred for this side quest)
-- **Section 4 dirty-check dialog reconfirm**: verify styled dialog after s15 PWA reload
+- **Beta walkthrough Sections 5–8**: Status, Pricing, Settings, Onboarding — still not tested
+- **Section 4 dirty-check dialog reconfirm**: verify styled dialog after PWA reload
 - **CA covers on old books**: existing `books` rows with raw CA URLs in `cover_url` still broken. Fix path: Edit → Update Cover. Not a code bug.
 
 ---
@@ -105,14 +105,15 @@ Before running `handoff`, Claude Code MUST:
 - [x] **Admin portal upsert fix**: insert → upsert on (norm_key, source)
 - [x] **book_catalog architecture**: all decisions locked, full Supabase audit completed
 
-### Session 31 — book_catalog Build
-- [ ] **SQL migration**: create `book_catalog` table in Supabase (Sean runs in SQL Editor)
-- [ ] **Seed script** (`scripts/seed-book-catalog.js`): CONJURING_DB → 10,495 rows, MagicRef hotlink + CA download→Storage
-- [ ] **Price merge script** (`scripts/merge-price-db.js`): join price_db into book_catalog price columns
-- [ ] **Admin portal**: Book Catalog section — stats, CSV upload targeting book_catalog
-- [ ] **Validate**: sample well-known titles, confirm cover/price/publisher populated
+### Session 31 — book_catalog Build ✅
+- [x] **SQL migration**: `book_catalog` table created in Supabase
+- [x] **Seed script** (`scripts/seed-book-catalog.js`): 10,495 rows upserted; 6,509 MagicRef · 2,243 raw CA · 1,742 no cover
+- [x] **CA cover download**: batch 1 complete (1,000); batch 2 running in background (1,243) — resumable
+- [x] **Price merge script** (`scripts/merge-price-db.js`): 866 entries priced (804 eBay · 92 Penguin · 12 Murphy's)
+- [x] **Admin portal**: Book Catalog section — stats + CSV upload in `magilib-admin`
+- [x] **Validate**: Royal Road $21 · Strong Magic $139 · Paper Engine $46 · Card College 1 $246
 
-### Session 32+ — Wire book_catalog into App
+### Session 32 — Wire book_catalog into App
 - [ ] **Add flow**: query book_catalog on title entry → auto-fill all fields
 - [ ] **"Not found" toast**: "Not found in local database. Add information manually."
 - [ ] **Reconfirm Section 4** + **beta walkthrough Sections 5–8**
@@ -274,6 +275,10 @@ Before running `handoff`, Claude Code MUST:
 - **Never proxy-fetch inside `onerror` on list/grid items**: triggers a waterfall of simultaneous async HTTP requests (one per visible book card). Only proxy at save time. Instant `this.style.display='none'` is the correct `onerror` for grid cards.
 - **`node --check` after every deeply nested async block**: extra `}` in deeply nested try/if/for structures is invisible to the eye but kills the JS parser. Always validate before deploying.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
+- **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.
+- **Supabase upsert INSERT path hits NOT NULL constraint**: even when all target rows exist, Supabase upsert may attempt INSERT for some rows. For known-existing rows, use concurrent `.update().eq()` calls instead of upsert.
+- **Supabase default query limit is 1000**: all `select()` calls on large tables must paginate with `.range()` or results will be silently truncated.
+- **`dotenv` resolves `.env` relative to CWD, not script file**: always `cd scripts/` before running any script that uses dotenv. Running from wrong directory causes silent failure with no output.
 - **CONJURING_DB cover compression**: `"M:filename.jpg"` = MagicRef (hotlink fine). `"C:NNN"` = ConjuringArchive (download + re-host). `m` field presence = has MagicRef page → skip CA download.
 - **QTTE scraper data quality**: publisher fragments under 4 chars are regex garbage (e.g. "The" captured mid-sentence). `html.unescape()` required for HTML entities in scraped text.
 - **Murphy's price_db norm_key uses Last-First author**: `Artist/Magician` CSV field stored as-is. Won't match book_catalog (First Last). Migrate forward; don't fix backward.
