@@ -31,16 +31,15 @@ Before running `handoff`, Claude Code MUST:
 
 ## Last Session (Session 35)
 - ### 1. `index.html` (MODIFIED)
-- **Google sign-in button added** to auth screen — "or" divider + `.auth-google-btn` below the main Sign In button
+- **Google sign-in button added** — "or" divider + `.auth-google-btn` below the main Sign In button
 - **Version bumped** `?v=s34` → `?v=s35` (all script tags)
 - ### 2. `auth.js` (MODIFIED)
 - **`signInWithGoogle()`** added — calls `_supa.auth.signInWithOAuth({ provider: 'google', redirectTo: window.location.origin })`
-- **`signOut()` fix** — now calls `renderCatalog()` immediately after clearing `S.books`, so the old user's books clear from screen at sign-out (not on next tab tap)
+- **`signOut()` fix** — calls `renderCatalog()` immediately after clearing `S.books` so old user's books clear from screen at sign-out
 
 **Known issues carried forward:**
-- **Auth device test**: Google sign-in + user-switch isolation not yet confirmed on device
-- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through this session
-- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (carried from Session 34)
+- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
+- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through
 
 ---
 
@@ -138,7 +137,7 @@ Before running `handoff`, Claude Code MUST:
 - [x] **Google sign-in button**: added to auth screen, OAuth wired, Supabase + Google Cloud configured
 - [x] **Library isolation fix**: `renderCatalog()` on sign-out + `loadCatalog()` in `afterSplash()`
 - [x] **SW cache bumped**: `magilib-sw-s35` — forces fresh HTML on device
-- [ ] Auth device test: Google sign-in + user-switch isolation confirmed on device
+- [x] Auth device test: Google sign-in + user-switch isolation confirmed on device
 - [ ] Full device walkthrough: add → library → edit (dirty-check) → status → pricing → settings → onboarding
 - [ ] Section 4 dirty-check: verify `magiConfirm` fires after PWA reload
 - [ ] Beta launch checklist sign-off (see checklist below)
