@@ -280,7 +280,8 @@ function dismissWelcome(action) {
     showView('settings');
     setTimeout(() => { const el = document.getElementById('csvImportSection'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 200);
   } else {
-    showView('catalog');
+    showView('home');
+    if (typeof loadCatalog === 'function') loadCatalog();
   }
 }
 

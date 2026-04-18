@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "ec6a90b16f8f9387",
+        "id": "fa6a6023e0e31624",
         "type": "tabs",
         "children": [
           {
-            "id": "765610fdd473e010",
+            "id": "c4f619016ac512fc",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "What platforms and practices do you use for user testing in UX research_.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "What platforms and practices do you use for user testing in UX research_"
             }
           }
         ]
@@ -83,12 +87,11 @@
               "title": "Bookmarks"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 447.5
   },
   "right": {
     "id": "01ad358fc18be8b3",
@@ -190,21 +193,23 @@
       "bases:Create new base": false
     }
   },
-  "active": "765610fdd473e010",
+  "active": "c4f619016ac512fc",
   "lastOpenFiles": [
+    "Tips For Effective App UI Usability Testing.md",
     "The Best Practices and Key Principles of UX Design.md",
     "Mobile App Ux Design_ Tips to Improve Your User Experience.md",
-    "Untitled.canvas",
+    "Mobile App Usability Testing_ Methods, Tools, Best Practices.md",
+    "Mobile App Usability Testing_ A Practical Guide & Testing Tools.md",
+    "App Testing Best Practices for Optimal UX, Performance, and Security.md",
     "2026-04-18.md",
+    "Untitled 1.base",
+    "Untitled.canvas",
+    "Untitled 1.canvas",
     "Untitled.base",
     "Clippings/10 UX and UI best practices to build better business apps.md",
     "Untitled.md",
     "Clippings",
     "What platforms and practices do you use for user testing in UX research_.md",
-    "Mobile App Usability Testing_ Methods, Tools, Best Practices.md",
-    "App Testing Best Practices for Optimal UX, Performance, and Security.md",
-    "Mobile App Usability Testing_ A Practical Guide & Testing Tools.md",
-    "Tips For Effective App UI Usability Testing.md",
     "Welcome.md"
   ]
 }

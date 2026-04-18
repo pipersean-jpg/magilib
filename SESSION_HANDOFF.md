@@ -1,66 +1,94 @@
-# SESSION HANDOFF — 2026-04-19 (Session 35)
+# SESSION HANDOFF — 2026-04-19 (Session 36)
 
 ## Session Summary
-Beta walkthrough: Auth section. Added Google OAuth sign-in, fixed library data isolation bug (previous user's books bleeding through after sign-out), fixed SW cache to force fresh HTML delivery. Auth confirmed working on device. Google consent screen shows Supabase URL — accepted as-is for beta.
+New Layout sprint. Added a Home/Summary landing page, mobile bottom nav, restructured cover picker overlay (4-option list), and desktop 50/50 cover+details layout. All syntax-clean; ready for device walkthrough next session.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `index.html` (MODIFIED)
-- **Google sign-in button added** — "or" divider + `.auth-google-btn` below the main Sign In button
-- **Version bumped** `?v=s34` → `?v=s35` (all script tags)
+### 1. `assets/css/magilib.css` (MODIFIED)
+- **Bottom nav CSS** — `.bottom-nav`, `.bn-tab`, `.bn-add`, `.bn-add-circle` — mobile-only fixed bottom bar
+- **Home view CSS** — `.home-wrap`, `.home-greeting`, `.home-stats-grid`, `.home-stat-card`, `.home-recent-row`, `.home-magic-fact`, `.home-cta`
+- **Cover picker option CSS** — `.cover-picker-opts`, `.cover-picker-opt`, `.cpo-icon` — icon+label list rows with `.active` highlight
+- **Desktop 50/50** — `@media(min-width:768px)` CSS grid on `.entry-layout`: `"pricing pricing" / "cover details" / "condition condition" / "save save"`
+- **Mobile bottom padding** — `.view` gets `padding-bottom:76px` on mobile so content clears the bottom nav
 
-### 2. `auth.js` (MODIFIED)
-- **`signInWithGoogle()`** added — calls `_supa.auth.signInWithOAuth({ provider: 'google', redirectTo: window.location.origin })`
-- **`signOut()` fix** — calls `renderCatalog()` immediately after clearing `S.books` so old user's books clear from screen at sign-out
+### 2. `index.html` (MODIFIED)
+- **`#view-home`** — new Home/Summary view with greeting, 3 stat cards, Magic Fact panel, recently-added book row, Add CTA + Browse Library button
+- **`#bottomNav`** — 5-tab bottom nav (Home · Library · Add · Wishlist · Settings); Add tab has circle pill; mobile-only
+- **Logo onclick** — `showView('home')` wired to nav logo for desktop
+- **Cover picker restructured** — 4-option list replaces old source buttons: Take a photo / Choose from gallery (both with `<input type="file">` inline) / The Pro Shelf (`selectCoverOpt('shelf')`) / Add image link (`selectCoverOpt('link')`)
+- **Add form** — `.cover-actions-row` (Upload + URL buttons) removed; replaced with hint text "Tap to update cover"
+- **Version bumped** `?v=s35` → `?v=s36`
 
-### 3. `ui.js` (MODIFIED)
-- **`onAuthStateChange` updated** — handles `SIGNED_IN` event for OAuth redirect callback (guarded by `!_supaUser` to prevent double-call on password sign-in)
-- **`afterSplash()` fixed** — calls `loadCatalog()` for returning authenticated users (previously only called `checkChangelog()`, leaving stale/empty grid until Library tab was tapped)
+### 3. `catalog.js` (MODIFIED)
+- **`showView()`** — handles `'home'` view; updates `.bn-tab` active state on bottom nav; desktop tab map updated (`home:-1`)
+- **`renderHomeView()`** — new function; populates greeting, stat cards, Magic Fact (rotates daily from array of 12), recent books row; called on `showView('home')` and after `loadCatalog()` completes if home is active
+- **`MAGIC_FACTS`** — 12-item array of curated magic/conjuring facts
+- **`_openPickerOverlay()`** — shared helper for `openCoverPicker` / `openCoverPickerForEdit`; resets option highlights and content area on open
+- **`openCoverPicker()` / `openCoverPickerForEdit()`** — removed auto-load of Google Images; now open with neutral state via `_openPickerOverlay()`
+- **`selectCoverOpt(opt)`** — new; handles 'shelf' (triggers conjuring search + shows results) and 'link' (shows URL input, hides results)
+- **`uploadCoverFromPicker(event)`** — new; reads file → `setCoverCompressed` → closes picker overlay
+- **`resetPickerState()`** — updated to clear `.cover-picker-opt.active` instead of old `picker-source-btn` references
 
-### 4. `sw.js` (MODIFIED)
-- **Cache name bumped** `magilib-sw-s32d` → `magilib-sw-s35` — forces SW eviction so device gets fresh HTML
+### 4. `ui.js` (MODIFIED)
+- **`afterSplash()`** — calls `showView('home')` for returning users (previously just called `loadCatalog()` with no view change)
 
-### 5. `assets/css/magilib.css` (MODIFIED)
-- **`.auth-divider`** + **`.auth-google-btn`** added
+### 5. `auth.js` (MODIFIED)
+- **`dismissWelcome()`** — routes to `showView('home')` + `loadCatalog()` instead of `showView('catalog')`
+
+### 6. `sw.js` (MODIFIED)
+- **Cache name bumped** `magilib-sw-s35` → `magilib-sw-s36`
 
 ---
 
-## Sections Reviewed (Walkthrough)
+## Next Session — New Layout Review & Test
 
-### Section 1 — Auth ✅ (confirmed on device)
-- Google sign-in working
-- Email sign-in / sign-up working
-- Library isolation confirmed (sign out → sign in as different user → correct library loads)
-- Google consent screen shows Supabase callback URL — accepted for beta (changing requires custom Vercel callback handler or paid Supabase custom domain)
+### Priority: Device walkthrough of all New Layout changes
+
+**Home view**
+- [ ] Stat cards populate correctly after books load (not stuck at "—")
+- [ ] Magic Fact displays and rotates daily
+- [ ] Recently added row scrolls horizontally; tapping a book opens the detail sheet
+- [ ] "Add a Book" CTA navigates to Add view
+- [ ] "Browse Library" navigates to Library view
+- [ ] First-time user (no books): empty-state copy shows correctly
+
+**Bottom nav (mobile)**
+- [ ] All 5 tabs navigate correctly
+- [ ] Active state updates on tab switch (correct tab highlights)
+- [ ] Add tab circle pill renders distinctly
+- [ ] Content clears the nav bar (no overlap from bottom)
+- [ ] Safe-area-inset-bottom respected on iPhone (home indicator doesn't obscure nav)
+- [ ] Bottom nav hidden on desktop (≥768px)
+
+**Cover picker**
+- [ ] Tapping cover frame opens picker overlay
+- [ ] 4 options render as icon+label rows
+- [ ] "Take a photo" triggers camera on mobile
+- [ ] "Choose from gallery" triggers photo library picker
+- [ ] "The Pro Shelf" shows Pro Shelf search results below
+- [ ] "Add image link" shows URL input; hides results grid
+- [ ] Active option highlights (accent colour, icon tints)
+- [ ] Upload/URL buttons gone from Add form; hint text shows instead
+
+**Desktop 50/50 (browser, ≥768px)**
+- [ ] Cover image + Details fields sit side by side at equal width
+- [ ] Pricing full-width above; Condition + Save full-width below
+- [ ] Cover frame aspect ratio looks proportional (3:4 on desktop)
 
 ---
 
-## Known Issues / Still Pending
-
+## Known Issues Carried Forward
 - **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through
-
----
-
-## Next Session Plan (Session 36)
-
-### Continue beta walkthrough from Section 2
-- **Section 2**: Add — photo/scan, manual entry, auto-fill from book_catalog, batch queue, cover picker
-- **Section 3**: Library — search, filter, sort, view detail
-- **Section 4**: Edit — all fields, cover update, dirty-check dialog after PWA reload
-- **Section 5**: Status — Mark Sold, + Wishlist, Move to Library
-- **Section 6**: Pricing — Fetch estimate (Add) + stored price + eBay link (Library)
-- **Section 7**: Settings — all panels
-- **Section 8**: Onboarding — welcome + wizard
+- **Full beta walkthrough**: Sections 2–8 (Add · Library · Edit · Status · Pricing · Settings · Onboarding) still pending end-to-end device sign-off
 
 ---
 
 ## Model Learnings This Session
-
-- **`afterSplash()` must call `loadCatalog()`**: for returning users, `checkChangelog()` is the only branch — it never triggers a catalog fetch. Always terminate auth success paths with `loadCatalog()`.
-- **`signOut()` clears `S.books` but not the DOM**: call `renderCatalog()` after clearing `S.books` or the old user's rendered HTML persists until the user manually taps Library.
-- **SW cache name must be bumped every session**: stale cache name means HTML changes are never served fresh on device. Bump alongside `?v=sN` each session.
-- **`onAuthStateChange('SIGNED_IN')` guard**: check `!_supaUser` before calling `onAuthSuccess()` from the handler — normal password sign-in already calls it manually; double-call would re-run splash and loadSettings.
-- **Supabase OAuth consent screen always shows Supabase callback URL**: changing it requires either a custom Vercel callback handler or Supabase Pro custom domain. Not worth fixing for beta.
+- **`showView('home')`**: 'home' maps to -1 in the desktop tab index so no `.tab-btn` gets active — correct behaviour (home has no desktop tab; logo click is the desktop entry point).
+- **`resetPickerState()` must clear `.cover-picker-opt.active`**: old code cleared `.picker-source-btn.active` — stale reference after overlay restructure; always update together.
+- **`uploadCoverFromPicker` closes picker**: unlike `uploadCover()` (Add form file input), the picker variant must explicitly `classList.add('hidden')` on the overlay after setting the cover.
+- **`renderHomeView()` called twice on load**: once from `showView('home')` (books may be empty), once from `loadCatalog()` success path (books populated) — this is intentional for progressive display.
+- **Bottom nav z-index**: `z-index:150` sits above page content (`z-index:100` nav) but below Magi-sheets (1000) and dialogs (2000).

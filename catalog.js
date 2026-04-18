@@ -281,7 +281,13 @@ function showView(v){
   }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  const tabs={entry:0,catalog:1,wishlist:2,settings:3};
+  // Update bottom nav active state
+  document.querySelectorAll('.bn-tab').forEach(el=>el.classList.remove('active'));
+  const bnMap={home:'bn-home',catalog:'bn-catalog',entry:'bn-entry',wishlist:'bn-wishlist',settings:'bn-settings'};
+  const _bnTab=document.getElementById(bnMap[v]);
+  if(_bnTab)_bnTab.classList.add('active');
+  // Update top nav tabs (desktop)
+  const tabs={home:-1,entry:0,catalog:1,wishlist:2,settings:3};
   const _tabBtn = document.querySelectorAll('.tab-btn')[tabs[v]];
   if (_tabBtn) _tabBtn.classList.add('active');
   const catH2=document.querySelector('.catalog-header h2');
@@ -310,11 +316,69 @@ function showView(v){
     }
     if(catH2&&v==='catalog'){catH2.textContent='Library';}
     if(v==='catalog')loadCatalog();
+    if(v==='home')renderHomeView();
     if(v==='entry'){
       window.scrollTo(0,0);
       document.body.scrollTop=0;
       document.documentElement.scrollTop=0;
       setTimeout(()=>{window.scrollTo(0,0);document.body.scrollTop=0;document.documentElement.scrollTop=0;},50);
+    }
+  }
+}
+
+const MAGIC_FACTS = [
+  "The oldest known magic text is the Westcar Papyrus (c.1600 BC), describing Egyptian court magicians performing miracles before the Pharaoh.",
+  "Houdini's personal library contained over 5,000 volumes on magic and spiritualism — one of the largest collections ever assembled by a performer.",
+  "The Expert at the Card Table (1902) was published anonymously. S.W. Erdnase was never definitively identified despite over a century of research.",
+  "Jean Eugène Robert-Houdin, often called the 'father of modern magic', pioneered the use of science and technology to create seemingly impossible illusions in the 1840s.",
+  "The magic book Conjuring with Cards (1894) by Paul Valadon is so rare that fewer than 10 copies are known to survive worldwide.",
+  "Vernon's The Dai Vernon Book of Magic (1957) changed card magic forever — it documented techniques so refined they became the foundation of modern sleight of hand.",
+  "The Linking Ring, the official publication of the International Brotherhood of Magicians, has been published continuously since 1923.",
+  "Edwin Sachs' Sleight of Hand (1877) was the first comprehensive English-language text on sleight of hand magic and is still reprinted today.",
+  "Card College by Roberto Giobbi took 20 years to write and is considered the most thorough treatment of card technique ever published.",
+  "The conjuring archive at the Library of Congress holds over 12,000 items related to magic, making it one of the largest institutional magic collections in the world.",
+  "Tarbell Course in Magic began as a mail-order course in 1927 and eventually expanded to 8 volumes — one of the most comprehensive magic curricula ever created.",
+  "Strong Magic by Darwin Ortiz (1994) shifted how magicians think about performance — arguing that technique is secondary to making the audience feel genuine wonder.",
+];
+
+function renderHomeView(){
+  const lib=S.books.filter(b=>b.sold!=='Sold'&&b.sold!=='Wishlist');
+  const wishlist=S.books.filter(b=>b.sold==='Wishlist');
+  const totalVal=lib.reduce((sum,b)=>{const p=parseFloat(b.price)||0;return sum+p;},0);
+  const cur=(S.settings&&S.settings.currency)||'AUD';
+  const sym={'AUD':'A$','USD':'$','GBP':'£','EUR':'€','JPY':'¥'}[cur]||cur+' ';
+  // Stats
+  const el=id=>document.getElementById(id);
+  if(el('homeStatBooks'))el('homeStatBooks').textContent=lib.length||'0';
+  if(el('homeStatValue'))el('homeStatValue').textContent=totalVal>0?(sym+Math.round(totalVal).toLocaleString()):'—';
+  if(el('homeStatWishlist'))el('homeStatWishlist').textContent=wishlist.length||'0';
+  // Greeting
+  const name=(S.settings&&S.settings.displayName)||(_supaUser&&_supaUser.email&&_supaUser.email.split('@')[0])||'Collector';
+  if(el('homeGreeting'))el('homeGreeting').textContent='Welcome back, '+name+'.';
+  if(el('homeGreetingSub')){
+    if(lib.length===0){
+      el('homeGreetingSub').textContent='Your magic library awaits — add your first book!';
+    } else {
+      el('homeGreetingSub').textContent='You have '+lib.length+' book'+(lib.length===1?'':'s')+' in your collection.';
+    }
+  }
+  // Magic fact (rotate by day)
+  if(el('homeMagicFact')){
+    const idx=Math.floor(Date.now()/86400000)%MAGIC_FACTS.length;
+    el('homeMagicFact').textContent=MAGIC_FACTS[idx];
+  }
+  // Recent books (last 5)
+  const row=el('homeRecentRow');
+  if(row){
+    const recent=lib.slice(0,5);
+    if(recent.length===0){
+      row.innerHTML='<div class="home-empty-recent">No books yet — add your first one below.</div>';
+    } else {
+      row.innerHTML=recent.map(b=>{
+        const cover=b.coverUrl?`<img class="home-recent-cover" src="${sanitize(b.coverUrl)}" loading="lazy" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="home-recent-cover" style="display:none;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;">📖</div>`
+          :`<div class="home-recent-cover" style="display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;">📖</div>`;
+        return `<div class="home-recent-book" onclick="openModal('${sanitize(b._id)}')">${cover}<div class="home-recent-title">${sanitize(b.title)}</div></div>`;
+      }).join('');
     }
   }
 }
@@ -552,6 +616,7 @@ async function loadCatalog(){
     // Cache rows in IndexedDB for offline access (fire-and-forget).
     _idbSaveBooks(_supaUser.id, data || []);
     renderCatalog();
+    if(document.getElementById('view-home')&&document.getElementById('view-home').classList.contains('active'))renderHomeView();
     showToast('Loaded '+S.books.length+' books','success',2000);
     enrichCoversFromCatalog();
   }catch(e){
@@ -1896,10 +1961,10 @@ function closeZoom() { document.getElementById('zoomOverlay').classList.add('hid
 
 // ── COVER PICKER ──
 function resetPickerState() {
-  document.getElementById('coverPickerStatus').textContent = '';
-  document.getElementById('coverPickerResults').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;"><span class="spinner dark"></span></div>';
-  document.getElementById('coverPickerResults').style.display = 'grid';
-  // Hide Google Images card and URL field, clear URL input
+  const statusEl = document.getElementById('coverPickerStatus');
+  if (statusEl) statusEl.textContent = '';
+  const res = document.getElementById('coverPickerResults');
+  if (res) { res.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">Choose an option above to find a cover</div>'; res.style.display = 'grid'; }
   const card = document.getElementById('googleImagesCard');
   const urlArea = document.getElementById('pickerUrlArea');
   const urlInput = document.getElementById('pickerUrlInput');
@@ -1908,30 +1973,65 @@ function resetPickerState() {
   if (urlInput) urlInput.value = '';
   S._googleImgUrl = '';
   const pf = document.getElementById('pickerFooter'); if (pf) pf.style.display = 'block';
-  // Highlight Google Images button as active (it loads automatically)
-  document.querySelectorAll('.picker-source-btn').forEach(b => b.classList.remove('active'));
-  const gBtn = document.getElementById('pickerGoogleBtn');
-  if (gBtn) gBtn.classList.add('active');
+  document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
+}
+function _openPickerOverlay() {
+  const _cp = document.getElementById('coverPickerOverlay');
+  _cp.classList.remove('hidden');
+  _cp.style.pointerEvents = 'none';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
+  // Reset option highlighting
+  document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
+  const ca=document.getElementById('pickerContentArea');
+  if(ca){
+    const gic=document.getElementById('googleImagesCard');
+    const pua=document.getElementById('pickerUrlArea');
+    const res=document.getElementById('coverPickerResults');
+    if(gic)gic.style.display='none';
+    if(pua)pua.style.display='none';
+    if(res){res.style.display='grid';res.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">Choose an option above to find a cover</div>';}
+  }
 }
 function openCoverPicker() {
   S.coverPickerTarget = 'add';
   resetPickerState();
-  const _cp = document.getElementById('coverPickerOverlay');
-  _cp.classList.remove('hidden');
-  _cp.style.pointerEvents = 'none';
-  requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
-  // Auto-load Google Images so picker is never empty on open
-  setTimeout(() => searchCoverSource('images'), 50);
+  _openPickerOverlay();
 }
 function openCoverPickerForEdit() {
   S.coverPickerTarget = 'edit';
   resetPickerState();
-  const _cp = document.getElementById('coverPickerOverlay');
-  _cp.classList.remove('hidden');
-  _cp.style.pointerEvents = 'none';
-  requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
-  // Auto-load Google Images so picker is never empty on open
-  setTimeout(() => searchCoverSource('images'), 50);
+  _openPickerOverlay();
+}
+
+function selectCoverOpt(opt) {
+  document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
+  const idMap={shelf:'cpoShelf',link:'cpoLink'};
+  const btn=document.getElementById(idMap[opt]);
+  if(btn)btn.classList.add('active');
+  const gic=document.getElementById('googleImagesCard');
+  const pua=document.getElementById('pickerUrlArea');
+  const res=document.getElementById('coverPickerResults');
+  if(opt==='shelf'){
+    if(gic)gic.style.display='none';
+    if(pua)pua.style.display='none';
+    if(res){res.style.display='grid';}
+    searchCoverSource('conjuring');
+  } else if(opt==='link'){
+    if(gic)gic.style.display='none';
+    if(pua){pua.style.display='block';setTimeout(()=>document.getElementById('pickerUrlInput').focus(),100);}
+    if(res){res.style.display='none';}
+  }
+}
+
+function uploadCoverFromPicker(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    await setCoverCompressed(e.target.result);
+    document.getElementById('coverPickerOverlay').classList.add('hidden');
+  };
+  r.readAsDataURL(file);
 }
 function closeCoverPicker(e) {
   if (!e || e.target === document.getElementById('coverPickerOverlay'))

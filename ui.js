@@ -741,6 +741,7 @@ function afterSplash() {
     document.getElementById('welcomeScreen').classList.remove('hidden');
     updateUserMenu();
   } else {
+    showView('home');
     if (typeof loadCatalog === 'function') loadCatalog();
     checkChangelog();
   }

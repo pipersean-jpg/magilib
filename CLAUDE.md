@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 35
+# MagiLib Project Status — Session 36
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,17 +29,17 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 35)
-- ### 1. `index.html` (MODIFIED)
-- **Google sign-in button added** — "or" divider + `.auth-google-btn` below the main Sign In button
-- **Version bumped** `?v=s34` → `?v=s35` (all script tags)
-- ### 2. `auth.js` (MODIFIED)
-- **`signInWithGoogle()`** added — calls `_supa.auth.signInWithOAuth({ provider: 'google', redirectTo: window.location.origin })`
-- **`signOut()` fix** — calls `renderCatalog()` immediately after clearing `S.books` so old user's books clear from screen at sign-out
+## Last Session (Session 36)
+- ### 1. `assets/css/magilib.css` (MODIFIED)
+- **Bottom nav CSS** — `.bottom-nav`, `.bn-tab`, `.bn-add`, `.bn-add-circle` — mobile-only fixed bottom bar
+- **Home view CSS** — `.home-wrap`, `.home-greeting`, `.home-stats-grid`, `.home-stat-card`, `.home-recent-row`, `.home-magic-fact`, `.home-cta`
+- **Cover picker option CSS** — `.cover-picker-opts`, `.cover-picker-opt`, `.cpo-icon` — icon+label list rows with `.active` highlight
+- **Desktop 50/50** — `@media(min-width:768px)` CSS grid on `.entry-layout`: `"pricing pricing" / "cover details" / "condition condition" / "save save"`
+- **Mobile bottom padding** — `.view` gets `padding-bottom:76px` on mobile so content clears the bottom nav
 
 **Known issues carried forward:**
 - **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through
+- **Full beta walkthrough**: Sections 2–8 (Add · Library · Edit · Status · Pricing · Settings · Onboarding) still pending end-to-end device sign-off
 
 ---
 
@@ -133,7 +133,9 @@ Before running `handoff`, Claude Code MUST:
 - [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload (code correct, needs device test)
 - [ ] **Full device walkthrough**: end-to-end beta checklist on device
 
-### Session 35 — Device Walkthrough & Beta Sign-off (IN PROGRESS)
+### Session 36 — New Layout (IN PROGRESS — needs device review)
+
+### Session 35 — Device Walkthrough & Beta Sign-off ✅ (partial)
 - [x] **Google sign-in button**: added to auth screen, OAuth wired, Supabase + Google Cloud configured
 - [x] **Library isolation fix**: `renderCatalog()` on sign-out + `loadCatalog()` in `afterSplash()`
 - [x] **SW cache bumped**: `magilib-sw-s35` — forces fresh HTML on device
@@ -141,6 +143,13 @@ Before running `handoff`, Claude Code MUST:
 - [ ] Full device walkthrough: add → library → edit (dirty-check) → status → pricing → settings → onboarding
 - [ ] Section 4 dirty-check: verify `magiConfirm` fires after PWA reload
 - [ ] Beta launch checklist sign-off (see checklist below)
+
+**New Layout (Session 36) — needs device review next session:**
+- [x] Home/Summary page (`#view-home`) — greeting, stats, Magic Fact, recent books, CTA
+- [x] Bottom nav (mobile) — 5 tabs: Home · Library · Add · Wishlist · Settings
+- [x] Cover picker restructured — 4-option icon list (Take photo · Gallery · Pro Shelf · Link)
+- [x] Desktop 50/50 — Cover + Details side by side on ≥768px
+- [ ] Device test: all New Layout changes (see SESSION_HANDOFF.md checklist)
 
 ### Beta Launch Checklist
 - [ ] Auth: sign up (OAuth), sign in, forgot password, change password
@@ -375,6 +384,11 @@ Before running `handoff`, Claude Code MUST:
 - Batch queue progress indicator: `#queueProgress` label + fill bar in `#queuePanel`; `_setQueueProgress`/`_clearQueueProgress` helpers in `catalog.js`
 - Drafts filter crash fix: null-guarded `#showWishlistChip` in `toggleDrafts()` — element doesn't exist in HTML
 - Service Worker (P2 #6): `sw.js` shell pre-cache + network-first strategy; IndexedDB catalog cache (`_idbSaveBooks`/`_idbLoadBooks`); offline banner + `body.offline-mode`; mutation queue (`_mgQueuePush`/`_mgQueueFlush`) for updates/deletes; inserts blocked offline
+- **`showView('home')` uses tab index -1**: desktop `.tab-btn` array lookup returns `undefined` for 'home' — intentional; no desktop tab gets highlighted. Logo click is the desktop home entry point.
+- **`resetPickerState()` must clear `.cover-picker-opt.active`**: must stay in sync with the cover picker overlay structure; stale class references silently fail.
+- **`uploadCoverFromPicker` must close the picker**: unlike the Add-form inline file input, the picker overlay must `classList.add('hidden')` after setting the cover.
+- **`renderHomeView()` is called twice on load**: once from `showView('home')` (S.books empty → shows zeros), once from `loadCatalog()` success (S.books populated → updates stats). Progressive display by design.
+- **Bottom nav z-index 150**: above sticky nav (100), below Magi-sheets (1000) and dialogs (2000).
 
 ---
 
