@@ -1,0 +1,59 @@
+site_name: UI/UX Design Wiki
+site_description: A knowledge base on UX design principles, mobile UX, and usability testing
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.integrate
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+plugins:
+  - search
+  - roamlinks
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - UX Principles:
+    - Key Principles of UX Design: ux-principles/ux-design-principles.md
+    - 10 UX/UI Best Practices for Business Apps: ux-principles/10-ux-ui-best-practices-business-apps.md
+  - Mobile UX Design:
+    - Mobile UX Design Tips: mobile-ux-design/mobile-ux-design-tips.md
+  - Usability Testing:
+    - Practical Guide & Testing Tools: usability-testing/mobile-usability-testing-practical-guide.md
+    - Methods, Tools, Best Practices: usability-testing/mobile-usability-testing-methods-tools.md
+    - Tips for Effective UI Testing: usability-testing/tips-effective-ui-testing.md
+    - App Testing Best Practices: usability-testing/app-testing-best-practices.md
+  - Tools & Platforms:
+    - Community Recommendations (Reddit): tools-platforms/user-testing-platforms-reddit.md

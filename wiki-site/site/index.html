@@ -1,0 +1,1401 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A knowledge base on UX design principles, mobile UX, and usability testing">
+      
+      
+      
+      
+      
+        <link rel="next" href="ux-principles/ux-design-principles/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>UI/UX Design Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#uiux-design-wiki" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="UI/UX Design Wiki" class="md-header__button md-logo" aria-label="UI/UX Design Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            UI/UX Design Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="ux-principles/ux-design-principles/" class="md-tabs__link">
+          
+  
+  
+  UX Principles
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="mobile-ux-design/mobile-ux-design-tips/" class="md-tabs__link">
+          
+  
+  
+  Mobile UX Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="usability-testing/mobile-usability-testing-practical-guide/" class="md-tabs__link">
+          
+  
+  
+  Usability Testing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="tools-platforms/user-testing-platforms-reddit/" class="md-tabs__link">
+          
+  
+  
+  Tools & Platforms
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="UI/UX Design Wiki" class="md-nav__button md-logo" aria-label="UI/UX Design Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    UI/UX Design Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ux-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UX Design Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UX Design Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-ux-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mobile UX Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mobile UX Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-concepts_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-concepts_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usability-testing-methods-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usability Testing: Methods &amp; Process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usability Testing: Methods &amp; Process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-concepts_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-concepts_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-tools-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Tools &amp; Platforms
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing Tools &amp; Platforms">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tool-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool categories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-insights-from-practitioners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key insights from practitioners
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-concepts_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Concepts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#testing-method-decision-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing method decision tree
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usability-issue-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usability issue severity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-user-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5-user rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UX Principles
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    UX Principles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ux-principles/ux-design-principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Principles of UX Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ux-principles/10-ux-ui-best-practices-business-apps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10 UX/UI Best Practices for Business Apps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobile UX Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mobile UX Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mobile-ux-design/mobile-ux-design-tips/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobile UX Design Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usability Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usability Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usability-testing/mobile-usability-testing-practical-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Practical Guide & Testing Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usability-testing/mobile-usability-testing-methods-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods, Tools, Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usability-testing/tips-effective-ui-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tips for Effective UI Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usability-testing/app-testing-best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Testing Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools & Platforms
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools & Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tools-platforms/user-testing-platforms-reddit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community Recommendations (Reddit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="uiux-design-wiki">UI/UX Design Wiki<a class="headerlink" href="#uiux-design-wiki" title="Permanent link">&para;</a></h1>
+<p>A concept-organized knowledge base on UX design principles, mobile UX, and usability testing. All notes are sourced from industry articles and community discussions.</p>
+<hr />
+<h2 id="ux-design-principles">UX Design Principles<a class="headerlink" href="#ux-design-principles" title="Permanent link">&para;</a></h2>
+<p>Core philosophy and best practices for designing experiences users love — covering consistency, simplicity, accessibility, and human-centered design.</p>
+<ul>
+<li><a href="ux-principles/ux-design-principles/">Key Principles of UX Design</a> — Baymard Institute's 10 research-backed UX principles for e-commerce sites and apps, grounded in 1,900+ usability test sessions</li>
+<li><a href="ux-principles/10-ux-ui-best-practices-business-apps/">10 UX/UI Best Practices for Business Apps</a> — Human-centered design fundamentals: user focus, layout consistency, feedback loops, and flipping bad UX cycles to virtuous ones</li>
+</ul>
+<h3 id="key-concepts">Key concepts<a class="headerlink" href="#key-concepts" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Consistency as the foundation of intuitive design</li>
+<li>Simplicity: only show users what they need</li>
+<li>Accessibility: 94% of top e-commerce sites have compliance issues</li>
+<li>Iterative design process: research → design → test → repeat</li>
+</ul>
+<h3 id="related-concepts">Related Concepts<a class="headerlink" href="#related-concepts" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="#mobile-ux-design">Mobile UX Design</a> — Mobile applies these principles under tighter constraints (small screen, one hand, on-the-go)</li>
+<li><a href="#usability-testing-methods-process">Usability Testing: Methods &amp; Process</a> — How to validate that your design actually follows these principles</li>
+</ul>
+<hr />
+<h2 id="mobile-ux-design">Mobile UX Design<a class="headerlink" href="#mobile-ux-design" title="Permanent link">&para;</a></h2>
+<p>How UX design changes when users are on a small screen, one-handed, distracted, and on the move. Covers iOS vs Android differences, the design process, and common pitfalls.</p>
+<ul>
+<li><a href="mobile-ux-design/mobile-ux-design-tips/">Mobile UX Design Tips</a> — Deep dive into mobile vs desktop UX differences, the 5-step design process (planning → wireframe → prototype), iOS/Android guidelines, and best practices like gesture design, white space, and one-handed use</li>
+</ul>
+<h3 id="key-concepts_1">Key concepts<a class="headerlink" href="#key-concepts_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Mobile users task in short bursts; desktop users work in long sessions</li>
+<li>One-handed use: place essential buttons in thumb reach</li>
+<li>iOS: Human Interface Guidelines; Android: Material Design Principles</li>
+<li>Constraints: small storage, screen size, distractions, slow app updates (7-day Apple review)</li>
+<li>Design process: Planning → Research → Specification → Wireframing → Prototyping</li>
+</ul>
+<h3 id="related-concepts_1">Related Concepts<a class="headerlink" href="#related-concepts_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="#ux-design-principles">UX Design Principles</a> — The same core principles apply; mobile just makes every trade-off harder</li>
+<li><a href="#usability-testing-methods-process">Usability Testing: Methods &amp; Process</a> — Mobile usability testing has unique challenges (physical devices, gesture recording)</li>
+</ul>
+<hr />
+<h2 id="usability-testing-methods-process">Usability Testing: Methods &amp; Process<a class="headerlink" href="#usability-testing-methods-process" title="Permanent link">&para;</a></h2>
+<p>How to plan, conduct, analyze, and report on usability tests. Covers moderated vs unmoderated, remote vs in-person, prototype vs live app, and how to turn findings into shipped improvements.</p>
+<ul>
+<li><a href="usability-testing/mobile-usability-testing-practical-guide/">Practical Guide &amp; Testing Tools</a> — Step-by-step process from establishing goals through prototype building, user recruitment, session recording, analysis, and actionable reporting</li>
+<li><a href="usability-testing/mobile-usability-testing-methods-tools/">Methods, Tools, Best Practices</a> — Comprehensive reference: all testing method types, usability metrics (task completion rate, time-on-task, error rate), data analysis, prioritizing severity, and the future of AI-driven testing</li>
+<li><a href="usability-testing/tips-effective-ui-testing/">Tips for Effective UI Testing</a> — Practical tips: test early and often, define objectives, dry runs, recruit right, record sessions; includes prototype vs live app comparison table</li>
+<li><a href="usability-testing/app-testing-best-practices/">App Testing Best Practices</a> — UX, performance, and security testing overview</li>
+</ul>
+<h3 id="key-concepts_2">Key concepts<a class="headerlink" href="#key-concepts_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>How many users?</strong> 5 per flow is the industry standard (Nielsen's rule); add more if trends aren't emerging</li>
+<li><strong>When to test?</strong> Early prototype → iterative → final pre-launch. Earlier = cheaper fixes</li>
+<li><strong>Moderated vs Unmoderated</strong>: Moderated = rich qualitative insight; Unmoderated = scale and speed</li>
+<li><strong>Metrics</strong>: Task completion rate, time on task, error rate, user satisfaction</li>
+<li><strong>Severity tiers</strong>: Critical (blocks tasks) → Serious → Moderate → Minor</li>
+<li><strong>Report structure</strong>: Executive summary, goals, process overview, categorized findings, prioritized issue list</li>
+</ul>
+<h3 id="related-concepts_2">Related Concepts<a class="headerlink" href="#related-concepts_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="#ux-design-principles">UX Design Principles</a> — Usability testing is how you validate that UX principles are working in practice</li>
+<li><a href="#testing-tools-platforms">Testing Tools &amp; Platforms</a> — The specific tools used to run the methods described here</li>
+</ul>
+<hr />
+<h2 id="testing-tools-platforms">Testing Tools &amp; Platforms<a class="headerlink" href="#testing-tools-platforms" title="Permanent link">&para;</a></h2>
+<p>What tools practitioners actually use for usability testing, recruiting, prototyping, and analysis — including community-sourced real-world recommendations.</p>
+<ul>
+<li><a href="tools-platforms/user-testing-platforms-reddit/">Community Recommendations (Reddit)</a> — r/UXDesign thread: real practitioners share their platform choices, recruiting strategies, budget tips, and what actually works</li>
+</ul>
+<h3 id="tool-categories">Tool categories<a class="headerlink" href="#tool-categories" title="Permanent link">&para;</a></h3>
+<p><strong>Moderated &amp; unmoderated testing platforms</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UserTesting.com</td>
+<td>Full platform: moderated + unmoderated, user panel, integrations</td>
+</tr>
+<tr>
+<td>Maze</td>
+<td>Prototype testing from Figma/Adobe; free tier available</td>
+</tr>
+<tr>
+<td>Lookback</td>
+<td>Live moderated interviews, session recording</td>
+</tr>
+<tr>
+<td>UXArmy</td>
+<td>Remote testing with panel; supports prototypes and live apps</td>
+</tr>
+<tr>
+<td>Hotjar</td>
+<td>Heatmaps, session recordings, surveys</td>
+</tr>
+<tr>
+<td>Loop11</td>
+<td>Agile teams; heatmaps, funnels, Slack integration</td>
+</tr>
+<tr>
+<td>Crazy Egg</td>
+<td>Heatmaps, A/B testing, session recordings</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Participant recruitment</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UserInterviews.com</td>
+<td>Vetted panel, scheduling + incentive management</td>
+</tr>
+<tr>
+<td>Respondent</td>
+<td>Niche/professional demographics</td>
+</tr>
+<tr>
+<td>Dovetail / Marvin</td>
+<td>Analysis and synthesis of research data</td>
+</tr>
+<tr>
+<td>Fullstory / Pendo</td>
+<td>In-product analytics (better for in-house teams)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prototyping</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Figma</td>
+<td>Standard for most teams; collaborative, interactive</td>
+</tr>
+<tr>
+<td>ProtoPie</td>
+<td>Advanced gestures and animations</td>
+</tr>
+<tr>
+<td>Framer / Webflow</td>
+<td>Full-flow visual simulation, responsive layouts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-insights-from-practitioners">Key insights from practitioners<a class="headerlink" href="#key-insights-from-practitioners" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tools are mostly feature-equivalent — match to your budget</li>
+<li><strong>Finding users is the hardest part</strong>, not the tool choice</li>
+<li>Best recruitment order: your own users → business connections → support staff → research agencies → paid panels (last resort)</li>
+<li>Budget for participant compensation, even small amounts</li>
+<li>5–8 users with think-aloud protocol surfaces 80%+ of usability issues</li>
+</ul>
+<h3 id="related-concepts_3">Related Concepts<a class="headerlink" href="#related-concepts_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="#usability-testing-methods-process">Usability Testing: Methods &amp; Process</a> — The methods these tools are used to execute</li>
+</ul>
+<hr />
+<h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
+<h3 id="testing-method-decision-tree">Testing method decision tree<a class="headerlink" href="#testing-method-decision-tree" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Need rich qualitative insight?
+  ↳ Yes → Moderated testing (UserTesting, Lookback)
+  ↳ No  → Unmoderated testing (Maze, UXArmy, Hotjar)
+
+Early stage prototype or late-stage live app?
+  ↳ Prototype → Figma + Maze/UXArmy prototype testing
+  ↳ Live app  → UXArmy / UserTesting live app testing
+
+Budget constrained?
+  ↳ Use Maze free tier or UXArmy free plan
+  ↳ Recruit from your own user base or business contacts
+  ↳ 5 users is enough to find most issues
+</code></pre></div>
+<h3 id="usability-issue-severity">Usability issue severity<a class="headerlink" href="#usability-issue-severity" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Definition</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical</td>
+<td>Blocks key task (e.g., can't complete checkout)</td>
+<td>Fix immediately</td>
+</tr>
+<tr>
+<td>Serious</td>
+<td>Significantly impairs experience (e.g., confusing nav)</td>
+<td>Fix before launch</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>Minor efficiency impact (e.g., unclear error messages)</td>
+<td>Fix in next sprint</td>
+</tr>
+<tr>
+<td>Minor</td>
+<td>Cosmetic (e.g., typos, formatting)</td>
+<td>Backlog</td>
+</tr>
+</tbody>
+</table>
+<h3 id="5-user-rule">5-user rule<a class="headerlink" href="#5-user-rule" title="Permanent link">&para;</a></h3>
+<p>Nielsen's research shows 5 users per flow surfaces ~85% of usability issues. Add sessions only if patterns aren't recurring. Test the flows central to your value proposition first.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

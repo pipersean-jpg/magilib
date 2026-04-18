@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 34
+# MagiLib Project Status — Session 35
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,17 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 34)
-- ### 1. `catalog.js` (MODIFIED)
-- **"+ Wishlist" button added** to library book modal (`ms-actions-secondary` full-width ghost button, below the locked 2×2 grid). Calls `toggleWishlistStatus()`.
-- **"Move to Library" button added** to wishlist book modal (`ms-actions-secondary` full-width ghost button, between primary actions and the hr separator). Calls `toggleWishlistStatus()`.
-- **`deleteBook` console.log removed** — debug `console.log("Delete triggered for:", bookId)` and `console.warn` removed.
-- **Version bumped** `?v=s33` → `?v=s34`
-- ### 2. `ui.js` (MODIFIED)
+## Last Session (Session 35)
+- ### 1. `index.html` (MODIFIED)
+- **Google sign-in button added** to auth screen — "or" divider + `.auth-google-btn` below the main Sign In button
+- **Version bumped** `?v=s34` → `?v=s35` (all script tags)
+- ### 2. `auth.js` (MODIFIED)
+- **`signInWithGoogle()`** added — calls `_supa.auth.signInWithOAuth({ provider: 'google', redirectTo: window.location.origin })`
+- **`signOut()` fix** — now calls `renderCatalog()` immediately after clearing `S.books`, so the old user's books clear from screen at sign-out (not on next tab tap)
 
 **Known issues carried forward:**
-- **Section 4 dirty-check**: verify styled `magiConfirm` dialog fires correctly after PWA reload (code is correct)
-- **Beta launch checklist**: all sections now reviewed — ready for device walkthrough
+- **Auth device test**: Google sign-in + user-switch isolation not yet confirmed on device
+- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through this session
+- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (carried from Session 34)
 
 ---
 
@@ -133,8 +134,12 @@ Before running `handoff`, Claude Code MUST:
 - [ ] **Section 4 reconfirm**: dirty-check dialog after PWA reload (code correct, needs device test)
 - [ ] **Full device walkthrough**: end-to-end beta checklist on device
 
-### Session 35 — Device Walkthrough & Beta Sign-off
-- [ ] Full device walkthrough: auth → add → library → edit (dirty-check) → status → pricing → settings → onboarding
+### Session 35 — Device Walkthrough & Beta Sign-off (IN PROGRESS)
+- [x] **Google sign-in button**: added to auth screen, OAuth wired, Supabase + Google Cloud configured
+- [x] **Library isolation fix**: `renderCatalog()` on sign-out + `loadCatalog()` in `afterSplash()`
+- [x] **SW cache bumped**: `magilib-sw-s35` — forces fresh HTML on device
+- [ ] Auth device test: Google sign-in + user-switch isolation confirmed on device
+- [ ] Full device walkthrough: add → library → edit (dirty-check) → status → pricing → settings → onboarding
 - [ ] Section 4 dirty-check: verify `magiConfirm` fires after PWA reload
 - [ ] Beta launch checklist sign-off (see checklist below)
 
@@ -304,6 +309,10 @@ Before running `handoff`, Claude Code MUST:
 - **Flex override in grid container**: set `resultsEl.style.display='flex'` inline to override CSS `display:grid`. `resetPickerState()` restores `display:grid` — no cleanup needed in the conjuring handler.
 - **Duplicate `window.fn =` overwrites silently**: if two files both define `function toggleWishlistStatus()` and one does `window.toggleWishlistStatus = toggleWishlistStatus`, the last-loaded file wins. Check for cross-file duplicates when a feature appears wired but doesn't fire as expected.
 - **`ms-actions-secondary` full-width button**: `display:grid;grid-template-columns:1fr 1fr` applies to the container — override per-button with `style="width:100%"` (or `grid-column:1/-1`) when you want a single full-width button in the secondary row.
+- **`afterSplash()` must call `loadCatalog()`**: for returning users, `checkChangelog()` is the only branch — it never triggers a catalog fetch. Always terminate auth success paths with `loadCatalog()`.
+- **`signOut()` clears `S.books` but not the DOM**: call `renderCatalog()` after clearing `S.books` or the old user's rendered HTML persists until the user manually taps Library.
+- **SW cache name must be bumped every session**: stale cache name means HTML changes are never served fresh on device. Bump alongside `?v=sN` each session.
+- **`onAuthStateChange('SIGNED_IN')` guard**: check `!_supaUser` before calling `onAuthSuccess()` from the handler — normal password sign-in already calls it manually; double-call would re-run splash and loadSettings.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
 - **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.
 - **Supabase upsert INSERT path hits NOT NULL constraint**: even when all target rows exist, Supabase upsert may attempt INSERT for some rows. For known-existing rows, use concurrent `.update().eq()` calls instead of upsert.

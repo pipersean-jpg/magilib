@@ -1,76 +1,71 @@
-# SESSION HANDOFF — 2026-04-18 (Session 34)
+# SESSION HANDOFF — 2026-04-18 (Session 35)
 
 ## Session Summary
-Beta walkthrough Sections 5–8 (Status, Pricing, Settings, Onboarding) — code review clean with one bug fixed: "+ Wishlist" and "Move to Library" buttons were missing from book modals. Duplicate `toggleWishlistStatus` in `ui.js` removed. Console.log cleaned from `deleteBook`.
+Beta walkthrough: Auth section. Added Google OAuth sign-in, fixed library data isolation bug (previous user's books bleeding through after sign-out), and fixed SW cache to force fresh HTML delivery.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `catalog.js` (MODIFIED)
-- **"+ Wishlist" button added** to library book modal (`ms-actions-secondary` full-width ghost button, below the locked 2×2 grid). Calls `toggleWishlistStatus()`.
-- **"Move to Library" button added** to wishlist book modal (`ms-actions-secondary` full-width ghost button, between primary actions and the hr separator). Calls `toggleWishlistStatus()`.
-- **`deleteBook` console.log removed** — debug `console.log("Delete triggered for:", bookId)` and `console.warn` removed.
-- **Version bumped** `?v=s33` → `?v=s34`
+### 1. `index.html` (MODIFIED)
+- **Google sign-in button added** to auth screen — "or" divider + `.auth-google-btn` below the main Sign In button
+- **Version bumped** `?v=s34` → `?v=s35` (all script tags)
 
-### 2. `ui.js` (MODIFIED)
-- **Duplicate `toggleWishlistStatus` removed** — the function was defined in both `ui.js` (without offline support) and `catalog.js` (with offline queueing). The `catalog.js` version was already overwriting via `window.toggleWishlistStatus = ...`. Removed the dead copy from `ui.js`.
+### 2. `auth.js` (MODIFIED)
+- **`signInWithGoogle()`** added — calls `_supa.auth.signInWithOAuth({ provider: 'google', redirectTo: window.location.origin })`
+- **`signOut()` fix** — now calls `renderCatalog()` immediately after clearing `S.books`, so the old user's books clear from screen at sign-out (not on next tab tap)
 
-### 3. `index.html` (MODIFIED)
-- **Version bumped** `?v=s33` → `?v=s34`
+### 3. `ui.js` (MODIFIED)
+- **`onAuthStateChange` updated** — now handles `SIGNED_IN` event for OAuth redirect callback. When `SIGNED_IN` fires and `_supaUser` is not yet set, calls `onAuthSuccess()` to complete the login flow
+- **`afterSplash()` fixed** — now calls `loadCatalog()` for returning authenticated users (previously only called `checkChangelog()`, which never triggered a catalog load — meaning you saw stale/empty grid until you tapped Library tab)
+
+### 4. `sw.js` (MODIFIED)
+- **Cache name bumped** `magilib-sw-s32d` → `magilib-sw-s35` — forces SW eviction so device gets fresh `index.html` with Google button
+
+### 5. `assets/css/magilib.css` (MODIFIED)
+- **`.auth-divider`** — "or" divider between email and Google buttons
+- **`.auth-google-btn`** — white background, border, flex layout for Google logo + text
 
 ---
 
 ## Sections Reviewed (Walkthrough)
 
-### Section 5 — Status ✅ (1 bug fixed)
-- **Bug**: `toggleWishlistStatus()` existed in both files but was never wired to any button in the modal. Library books had no "+ Wishlist" button; wishlist books had no "Move to Library" button.
-- **Fix**: Both buttons added as `btn-ghost` full-width in `ms-actions-secondary` div.
-- `toggleSold()` — correct: toggles '' ↔ 'Sold', updates DB, closes modal.
-- `toggleWishlistStatus()` in catalog.js — correct: toggles '' ↔ 'Wishlist', offline-queue support, closes modal.
-
-### Section 6 — Pricing ✅ (no issues)
-- `fetchPrice()` in `pricing.js` — all tiers (Murphy's, QTTE, CMB, eBay, MC) intact.
-- Price review sheet (`openPriceReviewSheet`) — correct.
-- `_applyConditionAdjustment()` — wired correctly to `getConditionPct()`.
-
-### Section 7 — Settings ✅ (no issues)
-- All 6 panels present: Account, Security, Currency & Marketplace, Condition Presets, Library Settings, Help & Feedback.
-- All functions verified present: `saveUsernameDebounced`, `changePasswordFromSettings`, `exportCSV`, `importFromCSV`, `downloadCSVTemplate`, `startBulkPriceRefresh`, `openTutorial`, `openWizard`.
-- `loadSettings` / `saveSettings` — correct with currency guard.
-
-### Section 8 — Onboarding ✅ (no issues)
-- `afterSplash()` checks `welcomeSeen` → shows `#welcomeScreen` for new users.
-- `startWizardTour()` / `dismissWelcome()` both mark `welcomeSeen = true`.
-- Wizard: 4 steps (display name → Add → Library → Pricing), `WIZARD_STEPS = 4`, progress bar + dots.
-
-### Section 4 — Dirty-check dialog ⚠️ (code correct, needs device test)
-- `closeEditModal()` checks `_editDirty && fromBackdrop` → `magiConfirm` dialog.
-- Code is correct. Needs device-level verification after PWA reload.
+### Section 1 — Auth (IN PROGRESS — device test pending)
+- **Google sign-in**: wired, needs device test after SW cache eviction
+- **Sign up / Sign in / Forgot password / Change password**: code confirmed correct in Session 34 review
+- **Library isolation bug**: fixed — `renderCatalog()` on sign-out + `loadCatalog()` in `afterSplash()`
+- **Google OAuth prerequisite**: user has configured Google provider in Supabase dashboard + Google Cloud Console
 
 ---
 
 ## Known Issues / Still Pending
 
-- **Section 4 dirty-check**: verify styled `magiConfirm` dialog fires correctly after PWA reload (code is correct)
-- **Beta launch checklist**: all sections now reviewed — ready for device walkthrough
+- **Auth device test**: Google sign-in + user-switch isolation not yet confirmed on device
+- **Sections 2–8**: Add, Library, Edit, Status, Pricing, Settings, Onboarding — not yet walked through this session
+- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (carried from Session 34)
 
 ---
 
-## Next Session Plan (Session 35)
+## Next Session Plan (Session 35 cont.)
 
-### 1. Device walkthrough — full end-to-end
-- Auth → Add → Library → Edit (dirty-check) → Status (Wishlist/Sold) → Pricing → Settings → Onboarding
-- Focus on Section 4 dirty-check after PWA reload
+### 1. Confirm auth on device
+- Google sign-in working
+- Sign out → sign in as different user → library isolates correctly
 
-### 2. Beta launch checklist sign-off
-- Walk checklist in CLAUDE.md item by item on device
-- Fix any remaining issues
+### 2. Continue walkthrough
+- Section 2: Add (scan/photo, manual, batch queue, save)
+- Section 3: Library (search, filter, sort, view detail)
+- Section 4: Edit (all fields, cover update, dirty-check dialog)
+- Section 5: Status (Mark Sold, + Wishlist, Move to Library)
+- Section 6: Pricing (Fetch estimate, stored price + eBay link)
+- Section 7: Settings (all panels)
+- Section 8: Onboarding (welcome + wizard)
 
 ---
 
 ## Model Learnings This Session
 
-- **`toggleWishlistStatus` was defined in both `ui.js` and `catalog.js`**: `catalog.js` sets `window.toggleWishlistStatus` (overwriting ui.js), so the ui.js version was dead code. Always check for duplicate window-level function definitions when a feature appears wired but doesn't work.
-- **`ms-actions-secondary` is the correct container** for secondary ghost buttons below the primary 2×2 grid — it has `margin-top:10px` and uses the same 2-col grid. For a full-width single button, add `style="width:100%"` to override the grid columns.
-- **Wishlist vs Sold status**: both use `b.sold` field (`'Wishlist'` | `'Sold'` | `''`). The modal `isWishlist` branch is `b.sold === 'Wishlist'`. Sold books go through the non-wishlist branch and get "Return to Library" label on the Mark Sold button.
+- **`afterSplash()` never called `loadCatalog()`**: for returning users, `checkChangelog()` was the only branch — no catalog refresh. Always ensure auth success paths terminate in a `loadCatalog()` call.
+- **`signOut()` cleared `S.books` but not the DOM**: `renderCatalog()` must be called after clearing `S.books` or the old user's rendered HTML persists until the user taps the Library tab.
+- **SW cache name must match session**: `magilib-sw-s32d` was never updated after Session 32 — HTML changes from Sessions 33/34/35 were served stale. Bump SW cache name every session alongside `?v=sN`.
+- **`onAuthStateChange('SIGNED_IN')` guard**: check `!_supaUser` before calling `onAuthSuccess()` from the state change handler — otherwise normal password sign-in (which already calls `onAuthSuccess()` manually) would trigger it twice.

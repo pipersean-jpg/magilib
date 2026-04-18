@@ -1,0 +1,1652 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Mobile app UX design differs from the web. Explore these differences, the process, and the main pitfalls with our experts in this article.">
+      
+      
+        <meta name="author" content="['Volodymyr Botsman']">
+      
+      
+      
+        <link rel="prev" href="../../ux-principles/10-ux-ui-best-practices-business-apps/">
+      
+      
+        <link rel="next" href="../../usability-testing/mobile-usability-testing-practical-guide/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Mobile App UX Design: Tips to Improve Your User Experience - UI/UX Design Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mobile-app-ux-design-basics-that-will-improve-user-experience" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="UI/UX Design Wiki" class="md-header__button md-logo" aria-label="UI/UX Design Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            UI/UX Design Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mobile App UX Design: Tips to Improve Your User Experience
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../ux-principles/ux-design-principles/" class="md-tabs__link">
+          
+  
+  
+  UX Principles
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Mobile UX Design
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../usability-testing/mobile-usability-testing-practical-guide/" class="md-tabs__link">
+          
+  
+  
+  Usability Testing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tools-platforms/user-testing-platforms-reddit/" class="md-tabs__link">
+          
+  
+  
+  Tools & Platforms
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="UI/UX Design Wiki" class="md-nav__button md-logo" aria-label="UI/UX Design Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    UI/UX Design Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UX Principles
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    UX Principles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ux-principles/ux-design-principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Key Principles of UX Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ux-principles/10-ux-ui-best-practices-business-apps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10 UX/UI Best Practices for Business Apps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobile UX Design
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mobile UX Design
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobile UX Design Tips
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobile UX Design Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-app-ux-design-basics-that-will-improve-user-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mobile app UX design: Basics that will improve user experience
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-mobile-app-ux-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is mobile app UX design?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What is mobile app UX design?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-you-should-be-thinking-about-mobile-app-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why you should be thinking about mobile app UX
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-people-hold-mobile-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How people hold mobile devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#differences-between-desktop-vs-mobile-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Differences between desktop vs mobile UX
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Differences between desktop vs mobile UX">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#display-orientation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Display orientation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual language
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ios-vs-android-app-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        iOS vs. Android app UX
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-mobile-app-design-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The mobile app design process
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The mobile app design process">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1: Planning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2: Research
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3: Specification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-wireframing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4: Wireframing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-prototyping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Prototyping
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-dos-and-donts-of-mobile-app-ux-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The dos and don'ts of mobile app UX design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The dos and don&#39;ts of mobile app UX design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-dos-of-mobile-app-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The dos of mobile app design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The dos of mobile app design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prioritizing-user-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prioritizing user experience
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-a-solid-visual-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building a solid visual hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimizing-for-all-mobile-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimizing for all mobile devices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-donts-of-mobile-app-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The don'ts of mobile app design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The don&#39;ts of mobile app design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overcrowding-the-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overcrowding the screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inconsistent-design-elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inconsistent design elements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#overloading-users-with-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overloading users with notifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices-for-mobile-ux-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best practices for mobile UX design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best practices for mobile UX design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-gestures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use gestures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#think-well-about-notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Think well about notifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintain-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintain consistency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-white-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use white space
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simplify-introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simplify introduction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#focus-on-content-centric-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Focus on content-centric design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoid-ui-noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avoid UI noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#consider-a-poor-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consider a poor connection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-hand-centered-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One hand-centered design
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-ux-design-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mobile UX design constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mobile UX design constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#client-side-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client-side storage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#small-screen-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Small screen sizes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distractions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distractions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hard-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hard updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#faq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FAQ
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FAQ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chatgpt-and-mobile-app-ux-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatGPT and mobile app UX design?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-much-does-mobile-app-uiux-design-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How much does mobile app UI/UX design cost?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-ui-design-in-mobile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is UI design in mobile?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usability Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usability Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usability-testing/mobile-usability-testing-practical-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Practical Guide & Testing Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usability-testing/mobile-usability-testing-methods-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods, Tools, Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usability-testing/tips-effective-ui-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tips for Effective UI Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usability-testing/app-testing-best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Testing Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools & Platforms
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tools & Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools-platforms/user-testing-platforms-reddit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community Recommendations (Reddit)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Mobile UX Design Tips</h1>
+
+<blockquote>
+<p><strong>Source:</strong> <a href="https://blackthorn-vision.com/blog/mobile-app-ux-design/">Blackthorn Vision</a> · Author: Volodymyr Botsman · Published: March 6, 2024</p>
+</blockquote>
+<h2 id="mobile-app-ux-design-basics-that-will-improve-user-experience">Mobile app UX design: Basics that will improve user experience<a class="headerlink" href="#mobile-app-ux-design-basics-that-will-improve-user-experience" title="Permanent link">&para;</a></h2>
+<p>Creating a mobile app is a new level and the next step for your business. But would you like it to be a step backward? 52% say a bad mobile experience makes them lose faith in a company. Not in an app but in a company.</p>
+<p>Therefore, consider investing time and costs into the mobile app UX design strategy and be familiar with its specifics and trends — those things we cover in this article.</p>
+<h2 id="what-is-mobile-app-ux-design">What is mobile app UX design?<a class="headerlink" href="#what-is-mobile-app-ux-design" title="Permanent link">&para;</a></h2>
+<p>Mobile UX designs are interfaces for hand-held and wearable devices. Accordingly, mobile UX designers work on creating positive experiences for mobile device users.</p>
+<p>Mobile users have been an online majority since 2014. That's when thousands of challenges and opportunities appeared. UX designers and strategists realized it's not an option just to shrink a web app to make it mobile-size. You need to optimize it, relying on research and keeping in mind some vital specifics.</p>
+<h3 id="why-you-should-be-thinking-about-mobile-app-ux">Why you should be thinking about mobile app UX<a class="headerlink" href="#why-you-should-be-thinking-about-mobile-app-ux" title="Permanent link">&para;</a></h3>
+<p>People use the same apps differently on a desktop and mobile — the most straightforward example is Google Maps. We have relatively long seances on a desktop while planning a trip or building a hiking route. But we spend minutes or even seconds in a mobile app, trying to get the direction, figure out the traffic or send someone our location.</p>
+<p>The same we can say about most apps. The general purpose of the app stays the same, but small goals, interactions, and expectations are different. Understanding these differences is the starting point in your work on mobile UX design.</p>
+<h2 id="how-people-hold-mobile-devices">How people hold mobile devices<a class="headerlink" href="#how-people-hold-mobile-devices" title="Permanent link">&para;</a></h2>
+<p>To create a user-centric design, consider how people use their mobile devices. Usually, they hold them in one hand, often — in crowded places like restaurants, public transport, and queues. These are the situations for mobile apps to blossom — when people need to fill their time. What would they expect? They'd expect a fast-loading app they can use with one hand while holding the phone vertically. They want to push the buttons, scroll, or type with one finger. And they don't wish to have personal information on their screens for long.</p>
+<h2 id="differences-between-desktop-vs-mobile-ux">Differences between desktop vs mobile UX<a class="headerlink" href="#differences-between-desktop-vs-mobile-ux" title="Permanent link">&para;</a></h2>
+<p>Let's take a closer look at these differences between desktop and mobile UX. They are the first direction indicator in the mobile app UX design.</p>
+<h3 id="workspace">Workspace<a class="headerlink" href="#workspace" title="Permanent link">&para;</a></h3>
+<p>While using a desktop app, we usually have many windows open and switch from one to another quickly. We even have multiple desktops, physical and virtual. We also have a complete package of tools like a full-size keyboard, a mouse or a touchscreen, notepads, pens, or a Note app open.</p>
+<p>While using a mobile app, we usually have only a phone. It takes work to switch from one app or page to another, for example, to write something down or transmit data. Often, we focus on a simple task while being occupied with something else.</p>
+<p>Multitasking on a desktop looks like operating many windows and making prolonged interactions. Multitasking on mobile looks more like choosing a playlist, scrolling a news feed or saving a day streak in Duolingo while grabbing coffee or commuting.</p>
+<h3 id="display-orientation">Display orientation<a class="headerlink" href="#display-orientation" title="Permanent link">&para;</a></h3>
+<p>While using a desktop app, we operate a big screen, can analyze a lot of information, and take actions like screen zoom, dividing the text, and scrolling. Mobile screens are much smaller, and these operations might be more complicated. It's critical to position the essential buttons and call to action where they get the most attention.</p>
+<p>Another huge difference is that mobile phones people mainly use vertically, while desktop displays are horizontal. You have to consider this while deciding on functionality to include in your mobile app, how to introduce the information, and while locating buttons.</p>
+<h3 id="visual-language">Visual language<a class="headerlink" href="#visual-language" title="Permanent link">&para;</a></h3>
+<p>On a desktop, we can proceed with more details and explanations. On mobile, we rely on patterns, visual clues, and intuition. First, we use mobile apps for quick tasks and want them to be simple. Second, reading text on buttons can be challenging because of being on the road or under bright sunlight or simply because of the small screen size.</p>
+<p>Icons, pictures, arrows, and animation come in handy here. They create patterns and make current and the following sessions easier.</p>
+<h2 id="ios-vs-android-app-ux">iOS vs. Android app UX<a class="headerlink" href="#ios-vs-android-app-ux" title="Permanent link">&para;</a></h2>
+<p>To make your app universal and reach the maximum of your audience, make it available for both Apple and Android users. Apple and Google care a lot about the app appearance in their app stores. They provide detailed documentation on app design which is open-source and available for any designer.</p>
+<p>The set of iOS rules is called <strong>Human Interface Design</strong>. Android devices require following the <strong>Material Design Principles</strong>. Sticking to these guidelines makes the design process faster and error-free regarding mobile UI design consistency. The development stage becomes less time and cost consuming. And most importantly, users get a familiar and easy-to-understand experience.</p>
+<blockquote>
+<p><em>In mobile design, we respect a user's task and mindset, as well as the device's limitations.</em></p>
+<p>— Josh Clark, author of <em>Tapworthy: Designing Great iPhone Apps</em></p>
+</blockquote>
+<p>The main UX differences rely upon navigation. On Apple devices, you swipe to go back, while Android users tap a Back button in the navigation tab at the bottom of the screen. Android apps use a hamburger menu for switching apps, whereas iOS has a tab bar. The button design also differs, and the floating activity button locates differently.</p>
+<h2 id="the-mobile-app-design-process">The mobile app design process<a class="headerlink" href="#the-mobile-app-design-process" title="Permanent link">&para;</a></h2>
+<p>The stages of designing mobile user experience might vary or be divided into smaller phases. Some of these phases might be repeatable. Here is the framework every mobile UX design agency can follow and succeed.</p>
+<h3 id="step-1-planning">Step 1: Planning<a class="headerlink" href="#step-1-planning" title="Permanent link">&para;</a></h3>
+<p>First, the design team cooperates with the business analytics department and creates a plan for a process. They rely on the time estimate and focus on core requirements. Then — make decisions on functionality and divide responsibilities in the team.</p>
+<h3 id="step-2-research">Step 2: Research<a class="headerlink" href="#step-2-research" title="Permanent link">&para;</a></h3>
+<p>Research helps designers to find the best solutions and stay up-to-date in case of trends and competition. With the results of this research, designers can organize brainstorming sessions, come up with ideas, and get inspiration and a direction for following creative processes.</p>
+<h3 id="step-3-specification">Step 3: Specification<a class="headerlink" href="#step-3-specification" title="Permanent link">&para;</a></h3>
+<p>A design team works on specifications and presents them to the client. It is a description of all tools and methods the designers will use. They explain why they came to this or that decision and where it will lead. This specification moves to a development team when the design work is done.</p>
+<h3 id="step-4-wireframing">Step 4: Wireframing<a class="headerlink" href="#step-4-wireframing" title="Permanent link">&para;</a></h3>
+<p>Wireframe might be called a skeleton of an app. It's the basis for the future product and represents its vital functionality. This process is usually short but requires close team cooperation and a lot of discussions.</p>
+<h3 id="step-5-prototyping">Step 5: Prototyping<a class="headerlink" href="#step-5-prototyping" title="Permanent link">&para;</a></h3>
+<p>The last step is creating a clickable prototype. It is the exact copy of the final product and allows the team and stakeholders to see how the user will interact with an app. The client gives feedback, asks all the questions, and, if needed, the design team makes changes according to new requirements.</p>
+<h2 id="the-dos-and-donts-of-mobile-app-ux-design">The dos and don'ts of mobile app UX design<a class="headerlink" href="#the-dos-and-donts-of-mobile-app-ux-design" title="Permanent link">&para;</a></h2>
+<p>With an understanding of the process of creating UI/UX design for mobile apps, let's move to some golden rules and not that obvious ones. Considering them helps to avoid mistakes, blind decisions, and extra spending.</p>
+<h3 id="the-dos-of-mobile-app-design">The dos of mobile app design<a class="headerlink" href="#the-dos-of-mobile-app-design" title="Permanent link">&para;</a></h3>
+<h4 id="prioritizing-user-experience">Prioritizing user experience<a class="headerlink" href="#prioritizing-user-experience" title="Permanent link">&para;</a></h4>
+<p>While working on the UX, designers must keep end-users and their needs in mind. The design should be visually attractive, appealing, intuitive, and easy to navigate. Conduct UX research to understand your target audience, its needs, and its pains.</p>
+<p>Constantly collect the feedback, analyze it, and improve your product, relying on it.</p>
+<h4 id="building-a-solid-visual-hierarchy">Building a solid visual hierarchy<a class="headerlink" href="#building-a-solid-visual-hierarchy" title="Permanent link">&para;</a></h4>
+<p>Visual hierarchy is an arrangement of elements on the screen. It makes it easier for users to navigate an app and realize its value. To achieve a strong visual hierarchy, experiment with font size and contrast, use bold and italics and play with the placement.</p>
+<h4 id="optimizing-for-all-mobile-devices">Optimizing for all mobile devices<a class="headerlink" href="#optimizing-for-all-mobile-devices" title="Permanent link">&para;</a></h4>
+<p>Mobile devices have different screen sizes and resolutions; your task is to create an app that looks and operates well in all of them. Make your design flexible and adaptable to displays of different sizes, including tablets. Use responsive design, which adjusts your app's layout automatically.</p>
+<p>Another task is to reduce loading time. You can achieve this by compressing images and reducing the number of HTTP requests.</p>
+<h3 id="the-donts-of-mobile-app-design">The don'ts of mobile app design<a class="headerlink" href="#the-donts-of-mobile-app-design" title="Permanent link">&para;</a></h3>
+<h4 id="overcrowding-the-screen">Overcrowding the screen<a class="headerlink" href="#overcrowding-the-screen" title="Permanent link">&para;</a></h4>
+<p>By overcrowding a screen, you overwhelm a user. Use enough white space to make your app easy to understand and navigate. Don't include much text on one screen; users might see it and quit immediately.</p>
+<h4 id="inconsistent-design-elements">Inconsistent design elements<a class="headerlink" href="#inconsistent-design-elements" title="Permanent link">&para;</a></h4>
+<p>Establish a visual language for an app to avoid inconsistency. Create a style guide with a color palette, typology, buttons, and all the elements. The consistency rule also applies to swiping and scrolling.</p>
+<h4 id="overloading-users-with-notifications">Overloading users with notifications<a class="headerlink" href="#overloading-users-with-notifications" title="Permanent link">&para;</a></h4>
+<p>Notifications are one of the most powerful functionalities. Yet, its inappropriate use can play an evil game. Messages must be relevant and timely and only include essential and correct essential information.</p>
+<h2 id="best-practices-for-mobile-ux-design">Best practices for mobile UX design<a class="headerlink" href="#best-practices-for-mobile-ux-design" title="Permanent link">&para;</a></h2>
+<p>There are many practices for developing a UI/UX design for mobile and web apps. They modify and replace each other with a flow of time and change of trends. Here are some up-to-date and universal ones.</p>
+<h3 id="use-gestures">Use gestures<a class="headerlink" href="#use-gestures" title="Permanent link">&para;</a></h3>
+<p>Gestures are the best way to make the user experience easy and intuitive. They make it easier to navigate on a small screen and build the pattern making people get used to the app faster. While considering them, keep in mind the following:</p>
+<ul>
+<li>Gestures must be intuitive and logical.</li>
+<li>Only include a few of them, and don't overwhelm the user.</li>
+<li>Analyze feedback; sometimes, adding animation or changing an arrow is enough to make a difference.</li>
+</ul>
+<p>The most used gestures are:</p>
+<ul>
+<li>tapping — for choosing an option and pushing a button</li>
+<li>finger movement — to scroll</li>
+<li>swiping — to move between the screens</li>
+<li>pinching — to zoom in and out</li>
+</ul>
+<h3 id="think-well-about-notifications">Think well about notifications<a class="headerlink" href="#think-well-about-notifications" title="Permanent link">&para;</a></h3>
+<p>Notifications are vital to keep your users updated about the functionality and to remind them to open an app and to see what's new. However, too many of them have the opposite effect. When working on your app design, decide well what you will notify your users about and when.</p>
+<p>Consider giving them a right to choose notifications options in a Settings menu. Make notifications clear and concise. They have to provide value to users, not to annoy them.</p>
+<h3 id="maintain-consistency">Maintain consistency<a class="headerlink" href="#maintain-consistency" title="Permanent link">&para;</a></h3>
+<p>Consistency is vital for making the user experience intuitive. They should understand where they are in the app and which actions are available. Maintain the same color scheme, iconography, and typography throughout the app. Place all UI elements like buttons and controls consistently as well.</p>
+<p>If your app has numerous interfaces (Ex: for a student, for a teacher, for an admin), make it easy to understand, they are the parts of one app or a group of apps.</p>
+<h3 id="use-white-space">Use white space<a class="headerlink" href="#use-white-space" title="Permanent link">&para;</a></h3>
+<p>White space (negative space, or breath space) is the name of the emptiness between the objects. Besides being a blank space, it is incredibly functional and might be a life changer.</p>
+<p>White space helps to set accents on specific objects, divide them, or group them.</p>
+<p>Generally, white space creates a feeling of harmony, structure, and order.</p>
+<h3 id="simplify-introduction">Simplify introduction<a class="headerlink" href="#simplify-introduction" title="Permanent link">&para;</a></h3>
+<p>The first minutes after downloading an app, the user usually spends creating an account. The cost of mistakes is high here. Make the navigation from one field to another fast and quick. Otherwise, you risk losing their interest.</p>
+<p>Ex: It might be urgent if it's a taxi or delivery service. Long and complicated onboarding turns users away from your app and makes them opt for your competitor.</p>
+<p>Consider requiring vital data at the beginning and allowing feeling the rest later. Use notifications to remind users about it.</p>
+<h3 id="focus-on-content-centric-design">Focus on content-centric design<a class="headerlink" href="#focus-on-content-centric-design" title="Permanent link">&para;</a></h3>
+<p>Keep in mind that the design is not a product itself. It's a package for a principal value. It means nothing if users can't use it to reach the primary purpose.</p>
+<p>Start the design process by creating a wireframe of your app's layout, then work on text and images. This way, you ensure that the app is consistent and the content is easy to find and represented correctly.</p>
+<h3 id="avoid-ui-noise">Avoid UI noise<a class="headerlink" href="#avoid-ui-noise" title="Permanent link">&para;</a></h3>
+<p>UI noise is a term that defines too much text and visual elements on the screen. Remember, they all fight for the user's attention on the small mobile screen.</p>
+<p>Minimalism has been a trend for the last few years, and there are reasons. By avoiding UI noise, mobile UI designer prioritizes elements and eases navigation. The best ways to do so are:</p>
+<ul>
+<li>Using fewer colors</li>
+<li>Using simple shapes</li>
+<li>Being careful with animation and typography</li>
+</ul>
+<h3 id="consider-a-poor-connection">Consider a poor connection<a class="headerlink" href="#consider-a-poor-connection" title="Permanent link">&para;</a></h3>
+<p>If you want to be used by people in areas with unstable internet connections or travelers, there are some recommendations on how to reach that:</p>
+<ul>
+<li>Use small pictures, videos, and audio.</li>
+<li>Use caching to store data so it's possible to access it offline</li>
+<li>Use data compression</li>
+<li>Include 'download' functionality if relevant</li>
+<li>Run the tests and collect feedback in these areas to make sure you do right</li>
+</ul>
+<h3 id="one-hand-centered-design">One hand-centered design<a class="headerlink" href="#one-hand-centered-design" title="Permanent link">&para;</a></h3>
+<p>Make it possible to use your app while having one hand busy with something else — food, drink, or a handrail.</p>
+<p>Place the most essential buttons within easy reach. Keep this in mind while considering your gestures and notifications. Make it possible to hide a notice easily if it covers content. If you have a complex app, use buttons and built-in links to navigate among the pages.</p>
+<h2 id="mobile-ux-design-constraints">Mobile UX design constraints<a class="headerlink" href="#mobile-ux-design-constraints" title="Permanent link">&para;</a></h2>
+<p>The important thing about mobile app designing is that you can rarely make them work 100% perfectly. Even considering all the information mentioned above leaves space for constraints. They might be more or less acute, depending on the type of app.</p>
+<h3 id="client-side-storage">Client-side storage<a class="headerlink" href="#client-side-storage" title="Permanent link">&para;</a></h3>
+<p>Three-fourths of all apps stay on the phone only for three days. There are different reasons to do so, but the most frequent one — people don't have enough space on their phones.</p>
+<p>The major constraint of mobile apps is that the data is stored client-side rather than server-side like on the web. With time, apps are becoming 'heavier' and more complex. They include 4k videos and live photos, and all this data needs to be stored. When the overload happens and the user gets a notification about it, they have to decide what to delete.</p>
+<p>To handle this, product owners aim to make their apps hard to give up. It means making them a habit, a part of life. In the case of mobile, the frequency of use plays a more significant role than importance.</p>
+<p>Ex: Uber is important, but you might use it sparingly. You can delete it now and install and log in within a minute when needed. A fitness app, mainly used every other day, has a good chance to stay, even while heavy.</p>
+<h3 id="small-screen-sizes">Small screen sizes<a class="headerlink" href="#small-screen-sizes" title="Permanent link">&para;</a></h3>
+<p>The screens may get bigger over time, but they are still too small to complete some tasks comfortably. The keyboard is the major problem; it's not easy to use even in full (horizontal) mode. It annoys the most during the login process.</p>
+<p>To make it easier for a user, consider making the login process as short as possible, and eliminate friction.</p>
+<h3 id="distractions">Distractions<a class="headerlink" href="#distractions" title="Permanent link">&para;</a></h3>
+<p>Users are more likely to drop a mobile app than a desktop one. Mobile devices are better for short interactions or filling time, while desktop ones we mainly use during work or research.</p>
+<p>Develop a strategy for getting users back when they quit. You may develop a habit, give rewards, make a user a part of a community, challenge them, etc. Be careful with notifications, and don't overuse them. Think of a suitable and persuasive UX copy.</p>
+<h3 id="hard-updates">Hard updates<a class="headerlink" href="#hard-updates" title="Permanent link">&para;</a></h3>
+<p>Making a teeny-tiny change in a mobile app takes about seven days to get approved by Apple. After this, the user has to download an update because all the data is stored on their side; immediately fixing a bug is impossible.</p>
+<p>To eliminate risks and the need for frequent updates, conduct a discovery process before development and run regular tests. Errors might still occur, but their amount will be much lower.</p>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>A UX design is like a joke — it's not that good if you have to explain it. A great design combines beauty and functionality, which should be your goal while building an app. Focus on the main features, put yourself in the user's shoes, rely on the research, and be relatively modest with visual elements.</p>
+<p>Always keep in mind that the design is not a product itself. It's the way to present it and make it as easy as possible to get the primary value.</p>
+<h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h2>
+<h3 id="chatgpt-and-mobile-app-ux-design">ChatGPT and mobile app UX design?<a class="headerlink" href="#chatgpt-and-mobile-app-ux-design" title="Permanent link">&para;</a></h3>
+<p>Integrating ChatGPT into your mobile UX design process can help you save time while improving the customer experience. It can automate repetitive tasks, enhance data collection, and handle many interactions.</p>
+<h3 id="how-much-does-mobile-app-uiux-design-cost">How much does mobile app UI/UX design cost?<a class="headerlink" href="#how-much-does-mobile-app-uiux-design-cost" title="Permanent link">&para;</a></h3>
+<p>The average cost of a UI/UX design for mobile apps varies from $3000 to $30,000. The range depends on different factors, including the complexity of an app idea, the size and type of team and its location, time-frames, etc.</p>
+<h3 id="what-is-ui-design-in-mobile">What is UI design in mobile?<a class="headerlink" href="#what-is-ui-design-in-mobile" title="Permanent link">&para;</a></h3>
+<p>A mobile UI is a graphical display on a mobile device that allows users to interact with the apps, features, content, and functions. Simply put, it's what users see when they open an app.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

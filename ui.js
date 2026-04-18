@@ -681,10 +681,14 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', async function() {
   // Initialise Supabase client now that supabase.min.js is guaranteed loaded
   _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  _supa.auth.onAuthStateChange(function(event) {
+  _supa.auth.onAuthStateChange(async function(event, session) {
     if (event === 'PASSWORD_RECOVERY') {
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('reset-password-form').style.display = 'flex';
+    } else if (event === 'SIGNED_IN' && session && !_supaUser) {
+      // OAuth redirect callback (Google etc) — _supaUser not yet set by getSession path
+      _supaUser = session.user;
+      await onAuthSuccess();
     }
   });
   loadSettings();
@@ -732,12 +736,13 @@ if (htmlSplash) htmlSplash.style.display = 'none';
 
 function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
+  if (!_supaUser) return; // not authenticated — auth screen is showing
   if (!stored.welcomeSeen) {
-    // New user — show welcome screen
     document.getElementById('welcomeScreen').classList.remove('hidden');
     updateUserMenu();
   } else {
-      checkChangelog();
+    if (typeof loadCatalog === 'function') loadCatalog();
+    checkChangelog();
   }
 }
 
