@@ -679,35 +679,39 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
-  // Initialise Supabase client now that supabase.min.js is guaranteed loaded
-  _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  _supa.auth.onAuthStateChange(async function(event, session) {
-    if (event === 'PASSWORD_RECOVERY') {
-      document.getElementById('authScreen').classList.add('hidden');
-      document.getElementById('reset-password-form').style.display = 'flex';
-    } else if (event === 'SIGNED_IN' && session && !_supaUser) {
-      // OAuth redirect callback (Google etc) — _supaUser not yet set by getSession path
-      _supaUser = session.user;
-      await onAuthSuccess();
-    }
-  });
-  loadSettings();
-  // Check for existing Supabase session (e.g. returning user, tab reopen)
+  // Show splash immediately — must be first so it fires even if later code throws
+  showSplash();
   try {
-    const { data: { session } } = await _supa.auth.getSession();
-    if (session && session.user) {
-      _supaUser = session.user;
-      loadStaticDBs(); // fire-and-forget: load 3.4 MB of DB scripts during splash window
-      const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
-      S.profile = profile || {};
-      updateUserMenu();
-      document.getElementById('authScreen').classList.add('hidden');
+    // Initialise Supabase client now that supabase.min.js is guaranteed loaded
+    _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    _supa.auth.onAuthStateChange(async function(event, session) {
+      if (event === 'PASSWORD_RECOVERY') {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('reset-password-form').style.display = 'flex';
+      } else if (event === 'SIGNED_IN' && session && !_supaUser) {
+        // OAuth redirect callback (Google etc) — _supaUser not yet set by getSession path
+        _supaUser = session.user;
+        await onAuthSuccess();
+      }
+    });
+    loadSettings();
+    // Check for existing Supabase session (e.g. returning user, tab reopen)
+    try {
+      const { data: { session } } = await _supa.auth.getSession();
+      if (session && session.user) {
+        _supaUser = session.user;
+        loadStaticDBs(); // fire-and-forget: load 3.4 MB of DB scripts during splash window
+        const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+        S.profile = profile || {};
+        updateUserMenu();
+        document.getElementById('authScreen').classList.add('hidden');
+      }
+    } catch(e) {
+      console.warn('Session check failed:', e.message);
     }
   } catch(e) {
-    console.warn('Session check failed:', e.message);
+    console.warn('Startup error:', e.message);
   }
-  // Always show splash — auth screen or app will be underneath
-  showSplash();
 });
 
 function showSplash() {

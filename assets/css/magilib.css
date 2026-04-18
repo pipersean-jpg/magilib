@@ -793,6 +793,7 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
 /* ── SPLASH PULSE ANIMATION ── */
 @keyframes splash-breathe{0%,100%{opacity:1;}50%{opacity:0.8;}}
 .splash-pulse{animation:splash-breathe 1.8s ease-in-out infinite;}
+@keyframes splashTimeout{to{opacity:0;pointer-events:none;visibility:hidden;}}
 
 /* ── OFFLINE BANNER ── */
 #offlineBanner{
