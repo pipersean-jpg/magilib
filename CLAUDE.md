@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 36
+# MagiLib Project Status — Session 37
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -29,17 +29,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 36)
-- ### 1. `assets/css/magilib.css` (MODIFIED)
-- **Bottom nav CSS** — `.bottom-nav`, `.bn-tab`, `.bn-add`, `.bn-add-circle` — mobile-only fixed bottom bar
-- **Home view CSS** — `.home-wrap`, `.home-greeting`, `.home-stats-grid`, `.home-stat-card`, `.home-recent-row`, `.home-magic-fact`, `.home-cta`
-- **Cover picker option CSS** — `.cover-picker-opts`, `.cover-picker-opt`, `.cpo-icon` — icon+label list rows with `.active` highlight
-- **Desktop 50/50** — `@media(min-width:768px)` CSS grid on `.entry-layout`: `"pricing pricing" / "cover details" / "condition condition" / "save save"`
-- **Mobile bottom padding** — `.view` gets `padding-bottom:76px` on mobile so content clears the bottom nav
+## Last Session (Session 37)
+- ### 1. `fuse.min.js` (NEW)
+- Downloaded Fuse.js 7.0.0 locally (23 KB) — eliminates blocking CDN script that caused DOMContentLoaded to hang when jsdelivr was slow on mobile
+- ### 2. `index.html` (MODIFIED)
+- Fuse.js script tag changed from CDN → `/fuse.min.js?v=s37`
+- All `?v=s36` script tags bumped to `?v=s37`
+- `#splashScreen` div: added `animation:splashTimeout 0.6s ease forwards 6s` — CSS fallback that force-hides the splash after 6s even if all JS fails
 
 **Known issues carried forward:**
 - **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Full beta walkthrough**: Sections 2–8 (Add · Library · Edit · Status · Pricing · Settings · Onboarding) still pending end-to-end device sign-off
+- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
+- **Vercel deploy timing**: splash fixes (s37) pushed this session — confirm they resolve the persistent splash on next open
 
 ---
 
@@ -320,6 +321,9 @@ Before running `handoff`, Claude Code MUST:
 - **`afterSplash()` must call `loadCatalog()`**: for returning users, `checkChangelog()` is the only branch — it never triggers a catalog fetch. Always terminate auth success paths with `loadCatalog()`.
 - **`signOut()` clears `S.books` but not the DOM**: call `renderCatalog()` after clearing `S.books` or the old user's rendered HTML persists until the user manually taps Library.
 - **SW cache name must be bumped every session**: stale cache name means HTML changes are never served fresh on device. Bump alongside `?v=sN` each session.
+- **`showSplash()` must be first in DOMContentLoaded**: any throw before it (slow CDN, `createClient` error) leaves `#splashScreen` permanently visible. Call it before any async/failing code; wrap the rest in try/catch.
+- **Blocking CDN `<script>` in `<head>` hangs DOMContentLoaded**: scripts without `async`/`defer` block HTML parsing. If the CDN is slow, the splash never dismisses. All critical scripts must be served locally.
+- **CSS animation as JS-independent splash fallback**: `animation: splashTimeout 0.6s forwards 6s` on the HTML splash element auto-hides it after 6s regardless of JS state — safe last resort.
 - **`onAuthStateChange('SIGNED_IN')` guard**: check `!_supaUser` before calling `onAuthSuccess()` from the handler — normal password sign-in already calls it manually; double-call would re-run splash and loadSettings.
 - **`count: exact, head: true` null ≠ table exists**: Supabase returns `null` count (no error) for non-existent tables in some SDK versions. Always confirm with `select().limit(1)` — missing table correctly errors there.
 - **`const` in Node.js vm scripts doesn't leak to context**: `vm.runInContext` with `const` declarations leaves the variable inaccessible on the context object. Fix: IIFE wrapper `vm.runInNewContext('(function(){ ...src...; return VAR; })()')`.

@@ -1,94 +1,78 @@
-# SESSION HANDOFF — 2026-04-19 (Session 36)
+# SESSION HANDOFF — 2026-04-19 (Session 37)
 
 ## Session Summary
-New Layout sprint. Added a Home/Summary landing page, mobile bottom nav, restructured cover picker overlay (4-option list), and desktop 50/50 cover+details layout. All syntax-clean; ready for device walkthrough next session.
+Splash screen debugging and hardening. Fuse.js moved from CDN to local bundle; splash call order fixed; CSS auto-dismiss fallback added. Five bugs identified via device/desktop walkthrough — captured for next session.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `assets/css/magilib.css` (MODIFIED)
-- **Bottom nav CSS** — `.bottom-nav`, `.bn-tab`, `.bn-add`, `.bn-add-circle` — mobile-only fixed bottom bar
-- **Home view CSS** — `.home-wrap`, `.home-greeting`, `.home-stats-grid`, `.home-stat-card`, `.home-recent-row`, `.home-magic-fact`, `.home-cta`
-- **Cover picker option CSS** — `.cover-picker-opts`, `.cover-picker-opt`, `.cpo-icon` — icon+label list rows with `.active` highlight
-- **Desktop 50/50** — `@media(min-width:768px)` CSS grid on `.entry-layout`: `"pricing pricing" / "cover details" / "condition condition" / "save save"`
-- **Mobile bottom padding** — `.view` gets `padding-bottom:76px` on mobile so content clears the bottom nav
+### 1. `fuse.min.js` (NEW)
+- Downloaded Fuse.js 7.0.0 locally (23 KB) — eliminates blocking CDN script that caused DOMContentLoaded to hang when jsdelivr was slow on mobile
 
 ### 2. `index.html` (MODIFIED)
-- **`#view-home`** — new Home/Summary view with greeting, 3 stat cards, Magic Fact panel, recently-added book row, Add CTA + Browse Library button
-- **`#bottomNav`** — 5-tab bottom nav (Home · Library · Add · Wishlist · Settings); Add tab has circle pill; mobile-only
-- **Logo onclick** — `showView('home')` wired to nav logo for desktop
-- **Cover picker restructured** — 4-option list replaces old source buttons: Take a photo / Choose from gallery (both with `<input type="file">` inline) / The Pro Shelf (`selectCoverOpt('shelf')`) / Add image link (`selectCoverOpt('link')`)
-- **Add form** — `.cover-actions-row` (Upload + URL buttons) removed; replaced with hint text "Tap to update cover"
-- **Version bumped** `?v=s35` → `?v=s36`
+- Fuse.js script tag changed from CDN → `/fuse.min.js?v=s37`
+- All `?v=s36` script tags bumped to `?v=s37`
+- `#splashScreen` div: added `animation:splashTimeout 0.6s ease forwards 6s` — CSS fallback that force-hides the splash after 6s even if all JS fails
 
-### 3. `catalog.js` (MODIFIED)
-- **`showView()`** — handles `'home'` view; updates `.bn-tab` active state on bottom nav; desktop tab map updated (`home:-1`)
-- **`renderHomeView()`** — new function; populates greeting, stat cards, Magic Fact (rotates daily from array of 12), recent books row; called on `showView('home')` and after `loadCatalog()` completes if home is active
-- **`MAGIC_FACTS`** — 12-item array of curated magic/conjuring facts
-- **`_openPickerOverlay()`** — shared helper for `openCoverPicker` / `openCoverPickerForEdit`; resets option highlights and content area on open
-- **`openCoverPicker()` / `openCoverPickerForEdit()`** — removed auto-load of Google Images; now open with neutral state via `_openPickerOverlay()`
-- **`selectCoverOpt(opt)`** — new; handles 'shelf' (triggers conjuring search + shows results) and 'link' (shows URL input, hides results)
-- **`uploadCoverFromPicker(event)`** — new; reads file → `setCoverCompressed` → closes picker overlay
-- **`resetPickerState()`** — updated to clear `.cover-picker-opt.active` instead of old `picker-source-btn` references
+### 3. `ui.js` (MODIFIED)
+- `showSplash()` moved to the **very first line** of `DOMContentLoaded` handler, before any potentially-throwing code
+- Remaining startup code wrapped in outer try/catch so a crash in `createClient` or session check can't prevent the splash from dismissing
 
-### 4. `ui.js` (MODIFIED)
-- **`afterSplash()`** — calls `showView('home')` for returning users (previously just called `loadCatalog()` with no view change)
+### 4. `assets/css/magilib.css` (MODIFIED)
+- Added `@keyframes splashTimeout { to { opacity:0; pointer-events:none; visibility:hidden; } }`
 
-### 5. `auth.js` (MODIFIED)
-- **`dismissWelcome()`** — routes to `showView('home')` + `loadCatalog()` instead of `showView('catalog')`
-
-### 6. `sw.js` (MODIFIED)
-- **Cache name bumped** `magilib-sw-s35` → `magilib-sw-s36`
+### 5. `sw.js` (MODIFIED)
+- Cache name bumped `magilib-sw-s36` → `magilib-sw-s37`
+- `/fuse.min.js` added to `SHELL_ASSETS` pre-cache list
 
 ---
 
-## Next Session — New Layout Review & Test
+## Bugs Identified This Session (Fix Next Session)
 
-### Priority: Device walkthrough of all New Layout changes
+### B1 — Sign-in hangs on mobile
+- Tapping Sign In on mobile does not complete — spinner or button stays stuck
+- Desktop sign-in works fine
+- Likely: async/await or fetch timing issue on mobile Safari; could also be a touch event vs click event mismatch on the submit button
 
-**Home view**
-- [ ] Stat cards populate correctly after books load (not stuck at "—")
-- [ ] Magic Fact displays and rotates daily
-- [ ] Recently added row scrolls horizontally; tapping a book opens the detail sheet
-- [ ] "Add a Book" CTA navigates to Add view
-- [ ] "Browse Library" navigates to Library view
-- [ ] First-time user (no books): empty-state copy shows correctly
+### B2 — "Save Password" browser prompt records Display Name as username
+- When navigating from Add → Library on desktop, the browser's native Save Password dialog fires
+- It's treating the Display Name field (`#authUsername` / `#s-username`) as a username credential field
+- Fix: add `autocomplete="off"` or `autocomplete="name"` to the Display Name input; add `autocomplete="new-password"` to non-auth password fields to suppress the prompt
 
-**Bottom nav (mobile)**
-- [ ] All 5 tabs navigate correctly
-- [ ] Active state updates on tab switch (correct tab highlights)
-- [ ] Add tab circle pill renders distinctly
-- [ ] Content clears the nav bar (no overlap from bottom)
-- [ ] Safe-area-inset-bottom respected on iPhone (home indicator doesn't obscure nav)
-- [ ] Bottom nav hidden on desktop (≥768px)
+### B3 — Cover picker overlay renders behind the detail sheet
+- In Library → tap a book → tap "Update Cover" → the cover picker overlay appears behind the book detail sheet instead of on top
+- Root cause: `#coverPickerOverlay` z-index may not be high enough when opened from the book detail modal context
+- Fix: verify `#coverPickerOverlay` has `z-index: var(--z-dialog)` (2000) AND that the detail sheet isn't at an equal or higher z-index; may need to bump picker to `var(--z-fullscreen)` (3000) when triggered from detail
 
-**Cover picker**
-- [ ] Tapping cover frame opens picker overlay
-- [ ] 4 options render as icon+label rows
-- [ ] "Take a photo" triggers camera on mobile
-- [ ] "Choose from gallery" triggers photo library picker
-- [ ] "The Pro Shelf" shows Pro Shelf search results below
-- [ ] "Add image link" shows URL input; hides results grid
-- [ ] Active option highlights (accent colour, icon tints)
-- [ ] Upload/URL buttons gone from Add form; hint text shows instead
+### B4 — Google Images link missing from cover picker
+- Old layout had a direct "Google Images" button that opened a new tab with `{title} {author} book cover` pre-loaded in Google Image Search
+- New cover picker (4-option list) dropped this entirely — no equivalent option exists
+- Fix: add a 5th option "Search Google Images" (opens `window.open(googleImagesUrl, '_blank')`) to the `#coverPickerSourceBtns` list; wire same URL-building logic as the old button
 
-**Desktop 50/50 (browser, ≥768px)**
-- [ ] Cover image + Details fields sit side by side at equal width
-- [ ] Pricing full-width above; Condition + Save full-width below
-- [ ] Cover frame aspect ratio looks proportional (3:4 on desktop)
+### B5 — Can't close the detail/edit card
+- In Library → book detail sheet — no visible way to close/dismiss it on device
+- The close button (✕ or equivalent) may be absent, hidden, or not tappable on mobile
+- Fix: verify `closeModal()` button exists and is visible at the top of `#modalOverlay`; check z-index and tap target size (min 48×48px)
+
+---
+
+## Next Session Priorities
+1. **Fix B1 (sign-in mobile hang)** — blocks all device testing
+2. **Fix B3, B4, B5 (cover picker z-index, Google Images option, modal close)** — blocks cover/edit workflow
+3. **Fix B2 (Save Password prompt)** — minor UX polish
+4. **Resume device walkthrough** once sign-in and cover picker are resolved
 
 ---
 
 ## Known Issues Carried Forward
 - **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Full beta walkthrough**: Sections 2–8 (Add · Library · Edit · Status · Pricing · Settings · Onboarding) still pending end-to-end device sign-off
+- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
+- **Vercel deploy timing**: splash fixes (s37) pushed this session — confirm they resolve the persistent splash on next open
 
 ---
 
 ## Model Learnings This Session
-- **`showView('home')`**: 'home' maps to -1 in the desktop tab index so no `.tab-btn` gets active — correct behaviour (home has no desktop tab; logo click is the desktop entry point).
-- **`resetPickerState()` must clear `.cover-picker-opt.active`**: old code cleared `.picker-source-btn.active` — stale reference after overlay restructure; always update together.
-- **`uploadCoverFromPicker` closes picker**: unlike `uploadCover()` (Add form file input), the picker variant must explicitly `classList.add('hidden')` on the overlay after setting the cover.
-- **`renderHomeView()` called twice on load**: once from `showView('home')` (books may be empty), once from `loadCatalog()` success path (books populated) — this is intentional for progressive display.
-- **Bottom nav z-index**: `z-index:150` sits above page content (`z-index:100` nav) but below Magi-sheets (1000) and dialogs (2000).
+- **Splash hang root cause**: `showSplash()` was at the END of `DOMContentLoaded` — any throw before it (e.g. slow CDN script blocking parse, Supabase `createClient` error) left the HTML `#splashScreen` permanently visible. Fix: call `showSplash()` first, wrap the rest in try/catch.
+- **Blocking CDN script in `<head>`**: `<script src="CDN">` without `async`/`defer` blocks the HTML parser and DOMContentLoaded. All critical scripts must be served locally or marked async. Fuse.js was the offender.
+- **CSS animation as JS fallback**: `animation: splashTimeout 0.6s forwards 6s` on the HTML splash element gives a pure-CSS safety net that fires regardless of JS state.
