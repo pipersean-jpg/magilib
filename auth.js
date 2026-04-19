@@ -161,7 +161,11 @@ async function authSubmit() {
 async function onAuthSuccess() {
   S.books = []; // clear any stale library data from previous session
   loadStaticDBs(); // fire-and-forget: 3.4 MB of DB scripts loaded only after auth
-  const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+  const _profileFallback = new Promise(resolve => setTimeout(() => resolve({ data: null }), 5000));
+  const { data: profile } = await Promise.race([
+    _supa.from('profiles').select('*').eq('id', _supaUser.id).single(),
+    _profileFallback
+  ]).catch(() => ({ data: null }));
   S.profile = profile || {};
   updateUserMenu();
   document.getElementById('authScreen').classList.add('hidden');

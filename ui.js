@@ -701,7 +701,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (session && session.user) {
         _supaUser = session.user;
         loadStaticDBs(); // fire-and-forget: load 3.4 MB of DB scripts during splash window
-        const { data: profile } = await _supa.from('profiles').select('*').eq('id', _supaUser.id).single();
+        const _profileFallback = new Promise(resolve => setTimeout(() => resolve({ data: null }), 5000));
+        const { data: profile } = await Promise.race([
+          _supa.from('profiles').select('*').eq('id', _supaUser.id).single(),
+          _profileFallback
+        ]).catch(() => ({ data: null }));
         S.profile = profile || {};
         updateUserMenu();
         document.getElementById('authScreen').classList.add('hidden');
