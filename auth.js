@@ -26,6 +26,7 @@ function authSwitchMode() {
   document.getElementById('authSub').textContent = isSignup ? 'Start cataloguing your magic collection' : 'Sign in to your MagiLib collection';
   document.getElementById('authUsernameField').style.display = isSignup ? '' : 'none';
   document.getElementById('authConfirmField').style.display = isSignup ? '' : 'none';
+  document.getElementById('authPassword').autocomplete = isSignup ? 'new-password' : 'current-password';
   document.getElementById('authConfirmPassword').value = '';
   document.getElementById('authSubmitBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
   document.getElementById('authToggle').innerHTML = isSignup

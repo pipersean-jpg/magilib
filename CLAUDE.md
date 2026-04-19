@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 39
+# MagiLib Project Status — Session 40
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -48,18 +48,15 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 39)
+## Last Session (Session 40)
 - ### 1. `auth.js` (MODIFIED)
-- `onAuthSuccess()`: wrapped `profiles` fetch in `Promise.race` with 5s fallback → prevents mobile Safari sign-in hang (B1)
-- ### 2. `ui.js` (MODIFIED)
-- DOMContentLoaded `getSession` path: same `Promise.race` 5s fallback on `profiles` fetch (B1, returning-user path)
-- ### 3. `index.html` (MODIFIED)
-- `#coverPickerOverlay`: changed inline z-index from `var(--z-dialog)` to hardcoded `2001` — CSS vars in inline styles can silently fail on iOS Safari (B3)
+- `authSwitchMode()`: added one line — sets `#authPassword` `autocomplete` to `'new-password'` in sign-up mode, `'current-password'` in sign-in mode (B2)
+- Browsers only trigger "Save Password" on `current-password` fields; switching to `new-password` during sign-up suppresses the prompt
 
 **Known issues carried forward:**
-- ### B2 — Save Password prompt
-- Browser treats Display Name field as a credential field. Not addressed this session.
 - ### Needs device verification
+- B1: Sign-in no longer hangs — needs confirming on device
+- B2: Save Password prompt fix — needs device confirm
 
 ---
 
@@ -258,6 +255,7 @@ Before running `handoff`, Claude Code MUST:
 - **Auth**: check if `authSwitchMode()` / `authUsernameField` still needed once OAuth is primary signup path
 
 ## Technical Learnings
+- **`autocomplete="new-password"` suppresses Save Password**: browsers only offer to save credentials when a `current-password` field is submitted. Dynamically switch `autocomplete` on the password field in sign-up vs sign-in mode — no HTML changes needed.
 - **CSS vars in inline styles on iOS Safari**: `z-index:var(--z-dialog)` in an inline `style` attribute can silently fail — always hardcode z-index values in inline styles.
 - **`position:absolute` inside `overflow:auto` container**: without `position:relative` on the scroll container, absolute children anchor to the nearest positioned ancestor (possibly the full-screen overlay). Always add `position:relative` to the intended containing block.
 - **Profile fetch timeout pattern**: `Promise.race([supabaseFetch, new Promise(r => setTimeout(() => r({data:null}), 5000))])` — correct pattern for non-critical Supabase fetches that must not block mobile auth flow.
