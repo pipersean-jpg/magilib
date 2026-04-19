@@ -2005,7 +2005,7 @@ function openCoverPickerForEdit() {
 
 function selectCoverOpt(opt) {
   document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
-  const idMap={shelf:'cpoShelf',link:'cpoLink'};
+  const idMap={shelf:'cpoShelf',link:'cpoLink',images:'cpoImages'};
   const btn=document.getElementById(idMap[opt]);
   if(btn)btn.classList.add('active');
   const gic=document.getElementById('googleImagesCard');
@@ -2016,6 +2016,8 @@ function selectCoverOpt(opt) {
     if(pua)pua.style.display='none';
     if(res){res.style.display='grid';}
     searchCoverSource('conjuring');
+  } else if(opt==='images'){
+    searchCoverSource('images');
   } else if(opt==='link'){
     if(gic)gic.style.display='none';
     if(pua){pua.style.display='block';setTimeout(()=>document.getElementById('pickerUrlInput').focus(),100);}

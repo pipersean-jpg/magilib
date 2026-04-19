@@ -424,6 +424,7 @@ input[type=file].file-input{display:none;}
 }
 .magi-sheet-overlay.is-active{opacity:1;pointer-events:auto;}
 .magi-sheet{
+  position:relative;
   background:var(--paper-card);
   border-radius:20px 20px 0 0;
   max-width:680px;width:100%;
