@@ -1,78 +1,70 @@
-# SESSION HANDOFF — 2026-04-19 (Session 37)
+# SESSION HANDOFF — 2026-04-19 (Session 38)
 
 ## Session Summary
-Splash screen debugging and hardening. Fuse.js moved from CDN to local bundle; splash call order fixed; CSS auto-dismiss fallback added. Five bugs identified via device/desktop walkthrough — captured for next session.
+Full protocol audit and activation. No app code changed — all infrastructure, config, and tooling work.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `fuse.min.js` (NEW)
-- Downloaded Fuse.js 7.0.0 locally (23 KB) — eliminates blocking CDN script that caused DOMContentLoaded to hang when jsdelivr was slow on mobile
+### 1. `CLAUDE.md` (MODIFIED)
+- Added `## Stack Overview` section (runtime/DB/auth/hosting/search/SW/sole dev)
+- Added 8 new items to `### Absolute Rules`: typecheck after every JS edit, verification-before-completion, atomic commits, auth/RLS/SW guard, session-start protocol, subagent discipline, auto-retro rule, consultation panel trigger (`consult panel`)
+- Added to `## Technical Rules`: claude-flow path, superpowers skills path, retros path
 
-### 2. `index.html` (MODIFIED)
-- Fuse.js script tag changed from CDN → `/fuse.min.js?v=s37`
-- All `?v=s36` script tags bumped to `?v=s37`
-- `#splashScreen` div: added `animation:splashTimeout 0.6s ease forwards 6s` — CSS fallback that force-hides the splash after 6s even if all JS fails
+### 2. `.claude/settings.json` (MODIFIED)
+- Added `PostToolUse` hook on `Edit|Write`: runs `node --check <file>` on any edited `.js` file — prints ✓ or ✗ SYNTAX ERROR
+- Added `Stop` hook: prints session-end reminder (write SESSION_HANDOFF.md → update CLAUDE.md → run handoff)
 
-### 3. `ui.js` (MODIFIED)
-- `showSplash()` moved to the **very first line** of `DOMContentLoaded` handler, before any potentially-throwing code
-- Remaining startup code wrapped in outer try/catch so a crash in `createClient` or session check can't prevent the splash from dismissing
+### 3. `~/.claude/projects/.../memory/user_seanpiper.md` (NEW)
+- User memory: role, comms style, magic words, solo Claude mode preference
 
-### 4. `assets/css/magilib.css` (MODIFIED)
-- Added `@keyframes splashTimeout { to { opacity:0; pointer-events:none; visibility:hidden; } }`
+### 4. `~/.claude/projects/.../memory/project_overview.md` (NEW)
+- Project memory: stack, key tables, current phase, Phase 2 scope
 
-### 5. `sw.js` (MODIFIED)
-- Cache name bumped `magilib-sw-s36` → `magilib-sw-s37`
-- `/fuse.min.js` added to `SHELL_ASSETS` pre-cache list
+### 5. `~/.claude/projects/.../memory/MEMORY.md` (MODIFIED)
+- Added index entries for the two new memory files above
+
+### 6. `.mcp.json` (NEW)
+- GitHub (`@modelcontextprotocol/server-github`) — token set ✅
+- Playwright (`@playwright/mcp@latest`) — no key needed ✅
+- context7 (`@upstash/context7-mcp`) — no key needed ✅
+- Firecrawl (`firecrawl-mcp`) — key set ✅
+- Sentry (`@sentry/mcp-server`) — token placeholder, pending
+
+### 7. `.gitignore` (MODIFIED)
+- Added `.mcp.json` (contains API keys)
+
+### 8. `docs/retros/` (NEW DIRECTORY)
+- Created for auto-retro workflow per new Absolute Rules
 
 ---
 
-## Bugs Identified This Session (Fix Next Session)
+## Unresolved / Carried Forward
 
-### B1 — Sign-in hangs on mobile
-- Tapping Sign In on mobile does not complete — spinner or button stays stuck
-- Desktop sign-in works fine
-- Likely: async/await or fetch timing issue on mobile Safari; could also be a touch event vs click event mismatch on the submit button
+### From Session 37
+- **B1 — Sign-in hangs on mobile**: async/fetch timing issue on mobile Safari
+- **B2 — Save Password prompt**: browser treats Display Name as credential field
+- **B3 — Cover picker z-index**: picker renders behind detail sheet when opened from modal
+- **B4 — Google Images link missing**: dropped from new cover picker layout
+- **B5 — Can't close detail card on device**: close button may be missing/hidden on mobile
 
-### B2 — "Save Password" browser prompt records Display Name as username
-- When navigating from Add → Library on desktop, the browser's native Save Password dialog fires
-- It's treating the Display Name field (`#authUsername` / `#s-username`) as a username credential field
-- Fix: add `autocomplete="off"` or `autocomplete="name"` to the Display Name input; add `autocomplete="new-password"` to non-auth password fields to suppress the prompt
-
-### B3 — Cover picker overlay renders behind the detail sheet
-- In Library → tap a book → tap "Update Cover" → the cover picker overlay appears behind the book detail sheet instead of on top
-- Root cause: `#coverPickerOverlay` z-index may not be high enough when opened from the book detail modal context
-- Fix: verify `#coverPickerOverlay` has `z-index: var(--z-dialog)` (2000) AND that the detail sheet isn't at an equal or higher z-index; may need to bump picker to `var(--z-fullscreen)` (3000) when triggered from detail
-
-### B4 — Google Images link missing from cover picker
-- Old layout had a direct "Google Images" button that opened a new tab with `{title} {author} book cover` pre-loaded in Google Image Search
-- New cover picker (4-option list) dropped this entirely — no equivalent option exists
-- Fix: add a 5th option "Search Google Images" (opens `window.open(googleImagesUrl, '_blank')`) to the `#coverPickerSourceBtns` list; wire same URL-building logic as the old button
-
-### B5 — Can't close the detail/edit card
-- In Library → book detail sheet — no visible way to close/dismiss it on device
-- The close button (✕ or equivalent) may be absent, hidden, or not tappable on mobile
-- Fix: verify `closeModal()` button exists and is visible at the top of `#modalOverlay`; check z-index and tap target size (min 48×48px)
+### Ongoing
+- **Sentry MCP**: `SENTRY_AUTH_TOKEN` still pending
+- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (needs device test)
+- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
+- **Splash fixes (s37)**: confirm resolved on next device open
 
 ---
 
 ## Next Session Priorities
 1. **Fix B1 (sign-in mobile hang)** — blocks all device testing
-2. **Fix B3, B4, B5 (cover picker z-index, Google Images option, modal close)** — blocks cover/edit workflow
-3. **Fix B2 (Save Password prompt)** — minor UX polish
-4. **Resume device walkthrough** once sign-in and cover picker are resolved
-
----
-
-## Known Issues Carried Forward
-- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
-- **Vercel deploy timing**: splash fixes (s37) pushed this session — confirm they resolve the persistent splash on next open
+2. **Fix B3, B4, B5** — cover picker z-index, Google Images option, modal close button
+3. **Resume device walkthrough** once sign-in and cover picker are resolved
 
 ---
 
 ## Model Learnings This Session
-- **Splash hang root cause**: `showSplash()` was at the END of `DOMContentLoaded` — any throw before it (e.g. slow CDN script blocking parse, Supabase `createClient` error) left the HTML `#splashScreen` permanently visible. Fix: call `showSplash()` first, wrap the rest in try/catch.
-- **Blocking CDN script in `<head>`**: `<script src="CDN">` without `async`/`defer` blocks the HTML parser and DOMContentLoaded. All critical scripts must be served locally or marked async. Fuse.js was the offender.
-- **CSS animation as JS fallback**: `animation: splashTimeout 0.6s forwards 6s` on the HTML splash element gives a pure-CSS safety net that fires regardless of JS state.
+- **`AskUserQuestion` not suited for API key collection**: users click option labels rather than the Other text field. Just ask them to paste directly in chat.
+- **`.mcp.json` must be gitignored immediately**: create and gitignore in the same step whenever keys are present.
+- **Token rotation prompt**: always remind user to regenerate tokens pasted in chat — they appear in Claude's conversation transcript.

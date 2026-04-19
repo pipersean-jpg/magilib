@@ -49,5 +49,29 @@
       "/Applications/ClaudeUsageBar.app",
       "/Users/seanpiper"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; if [[ \"$f\" == *.js ]]; then node --check \"$f\" 2>&1 && echo \"✓ syntax ok: $f\" || echo \"✗ SYNTAX ERROR: $f\"; fi; } 2>/dev/null || true",
+            "statusMessage": "Checking JS syntax..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"⚠ Session end: write SESSION_HANDOFF.md → update CLAUDE.md → run: node scripts/handoff.js\""
+          }
+        ]
+      }
+    ]
   }
 }

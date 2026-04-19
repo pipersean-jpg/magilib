@@ -1,8 +1,19 @@
-# MagiLib Project Status — Session 37
+# MagiLib Project Status — Session 38
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
 - **Current Focus:** 3-session sprint to beta readiness. Redundancy cleanup → Settings/Onboarding overhaul → Pricing simplification + QA.
+
+---
+
+## Stack Overview
+- **Runtime**: Vanilla JS PWA (no framework) — pure HTML/CSS/JS
+- **Database**: Supabase (PostgreSQL) — `books`, `price_db`, `book_catalog`, `fx_rates` tables
+- **Auth**: Supabase Auth + Google OAuth
+- **Hosting**: Vercel
+- **Search**: Fuse.js 7.0.0 (local bundle, threshold 0.3)
+- **Service Worker**: `sw.js` — shell pre-cache + network-first + IndexedDB offline fallback
+- **Sole dev**: Sean Piper (Claude Code as builder)
 
 ---
 
@@ -26,21 +37,29 @@ Before running `handoff`, Claude Code MUST:
 - **`b._id` only.** Never use `b.id`. Supabase queries: `.eq('id', b._id)` or `.in('id', ids)`.
 - **All CSS in `assets/css/magilib.css`.** No `<style>` blocks in `index.html`. No CSS injected via JS except the bulk-edit IIFE marked "Injected by deploy tool".
 - **Pacing:** Max 2–3 steps per response. Ask a clarifying question before writing major code blocks.
+- **Typecheck after every JS edit:** run `node --check <file>.js` on any changed JS file and show the output before reporting done.
+- **Never say "done" without verify output:** hallucinated success is not success. Show actual output from `node --check` or equivalent.
+- **Atomic commits:** one fix per commit. If a change touches >50 lines, break it into smaller commits.
+- **Never touch Supabase RLS, auth flows, or `sw.js`** without explicit user approval in that session message.
+- **Session-start protocol:** read SESSION_HANDOFF.md → check `git status` → load latest file in `docs/retros/` → state top 1–2 priorities before writing any code.
+- **Subagent discipline:** for any open-ended grep, multi-file exploration, or research task, spawn an Explore or general-purpose subagent. Never burn main context on raw file-digging.
+- **Auto-retro:** after any session with bugfixes, architecture changes, or multi-step work, write `docs/retros/YYYY-MM-DD-topic.md` with: What was attempted · What worked · What didn't · What to carry forward.
+- **Consultation:** for risky architecture, security, or migration decisions, the trigger phrase **`consult panel`** spawns 2–3 parallel subagents with independent analytical framings. Synthesize all before proceeding.
 
 ---
 
-## Last Session (Session 37)
-- ### 1. `fuse.min.js` (NEW)
-- Downloaded Fuse.js 7.0.0 locally (23 KB) — eliminates blocking CDN script that caused DOMContentLoaded to hang when jsdelivr was slow on mobile
-- ### 2. `index.html` (MODIFIED)
-- Fuse.js script tag changed from CDN → `/fuse.min.js?v=s37`
-- All `?v=s36` script tags bumped to `?v=s37`
-- `#splashScreen` div: added `animation:splashTimeout 0.6s ease forwards 6s` — CSS fallback that force-hides the splash after 6s even if all JS fails
+## Last Session (Session 38)
+- ### 1. `CLAUDE.md` (MODIFIED)
+- Added `## Stack Overview` section (runtime/DB/auth/hosting/search/SW/sole dev)
+- Added 8 new items to `### Absolute Rules`: typecheck after every JS edit, verification-before-completion, atomic commits, auth/RLS/SW guard, session-start protocol, subagent discipline, auto-retro rule, consultation panel trigger (`consult panel`)
+- Added to `## Technical Rules`: claude-flow path, superpowers skills path, retros path
+- ### 2. `.claude/settings.json` (MODIFIED)
+- Added `PostToolUse` hook on `Edit|Write`: runs `node --check <file>` on any edited `.js` file — prints ✓ or ✗ SYNTAX ERROR
 
 **Known issues carried forward:**
-- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (code correct, needs device test)
-- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
-- **Vercel deploy timing**: splash fixes (s37) pushed this session — confirm they resolve the persistent splash on next open
+- ### From Session 37
+- **B1 — Sign-in hangs on mobile**: async/fetch timing issue on mobile Safari
+- **B2 — Save Password prompt**: browser treats Display Name as credential field
 
 ---
 
@@ -400,3 +419,6 @@ Before running `handoff`, Claude Code MUST:
 - **No Frameworks:** Pure HTML/CSS/JS (PWA).
 - **Styling:** All CSS in `assets/css/magilib.css`. Flexbox-first, mobile-responsive.
 - **Workflow:** `handoff` at end of session. `newchat` at start of session.
+- **claude-flow** is installed (`ruflo v3.5.80`) at `/Users/seanpiper/.nvm/versions/node/v24.14.0/bin/claude-flow` — available for swarm orchestration and TDD workflows.
+- **Superpowers skills** installed at `~/.claude/skills/`: `systematic-debugging`, `verification-before-completion`, `test-driven-development`, `dispatching-parallel-agents`.
+- **Retros** live in `docs/retros/YYYY-MM-DD-topic.md`. Load the latest at session start for continuity.
