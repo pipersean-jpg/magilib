@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 40
+# MagiLib Project Status — Session 41
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -48,10 +48,13 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 40)
-- ### 1. `auth.js` (MODIFIED)
-- `authSwitchMode()`: added one line — sets `#authPassword` `autocomplete` to `'new-password'` in sign-up mode, `'current-password'` in sign-in mode (B2)
-- Browsers only trigger "Save Password" on `current-password` fields; switching to `new-password` during sign-up suppresses the prompt
+## Last Session (Session 41)
+- ### 1. `catalog.js` (MODIFIED) — event delegation refactor
+- **#modalOverlay (12 handlers removed)**
+- Cover zoom div: `onclick="zoomCover(...)"` → `data-action="zoom-cover" data-zoom-src="..."`
+- Google search button: `onclick="window.open(...)"` → `data-action="google-search" data-url="..."`
+- All 10 actionsArea buttons (Edit, eBay, Wishlist, Delete, Market Value, Mark Sold): inline `onclick` → `data-action="..."` (b._id no longer embedded in HTML strings)
+- **#batchActionsBar (7 handlers removed)**
 
 **Known issues carried forward:**
 - ### Needs device verification
@@ -256,6 +259,9 @@ Before running `handoff`, Claude Code MUST:
 
 ## Technical Learnings
 - **`autocomplete="new-password"` suppresses Save Password**: browsers only offer to save credentials when a `current-password` field is submitted. Dynamically switch `autocomplete` on the password field in sign-up vs sign-in mode — no HTML changes needed.
+- **`decodeURIComponent` for data-attribute group keys**: `groupKey` output contains `||` and spaces — safe to store in a data attribute using `encodeURIComponent`, read back with `decodeURIComponent`. No double-quote escaping needed.
+- **Two separate select systems in catalog.js**: `S.selectMode` ('edit'/'move') is the main toolbar batch-select; `_on` is the IIFE inline bulk-select. The `.bk-ov` overlay (IIFE) uses `e.stopPropagation()` — delegated `#booksGrid` listener is not reached when `_on` is active, which is correct.
+- **`queueThumbAction` dialog uses `#dialogOverlay` directly**: `magiConfirm`/`magiPrompt` also use `#dialogOverlay`. For isolated dialog injections, `.onclick` assignment after `innerHTML` is cleaner than delegation and avoids conflicts with other `#dialogOverlay` callers.
 - **CSS vars in inline styles on iOS Safari**: `z-index:var(--z-dialog)` in an inline `style` attribute can silently fail — always hardcode z-index values in inline styles.
 - **`position:absolute` inside `overflow:auto` container**: without `position:relative` on the scroll container, absolute children anchor to the nearest positioned ancestor (possibly the full-screen overlay). Always add `position:relative` to the intended containing block.
 - **Profile fetch timeout pattern**: `Promise.race([supabaseFetch, new Promise(r => setTimeout(() => r({data:null}), 5000))])` — correct pattern for non-critical Supabase fetches that must not block mobile auth flow.

@@ -838,11 +838,6 @@ function renderStatsRow() {
     const thumbHtml = hasCover
       ? `<img src="${effectiveCover}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" loading="lazy" decoding="async"/>`
       : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" style="opacity:0.4;color:var(--ink-faint)"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
-    const clickHandler = S.selectMode
-      ? `toggleBookSelection('${b._id}')`
-      : isGrouped
-        ? `openCopiesSheet('${groupKey(b).replace(/'/g,"\\'")}')`
-        : `openModal(${idx})`;
     const isSelected = S.selectMode && S.selectedBooks.has(b._id);
     // Adaptive duplicate badge: icon-only in card view, icon+text in list view
     const dupBadge = inLibrary
@@ -850,7 +845,7 @@ function renderStatsRow() {
           ? '<span style="display:inline-flex;align-items:center;gap:3px;background:var(--tier3-bg);color:var(--tier3);font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;margin-left:4px;white-space:nowrap;"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'9\' height=\'9\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' stroke-linecap=\'round\'><path d=\'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\'/></svg> In Library</span>'
           : '<span style="display:inline-flex;align-items:center;margin-left:3px;color:var(--tier3);" title="Already in Library"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'11\' height=\'11\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\'/></svg></span>')
       : '';
-    return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" onclick="${clickHandler}" style="position:relative;">
+    return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" data-idx="${idx}"${isGrouped?` data-grouped="1" data-group-key="${encodeURIComponent(groupKey(b))}"`:''}  style="position:relative;">
       <div class="book-cover">
         ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
         ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
@@ -1319,7 +1314,7 @@ function openModal(idx){
   document.getElementById('modalBody').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
       ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid var(--tier3);background:var(--tier3-bg);border-radius:0 6px 6px 0;opacity:0.9;"><span style="flex-shrink:0;color:var(--tier3);"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg></span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tier3);letter-spacing:0.02em;">Already in your library</span></div>` : ''}
-      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};" onclick="${modalCoverSrc?'zoomCover(\''+modalCoverSrc.replace(/'/g,"\\'")+'\')':''}">
+      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};"${modalCoverSrc?` data-action="zoom-cover" data-zoom-src="${modalCoverSrc.replace(/"/g,'&quot;')}"`:''} >
         ${modalCoverSrc
           ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
           : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;opacity:0.15;background:var(--paper-warm);border-radius:6px;color:var(--ink-faint);"><svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg></div>`}
@@ -1341,7 +1336,7 @@ function openModal(idx){
       ${b.location?`<div class="ms-metadata-item"><span class="ms-label">Acquired</span><span class="ms-value">${sanitize(b.location)}</span></div>`:''}
     </div>
     ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${sanitize(b.collectorNote)}</div></div>`:''}
-    ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button onclick="window.open('${googleUrl}','_blank','noopener')" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
+    ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button data-action="google-search" data-url="${googleUrl}" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
     ${isWishlist?'<div class="wishlist-status">★ In Wishlist</div>':''}
     <div id="marketSyncSection" style="display:none;"></div>
 `;
@@ -1352,30 +1347,30 @@ function openModal(idx){
     if (isWishlist) {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
-          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
+          <button class="btn-action" data-action="edit-book">Edit Details</button>
+          <button class="btn-action" data-action="ebay-check">${ebayIcon} Check eBay</button>
         </div>
         <div class="ms-actions-secondary">
-          <button class="btn-ghost" style="width:100%" onclick="toggleWishlistStatus()">Move to Library</button>
+          <button class="btn-ghost" style="width:100%" data-action="toggle-wishlist">Move to Library</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
-          <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
+          <button data-action="delete-book" class="btn-danger-link">Delete Book</button>
         </div>`;
     } else {
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
-          <button class="btn-action" id="btnMarketValue" onclick="toggleMarketSync('${b._id}')">Market Value</button>
-          <button class="btn-action" onclick="openEbayModal()">${ebayIcon} Check eBay</button>
-          <button class="btn-action" onclick="openEditFromModal('${b._id}')">Edit Details</button>
-          <button class="btn-action" id="modalSoldBtn" onclick="toggleSold()">Mark Sold</button>
+          <button class="btn-action" id="btnMarketValue" data-action="market-value">Market Value</button>
+          <button class="btn-action" data-action="ebay-check">${ebayIcon} Check eBay</button>
+          <button class="btn-action" data-action="edit-book">Edit Details</button>
+          <button class="btn-action" id="modalSoldBtn" data-action="mark-sold">Mark Sold</button>
         </div>
         <div class="ms-actions-secondary">
-          <button class="btn-ghost" id="modalWishlistBtn" style="width:100%" onclick="toggleWishlistStatus()">+ Wishlist</button>
+          <button class="btn-ghost" id="modalWishlistBtn" style="width:100%" data-action="toggle-wishlist">+ Wishlist</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
-          <button onclick="deleteBook('${b._id}')" class="btn-danger-link">Delete Book</button>
+          <button data-action="delete-book" class="btn-danger-link">Delete Book</button>
         </div>`;
     }
   }
@@ -1473,20 +1468,20 @@ function updateBatchBar() {
   if (!stack) return;
   if (S.selectMode === 'edit') {
     stack.innerHTML =
-      '<button onclick="bulkAutofill()" class="batch-btn">Auto-fill</button>' +
-      '<button onclick="bulkPriceUpdate()" class="batch-btn">Price Update</button>' +
-      '<div class="danger-separator"><button onclick="bulkDelete()" class="batch-btn batch-btn--danger">Delete</button></div>';
+      '<button data-action="bulk-autofill" class="batch-btn">Auto-fill</button>' +
+      '<button data-action="bulk-price-update" class="batch-btn">Price Update</button>' +
+      '<div class="danger-separator"><button data-action="bulk-delete" class="batch-btn batch-btn--danger">Delete</button></div>';
   } else if (S.selectMode === 'move') {
     const allWishlist = S.selectedBooks.size > 0 && [...S.selectedBooks].every(id => {
       const b = S.books.find(x => x._id === id);
       return b && b.sold === 'Wishlist';
     });
     stack.innerHTML =
-      '<button onclick="bulkMarkSold()" class="batch-btn">Mark Sold</button>' +
+      '<button data-action="bulk-mark-sold" class="batch-btn">Mark Sold</button>' +
       (allWishlist
-        ? '<button onclick="bulkMoveToLibrary()" class="batch-btn">Move to Library</button>'
-        : '<button onclick="bulkWishlist()" class="batch-btn">Wishlist</button>') +
-      '<button onclick="bulkDraft()" class="batch-btn">Draft</button>';
+        ? '<button data-action="bulk-move-library" class="batch-btn">Move to Library</button>'
+        : '<button data-action="bulk-wishlist" class="batch-btn">Wishlist</button>') +
+      '<button data-action="bulk-draft" class="batch-btn">Draft</button>';
   }
 }
 
@@ -1770,7 +1765,7 @@ function updateQueueUI() {
   if (hint) hint.textContent = count > 0 ? `(${count}/20)` : '';
   const thumbs = document.getElementById('queueThumbs');
   thumbs.innerHTML = photoQueue.map((item, i) =>
-    `<div onclick="queueThumbAction(${i})" style="position:relative;width:52px;height:72px;border-radius:6px;overflow:hidden;border:0.5px solid var(--border-med);cursor:pointer;">
+    `<div data-action="queue-thumb" data-idx="${i}" style="position:relative;width:52px;height:72px;border-radius:6px;overflow:hidden;border:0.5px solid var(--border-med);cursor:pointer;">
       <img src="${item.dataUrl}" style="width:100%;height:100%;object-fit:cover;">
       ${i === 0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:var(--accent);color:white;font-size:9px;text-align:center;padding:2px;">Next</div>' : ''}
     </div>`
@@ -1798,10 +1793,12 @@ function queueThumbAction(idx) {
       <h3>Photo ${idx + 1} of ${photoQueue.length}</h3>
       <p>Process this photo now, or remove it from the queue?</p>
       <div class="magi-dialog-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <button onclick="closeDialog();removeFromQueue(${idx})" class="btn-ghost" style="color:#b91c1c;border-color:#fca5a5;">Remove</button>
-        <button onclick="closeDialog();processSpecificFromQueue(${idx})" class="btn-primary">Process Now</button>
+        <button id="queueRemoveBtn" class="btn-ghost" style="color:#b91c1c;border-color:#fca5a5;">Remove</button>
+        <button id="queueProcessBtn" class="btn-primary">Process Now</button>
       </div>
     </div>`;
+  document.getElementById('queueRemoveBtn').onclick = () => { closeDialog(); removeFromQueue(idx); };
+  document.getElementById('queueProcessBtn').onclick = () => { closeDialog(); processSpecificFromQueue(idx); };
   overlay.classList.add('is-active');
 }
 function removeFromQueue(idx) {
@@ -2851,3 +2848,68 @@ function zoomCover(imgSrc) {
   zoomEl.onclick = () => zoomEl.remove();
   document.body.appendChild(zoomEl);
 }
+
+// Delegated click handlers — replaces inline onclick on modal and batch bar buttons
+(function() {
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      const action = el.dataset.action;
+      const b = S.books[S.currentModalIdx];
+      const id = b ? b._id : null;
+      switch (action) {
+        case 'zoom-cover': { const src = el.dataset.zoomSrc; if (src) zoomCover(src); break; }
+        case 'google-search': window.open(el.dataset.url, '_blank', 'noopener'); break;
+        case 'edit-book': if (id) openEditFromModal(id); break;
+        case 'ebay-check': openEbayModal(); break;
+        case 'toggle-wishlist': toggleWishlistStatus(); break;
+        case 'market-value': if (id) toggleMarketSync(id); break;
+        case 'mark-sold': toggleSold(); break;
+        case 'delete-book': if (id) deleteBook(id); break;
+      }
+    });
+  }
+
+  const batchBar = document.getElementById('batchActionsBar');
+  if (batchBar) {
+    batchBar.addEventListener('click', function(e) {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      switch (el.dataset.action) {
+        case 'bulk-autofill': bulkAutofill(); break;
+        case 'bulk-price-update': bulkPriceUpdate(); break;
+        case 'bulk-delete': bulkDelete(); break;
+        case 'bulk-mark-sold': bulkMarkSold(); break;
+        case 'bulk-move-library': bulkMoveToLibrary(); break;
+        case 'bulk-wishlist': bulkWishlist(); break;
+        case 'bulk-draft': bulkDraft(); break;
+      }
+    });
+  }
+
+  const queueThumbs = document.getElementById('queueThumbs');
+  if (queueThumbs) {
+    queueThumbs.addEventListener('click', function(e) {
+      const el = e.target.closest('[data-action="queue-thumb"]');
+      if (!el) return;
+      queueThumbAction(Number(el.dataset.idx));
+    });
+  }
+
+  const booksGrid = document.getElementById('booksGrid');
+  if (booksGrid) {
+    booksGrid.addEventListener('click', function(e) {
+      const card = e.target.closest('.book-card[data-id]');
+      if (!card) return;
+      if (S.selectMode) {
+        toggleBookSelection(card.dataset.id);
+      } else if (card.dataset.grouped) {
+        openCopiesSheet(decodeURIComponent(card.dataset.groupKey));
+      } else {
+        openModal(Number(card.dataset.idx));
+      }
+    });
+  }
+})();
