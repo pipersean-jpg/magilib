@@ -1,70 +1,61 @@
-# SESSION HANDOFF — 2026-04-19 (Session 38)
+# SESSION HANDOFF — 2026-04-19 (Session 39)
 
 ## Session Summary
-Full protocol audit and activation. No app code changed — all infrastructure, config, and tooling work.
+Bug fixes only. B1–B5 all resolved. No new features.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. `CLAUDE.md` (MODIFIED)
-- Added `## Stack Overview` section (runtime/DB/auth/hosting/search/SW/sole dev)
-- Added 8 new items to `### Absolute Rules`: typecheck after every JS edit, verification-before-completion, atomic commits, auth/RLS/SW guard, session-start protocol, subagent discipline, auto-retro rule, consultation panel trigger (`consult panel`)
-- Added to `## Technical Rules`: claude-flow path, superpowers skills path, retros path
+### 1. `auth.js` (MODIFIED)
+- `onAuthSuccess()`: wrapped `profiles` fetch in `Promise.race` with 5s fallback → prevents mobile Safari sign-in hang (B1)
 
-### 2. `.claude/settings.json` (MODIFIED)
-- Added `PostToolUse` hook on `Edit|Write`: runs `node --check <file>` on any edited `.js` file — prints ✓ or ✗ SYNTAX ERROR
-- Added `Stop` hook: prints session-end reminder (write SESSION_HANDOFF.md → update CLAUDE.md → run handoff)
+### 2. `ui.js` (MODIFIED)
+- DOMContentLoaded `getSession` path: same `Promise.race` 5s fallback on `profiles` fetch (B1, returning-user path)
 
-### 3. `~/.claude/projects/.../memory/user_seanpiper.md` (NEW)
-- User memory: role, comms style, magic words, solo Claude mode preference
+### 3. `index.html` (MODIFIED)
+- `#coverPickerOverlay`: changed inline z-index from `var(--z-dialog)` to hardcoded `2001` — CSS vars in inline styles can silently fail on iOS Safari (B3)
+- Added "Google Images" as 5th cover picker option (between Pro Shelf and Add image link), with search icon and `onclick="selectCoverOpt('images')"` (B4)
 
-### 4. `~/.claude/projects/.../memory/project_overview.md` (NEW)
-- Project memory: stack, key tables, current phase, Phase 2 scope
+### 4. `catalog.js` (MODIFIED)
+- `selectCoverOpt`: added `images:'cpoImages'` to `idMap` and `opt==='images'` branch that calls `searchCoverSource('images')` (B4)
 
-### 5. `~/.claude/projects/.../memory/MEMORY.md` (MODIFIED)
-- Added index entries for the two new memory files above
+### 5. `assets/css/magilib.css` (MODIFIED)
+- `.magi-sheet`: added `position:relative` — `.sheet-close-btn` (`position:absolute`) was anchoring to the `.magi-sheet-overlay` (full viewport), placing the button at the top of the screen above the sheet (B5)
 
-### 6. `.mcp.json` (NEW)
-- GitHub (`@modelcontextprotocol/server-github`) — token set ✅
-- Playwright (`@playwright/mcp@latest`) — no key needed ✅
-- context7 (`@upstash/context7-mcp`) — no key needed ✅
-- Firecrawl (`firecrawl-mcp`) — key set ✅
-- Sentry (`@sentry/mcp-server`) — token placeholder, pending
+---
 
-### 7. `.gitignore` (MODIFIED)
-- Added `.mcp.json` (contains API keys)
-
-### 8. `docs/retros/` (NEW DIRECTORY)
-- Created for auto-retro workflow per new Absolute Rules
+## Commits
+- `566f114` Fix B1: sign-in hang on mobile — profile fetch timeout
+- `63a31c8` Fix B3/B4/B5: cover picker z-index, Google Images option, modal close btn
 
 ---
 
 ## Unresolved / Carried Forward
 
-### From Session 37
-- **B1 — Sign-in hangs on mobile**: async/fetch timing issue on mobile Safari
-- **B2 — Save Password prompt**: browser treats Display Name as credential field
-- **B3 — Cover picker z-index**: picker renders behind detail sheet when opened from modal
-- **B4 — Google Images link missing**: dropped from new cover picker layout
-- **B5 — Can't close detail card on device**: close button may be missing/hidden on mobile
+### B2 — Save Password prompt
+Browser treats Display Name field as a credential field. Not addressed this session.
+
+### Needs device verification
+- B1: Sign-in no longer hangs — needs confirming on device
+- B3: Cover picker z-index — already had inline style, hardcoded value is safer but needs device confirm
+- B4: Google Images button visible and functional — needs device test
+- B5: Close button now inside sheet — needs device confirm
 
 ### Ongoing
+- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload
+- **Full beta walkthrough**: Sections 2–8 end-to-end device sign-off
 - **Sentry MCP**: `SENTRY_AUTH_TOKEN` still pending
-- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload (needs device test)
-- **Full beta walkthrough**: Sections 2–8 still pending end-to-end device sign-off
-- **Splash fixes (s37)**: confirm resolved on next device open
 
 ---
 
 ## Next Session Priorities
-1. **Fix B1 (sign-in mobile hang)** — blocks all device testing
-2. **Fix B3, B4, B5** — cover picker z-index, Google Images option, modal close button
-3. **Resume device walkthrough** once sign-in and cover picker are resolved
+1. **Device walkthrough** — B1/B3/B4/B5 confirmation + resume beta walkthrough Sections 2–8
+2. **B2** — Save Password prompt (Display Name credential field)
 
 ---
 
 ## Model Learnings This Session
-- **`AskUserQuestion` not suited for API key collection**: users click option labels rather than the Other text field. Just ask them to paste directly in chat.
-- **`.mcp.json` must be gitignored immediately**: create and gitignore in the same step whenever keys are present.
-- **Token rotation prompt**: always remind user to regenerate tokens pasted in chat — they appear in Claude's conversation transcript.
+- **CSS vars in inline styles on iOS Safari**: `z-index:var(--z-dialog)` in an inline `style` attribute can silently fail — always use hardcoded values for z-index in inline styles.
+- **`position:absolute` inside overflow scroll container**: absolute children inside `overflow-y:auto` elements scroll out of view. The fix is `position:relative` on the scroll container so absolute children are correctly anchored. Without it, the containing block becomes the nearest positioned ancestor (possibly the full-screen overlay).
+- **Profile fetch timeout pattern**: `Promise.race([supabaseFetch, new Promise(r => setTimeout(() => r({data:null}), 5000))])` is the correct pattern for non-critical Supabase fetches that shouldn't block auth flow on mobile.

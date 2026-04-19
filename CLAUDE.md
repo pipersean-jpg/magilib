@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 38
+# MagiLib Project Status — Session 39
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 38)
-- ### 1. `CLAUDE.md` (MODIFIED)
-- Added `## Stack Overview` section (runtime/DB/auth/hosting/search/SW/sole dev)
-- Added 8 new items to `### Absolute Rules`: typecheck after every JS edit, verification-before-completion, atomic commits, auth/RLS/SW guard, session-start protocol, subagent discipline, auto-retro rule, consultation panel trigger (`consult panel`)
-- Added to `## Technical Rules`: claude-flow path, superpowers skills path, retros path
-- ### 2. `.claude/settings.json` (MODIFIED)
-- Added `PostToolUse` hook on `Edit|Write`: runs `node --check <file>` on any edited `.js` file — prints ✓ or ✗ SYNTAX ERROR
+## Last Session (Session 39)
+- ### 1. `auth.js` (MODIFIED)
+- `onAuthSuccess()`: wrapped `profiles` fetch in `Promise.race` with 5s fallback → prevents mobile Safari sign-in hang (B1)
+- ### 2. `ui.js` (MODIFIED)
+- DOMContentLoaded `getSession` path: same `Promise.race` 5s fallback on `profiles` fetch (B1, returning-user path)
+- ### 3. `index.html` (MODIFIED)
+- `#coverPickerOverlay`: changed inline z-index from `var(--z-dialog)` to hardcoded `2001` — CSS vars in inline styles can silently fail on iOS Safari (B3)
 
 **Known issues carried forward:**
-- ### From Session 37
-- **B1 — Sign-in hangs on mobile**: async/fetch timing issue on mobile Safari
-- **B2 — Save Password prompt**: browser treats Display Name as credential field
+- ### B2 — Save Password prompt
+- Browser treats Display Name field as a credential field. Not addressed this session.
+- ### Needs device verification
 
 ---
 
@@ -258,6 +258,9 @@ Before running `handoff`, Claude Code MUST:
 - **Auth**: check if `authSwitchMode()` / `authUsernameField` still needed once OAuth is primary signup path
 
 ## Technical Learnings
+- **CSS vars in inline styles on iOS Safari**: `z-index:var(--z-dialog)` in an inline `style` attribute can silently fail — always hardcode z-index values in inline styles.
+- **`position:absolute` inside `overflow:auto` container**: without `position:relative` on the scroll container, absolute children anchor to the nearest positioned ancestor (possibly the full-screen overlay). Always add `position:relative` to the intended containing block.
+- **Profile fetch timeout pattern**: `Promise.race([supabaseFetch, new Promise(r => setTimeout(() => r({data:null}), 5000))])` — correct pattern for non-critical Supabase fetches that must not block mobile auth flow.
 - **Search algorithm:** Fuse.js `threshold: 0.3`. Keys: `['title','author','publisher','year']`. Falls back to `.includes()` if Fuse not loaded.
 - **Data source:** Catalog lives in `S.books`. No `window.allBooks`. Supabase populates via `loadCatalog()`.
 - **Performance pattern:** Fuse results stored in a `Set` → O(1) `.has()` in filter pass.
