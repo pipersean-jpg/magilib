@@ -2293,7 +2293,7 @@ function initScrollTopBtn() {
   </svg>`;
   btn.style.cssText = `
     position: fixed;
-    bottom: 72px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     right: 14px;
     width: 36px;
     height: 36px;
@@ -2680,6 +2680,7 @@ window._bkDelAll=_bkDelAll;
 // ── Inject Delete All into Settings ───────────────────────────
 var _settTries=0;
 function _injectSettingsBtn(){
+  return; // Delete Entire Library button removed — use Danger Zone accordion in Settings
   if(document.getElementById('_bkDelAllBtn'))return;
   _settTries++;
   var anchor=

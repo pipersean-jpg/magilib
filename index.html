@@ -633,8 +633,8 @@
   </div>
 
   <!-- Danger Zone (accordion) -->
-  <div class="settings-panel" style="margin-top:0;border-color:#fca5a5;padding:0;padding-bottom:max(20px,calc(env(safe-area-inset-bottom) + 72px));overflow:hidden;">
-    <button onclick="const c=document.getElementById('dangerZoneContent');const open=c.style.display!=='none';c.style.display=open?'none':'block';this.querySelector('.dz-chevron').style.transform=open?'':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#b91c1c;text-align:left;">
+  <div class="settings-panel" style="margin-top:0;border-color:#fca5a5;padding:0;overflow:hidden;">
+    <button onclick="const c=document.getElementById('dangerZoneContent');const open=c.style.display!=='none';c.style.display=open?'none':'block';this.querySelector('.dz-chevron').style.transform=open?'':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px 16px;background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#b91c1c;text-align:center;">
       <span>⚠ Danger Zone</span>
       <svg class="dz-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
