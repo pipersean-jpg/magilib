@@ -1,8 +1,8 @@
-# MagiLib Project Status — Session 43
+# MagiLib Project Status — Session 44
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Current Focus:** Device walkthrough + beta sign-off. 7 more fixes shipped (s43). Ready for end-to-end device test.
+- **Current Focus:** Device walkthrough + beta sign-off. Admin portal improved (s44). Ready for end-to-end device test.
 
 ---
 
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 43)
-- ### 1. magiConfirm "undefined" fix — catalog.js + auth.js
-- `showView()` line 276: positional args → object style `{title, message, confirmText, onConfirm}`
-- `bulkMarkSold()` line 1490: same fix
-- `bulkDraft()` line 1670: same fix
-- `auth.js` `confirmDeleteAccount()`: positional → object style (nested double-confirm)
-- ### 2. Bulk select checkboxes restored — catalog.js
+## Last Session (Session 44)
+- ### 1. Price CSV — template download + description fix — magilib-admin/prices.js + index.html
+- Added `downloadPriceTemplate()` — generates a `price_db_template.csv` with correct headers and two example rows
+- Updated hint text: now explains upsert/merge behaviour (rows with same title+author+source are updated; all other rows preserved)
+- "Download CSV Template" button added above the file input
+- ### 2. Library Health — fix actions with explanations — magilib-admin/app.js + index.html
+- Each health card now has a plain-English explanation of why the issue occurs
 
 **Known issues carried forward:**
 - ### Needs device verification
-- All 7 session fixes
-- All 18 Session 42 fixes (still not device-tested)
+- All Session 43 fixes (7 items)
+- All Session 42 fixes (18 items)
 
 ---
 
