@@ -37,6 +37,7 @@
     <div class="auth-title" id="authTitle">Welcome back</div>
     <div class="auth-sub" id="authSub">Sign in to your MagiLib collection</div>
     <div class="auth-error" id="authError"></div>
+    <form id="authForm" onsubmit="event.preventDefault();authSubmit()">
     <div class="auth-field" id="authUsernameField" style="display:none;">
       <label>Display Name <span class="auth-optional">(optional)</span></label>
       <input type="text" id="authUsername" placeholder="e.g. MagicMike" autocomplete="nickname"/>
@@ -47,15 +48,16 @@
     </div>
     <div class="auth-field">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()"/>
+      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
     </div>
     <div class="auth-field" id="authConfirmField" style="display:none;">
       <label>Confirm Password</label>
-      <input type="password" id="authConfirmPassword" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSubmit()"/>
+      <input type="password" id="authConfirmPassword" placeholder="••••••••" autocomplete="new-password"/>
     </div>
-    <button class="auth-forgot" id="authForgotLink" onclick="forgotPassword()">Forgot password?</button>
+    <button class="auth-forgot" id="authForgotLink" onclick="forgotPassword()" type="button">Forgot password?</button>
     <div class="auth-success" id="authSuccess"></div>
-    <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">Sign In</button>
+    <button class="auth-btn" id="authSubmitBtn" type="submit">Sign In</button>
+    </form>
     <div class="auth-divider"><span>or</span></div>
     <button class="auth-btn auth-google-btn" onclick="signInWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
@@ -263,8 +265,8 @@
           </div>
         </div>
         <div class="field-row two" style="margin-top:14px;">
-          <div class="field"><label id="priceLabelAdd">Market price estimate (AUD) *</label><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/><small id="condAdjHintAdd" style="display:none;color:var(--ink-faint);font-size:11px;margin-top:4px;"></small></div>
-          <div class="field"><label id="costLabelAdd">Purchase price (AUD)</label><input type="number" id="f-cost" placeholder="0.00" step="0.01" min="0" inputmode="decimal"/></div>
+          <div class="field"><label id="priceLabelAdd">Market price estimate (AUD) *</label><input type="number" id="f-price" placeholder="0" step="1" min="0" inputmode="decimal" oninput="S._priceUserEdited=true"/><small id="condAdjHintAdd" style="display:none;color:var(--ink-faint);font-size:11px;margin-top:4px;"></small></div>
+          <div class="field"><label id="costLabelAdd">Purchase price (AUD)</label><input type="number" id="f-cost" placeholder="0" step="1" min="0" inputmode="decimal"/></div>
         </div>
       </div>
     </div>
@@ -280,14 +282,6 @@
           <div style="position:absolute;bottom:6px;right:6px;width:26px;height:26px;background:rgba(0,0,0,0.52);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
         </div>
         <div style="font-size:12px;color:var(--ink-faint);text-align:center;margin-top:-6px;margin-bottom:10px;">Tap cover to search or update image</div>
-        <!-- AI INFO CARD -->
-        <div id="aiInfoCard" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <span style="font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;">Book Intelligence</span>
-            <button onclick="document.getElementById('aiInfoCard').style.display='none'" class="btn-icon-dismiss" title="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-          </div>
-          <div id="aiInfoContent" style="font-size:12px;color:var(--ink-light);line-height:1.6;"></div>
-        </div>
       </div>
     </div>
 
@@ -309,6 +303,14 @@
         </div>
         <div class="field-row two">
           <div class="field"><label>Publisher</label><input type="text" id="f-publisher" list="publisher-list" onblur="applyTitleCase('f-publisher')" placeholder="Type to search…" autocomplete="off"/><datalist id="publisher-list"><!-- populated by publishers.js --></datalist></div>
+        </div>
+        <!-- AI INFO CARD -->
+        <div id="aiInfoCard" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:10px;font-weight:500;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.07em;">Book Intelligence</span>
+            <button onclick="document.getElementById('aiInfoCard').style.display='none'" class="btn-icon-dismiss" title="Dismiss" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div id="aiInfoContent" style="font-size:12px;color:var(--ink-light);line-height:1.6;"></div>
         </div>
       </div>
     </div>
@@ -372,9 +374,8 @@
     </div>
     <!-- Row 2: Edit | Move | Filters (each flex:1) -->
     <div class="toolbar-row-2">
-      <button onclick="toggleEditMode()" id="editModeBtn" class="toolbar-row-btn">Edit</button>
-      <button onclick="toggleMoveMode()" id="moveModeBtn" class="toolbar-row-btn">Move</button>
-      <button id="filterMenuBtn" class="toolbar-row-btn" onclick="openFilterSheet()">Filters <span id="filterCount"></span></button>
+      <button onclick="toggleMoveMode()" id="moveModeBtn" class="toolbar-row-btn">Bulk Select</button>
+      <button id="filterMenuBtn" class="toolbar-row-btn" onclick="openFilterSheet()">Sort <span id="filterCount"></span></button>
     </div>
   </div>
   <div id="wishlistQuickAdd" style="display:none;background:var(--paper-card);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;">
@@ -412,7 +413,7 @@
 
 <div id="view-settings" class="view">
   <div class="settings-panel">
-    <div class="section-title">Account</div>
+    <div class="section-title">Account &amp; Security</div>
     <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--accent-light);border-radius:var(--radius);margin-bottom:14px;">
       <div style="width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;flex-shrink:0;" id="settingsAvatar">?</div>
       <div>
@@ -423,30 +424,30 @@
     <div class="settings-row">
       <label>Display Name</label>
       <input type="text" id="s-username" placeholder="e.g. MagicMike" autocomplete="nickname" oninput="saveUsernameDebounced()"/>
-      <div class="settings-hint">This name appears on cover images you contribute to the shared library.</div>
+      <div class="settings-hint">This name appears in the app and on the Welcome screen.</div>
     </div>
-    <div class="settings-row" style="margin-top:4px;">
+    <div style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px;">Change Password</div>
+      <div class="settings-row">
+        <label>Current Password</label>
+        <input type="password" id="s-current-password" placeholder="Your current password" autocomplete="current-password"/>
+      </div>
+      <div class="settings-row">
+        <label>New Password</label>
+        <input type="password" id="s-new-password" placeholder="At least 6 characters" autocomplete="new-password"/>
+      </div>
+      <div class="settings-row">
+        <label>Confirm New Password</label>
+        <input type="password" id="s-confirm-password" placeholder="Repeat new password" autocomplete="new-password"/>
+        <div class="settings-hint">Must be at least 6 characters.</div>
+      </div>
+      <div class="settings-row" style="margin-top:4px;">
+        <button class="btn-secondary" style="min-height:38px;" onclick="changePasswordFromSettings(this)">Update Password</button>
+        <div id="s-password-status" style="font-size:12px;margin-top:8px;min-height:16px;color:#b91c1c;"></div>
+      </div>
+    </div>
+    <div class="settings-row" style="margin-top:4px;border-top:0.5px solid var(--border);padding-top:14px;">
       <button class="btn-secondary" style="width:100%;text-align:center;color:#b91c1c;border-color:#fca5a5;" onclick="confirmSignOut()">Sign Out</button>
-    </div>
-  </div>
-  <div class="settings-panel">
-    <div class="section-title">Security</div>
-    <div class="settings-row">
-      <label>Current Password</label>
-      <input type="password" id="s-current-password" placeholder="Your current password" autocomplete="current-password"/>
-    </div>
-    <div class="settings-row">
-      <label>New Password</label>
-      <input type="password" id="s-new-password" placeholder="At least 6 characters" autocomplete="new-password"/>
-    </div>
-    <div class="settings-row">
-      <label>Confirm New Password</label>
-      <input type="password" id="s-confirm-password" placeholder="Repeat new password" autocomplete="new-password"/>
-      <div class="settings-hint">Must be at least 6 characters.</div>
-    </div>
-    <div class="settings-row" style="margin-top:4px;">
-      <button class="btn-secondary" style="min-height:38px;" onclick="changePasswordFromSettings(this)">Update Password</button>
-      <div id="s-password-status" style="font-size:12px;margin-top:8px;min-height:16px;color:#b91c1c;"></div>
     </div>
   </div>
   <div class="settings-panel">
@@ -528,7 +529,9 @@
     </div>
     <div style="border-top:0.5px solid var(--border);padding-top:14px;">
       <div style="font-size:13px;color:var(--ink-light);margin-bottom:10px;">Export your full collection as a CSV file.</div>
-      <button onclick="exportCSV()" class="btn-secondary" style="font-size:13px;padding:9px 18px;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download CSV</button>
+      <div style="display:flex;justify-content:center;">
+        <button onclick="exportCSV()" class="btn-secondary" style="font-size:13px;padding:9px 18px;display:inline-flex;align-items:center;gap:7px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download CSV</button>
+      </div>
     </div>
 <div id="csvImportSection" style="border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
       <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;">Import from CSV</div>
@@ -627,6 +630,16 @@
     </div>
   </div>
 
+  <!-- Danger Zone -->
+  <div class="settings-panel" style="margin-top:0;border-color:#fca5a5;padding-bottom:max(20px,calc(env(safe-area-inset-bottom) + 72px));">
+    <div class="section-title" style="color:#b91c1c;">Danger Zone</div>
+    <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Permanently delete your account and all library data. This cannot be undone.</div>
+    <button onclick="confirmDeleteAccount()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:transparent;border:0.5px solid #fca5a5;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#b91c1c;cursor:pointer;min-height:40px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      Delete My Account
+    </button>
+  </div>
+
   <!-- Version footer -->
   <div style="text-align:center;padding:28px 20px 36px;border-top:0.5px solid var(--border);margin-top:8px;">
     <div style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="openChangelog()">
@@ -713,7 +726,7 @@
     <div class="magi-sheet-handle"></div>
     <div style="padding:16px 20px 0;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;">Filters</div>
+        <div style="font-size:1rem;font-weight:700;font-family:'DM Sans',sans-serif;">Sort & Filter</div>
         <button onclick="closeFilterSheet()" style="background:none;border:none;font-size:20px;color:var(--ink-light);cursor:pointer;padding:0 4px;line-height:1;" aria-label="Close filters">✕</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;">
@@ -814,57 +827,65 @@ if ('serviceWorker' in navigator) {
       <div class="modal-title">Find Cover Image</div>
       <button class="modal-close" onclick="closeCoverPicker()" style="display:flex;align-items:center;justify-content:center;" aria-label="Close cover picker"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <!-- 4-option source list -->
+    <!-- Option list — each item with inline accordion content -->
     <div class="cover-picker-opts" id="coverPickerSourceBtns">
+      <!-- Take photo -->
       <label class="cover-picker-opt" id="cpoPhoto" style="cursor:pointer;">
         <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
         Take a photo
         <input type="file" accept="image/*" capture="environment" style="display:none" onchange="uploadCoverFromPicker(event)">
       </label>
+      <!-- Upload from gallery -->
       <label class="cover-picker-opt" id="cpoGallery" style="cursor:pointer;">
         <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-        Choose from gallery
+        Upload Cover Image
         <input type="file" accept="image/*" style="display:none" onchange="uploadCoverFromPicker(event)">
       </label>
+      <!-- Magic Sources accordion -->
       <button class="cover-picker-opt" id="cpoShelf" onclick="selectCoverOpt('shelf')">
         <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-        The Pro Shelf
+        Magic Sources
       </button>
+      <div id="pickerShelfArea" style="display:none;border-top:0.5px solid var(--border);">
+        <div id="coverPickerStatus" style="font-size:12px;color:var(--ink-faint);padding:8px 20px 0;min-height:16px;"></div>
+        <div id="coverPickerResults" style="padding:12px 20px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+          <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--ink-faint);font-size:13px;">Searching Magic Sources…</div>
+        </div>
+      </div>
+      <!-- Google Images accordion -->
       <button class="cover-picker-opt" id="cpoImages" onclick="selectCoverOpt('images')">
         <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
         Google Images
       </button>
-      <button class="cover-picker-opt" id="cpoLink" onclick="selectCoverOpt('link')">
-        <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-        Add image link
-      </button>
-    </div>
-    <!-- Content area: shown below options based on active selection -->
-    <div id="pickerContentArea" style="border-top:0.5px solid var(--border);">
-      <!-- Google Images instruction card -->
-      <div id="googleImagesCard" style="display:none;padding:16px 20px;background:var(--paper-warm);cursor:pointer;" onclick="openGoogleImagesTab()">
-        <p style="font-size:13px;font-weight:500;color:var(--ink);margin:0 0 8px;text-align:center;">Open Google Images →</p>
-        <ol style="font-size:12px;color:var(--ink-light);margin:0;padding-left:20px;line-height:1.8;">
+      <div id="googleImagesCard" style="display:none;padding:14px 20px;background:var(--paper-warm);border-top:0.5px solid var(--border);">
+        <button onclick="openGoogleImagesTab()" style="display:block;width:100%;padding:9px 0;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;">Open Google Images →</button>
+        <ol style="font-size:12px;color:var(--ink-light);margin:0 0 10px;padding-left:20px;line-height:1.8;">
           <li>Click an image to open the preview</li>
           <li>Right-click → <strong style="color:var(--ink);">Copy Image Address</strong></li>
           <li>Paste in the URL field below</li>
         </ol>
-        <p style="font-size:11px;color:var(--ink-faint);margin:10px 0 0;text-align:center;">⚠ On iOS: use the URL field instead.</p>
+        <div style="display:flex;gap:6px;width:100%;">
+          <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…" style="flex:1;min-width:0;"/>
+          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
+          <button onclick="applyPickerUrl()" style="flex-shrink:0;">Set</button>
+        </div>
+        <p style="font-size:11px;color:var(--ink-faint);margin:8px 0 0;text-align:center;">⚠ On iOS: copy URL then paste above.</p>
       </div>
-      <!-- URL input field (link option) -->
-      <div id="pickerUrlArea" style="display:none;padding:16px 20px;">
-        <div class="url-input-row">
-          <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…"/>
-          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste from clipboard" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
-          <button onclick="applyPickerUrl()">Set</button>
+      <!-- Paste image URL accordion -->
+      <button class="cover-picker-opt" id="cpoLink" onclick="selectCoverOpt('link')">
+        <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        Paste Image URL
+      </button>
+      <div id="pickerUrlArea" style="display:none;padding:14px 20px;border-top:0.5px solid var(--border);">
+        <div style="display:flex;gap:6px;width:100%;">
+          <input type="text" id="pickerUrlInputDirect" placeholder="Paste image URL here…" style="flex:1;min-width:0;" oninput="document.getElementById('pickerUrlInput').value=this.value"/>
+          <button id="pickerClipboardBtnDirect" onclick="pasteUrlFromClipboard();setTimeout(()=>{const v=document.getElementById('pickerUrlInput').value;document.getElementById('pickerUrlInputDirect').value=v;},100)" title="Paste" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
+          <button onclick="document.getElementById('pickerUrlInput').value=document.getElementById('pickerUrlInputDirect').value;applyPickerUrl()" style="flex-shrink:0;">Set</button>
         </div>
       </div>
-      <div id="coverPickerStatus" style="font-size:12px;color:var(--ink-faint);padding:0 20px;min-height:18px;"></div>
     </div>
-    <div id="coverPickerResults" style="padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-      <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">Select a source above to search for covers</div>
-    </div>
-    <div id="pickerFooter" style="padding:14px 20px;border-top:0.5px solid var(--border);font-size:11px;color:var(--ink-faint);">
+    <div id="pickerContentArea" style="display:none;"></div>
+    <div id="pickerFooter" style="padding:10px 20px;border-top:0.5px solid var(--border);font-size:11px;color:var(--ink-faint);">
       Tap any cover to use it for this listing
     </div>
   </div>

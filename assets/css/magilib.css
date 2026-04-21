@@ -231,7 +231,7 @@ input[type=file].file-input{display:none;}
 .el-pricing{order:2;}
 .el-condition{order:3;}
 .el-cover{order:4;}
-.el-save{order:5;}
+.el-save{order:5;padding-bottom:max(16px,calc(env(safe-area-inset-bottom) + 72px));}
 .book-preview-panel{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:20px;box-sizing:border-box;}
 .cover-frame{width:100%;aspect-ratio:4/5;background:var(--paper-warm);border-radius:8px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin-bottom:14px;}
 .cover-frame img{width:100%;height:100%;object-fit:cover;display:none;}

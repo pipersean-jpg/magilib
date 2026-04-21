@@ -647,6 +647,12 @@ function clearFilters() {
   S.filterCondition = 'all';
   S.sortBy = 'dateAdded';
   S.sortDir = 'desc';
+  S.showSold = false;
+  S.showDrafts = false;
+  const soldChip = document.getElementById('showSoldChip');
+  const draftsChip = document.getElementById('showDraftsChip');
+  if (soldChip) soldChip.classList.remove('active');
+  if (draftsChip) draftsChip.classList.remove('active');
   // Restore stat toggle checkboxes from settings
   ['total','value','avg','top'].forEach(k => {
     const el = document.getElementById('s-stat-' + k);

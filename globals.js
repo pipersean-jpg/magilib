@@ -162,4 +162,11 @@ async function _mgQueueFlush() {
 }
 
 
+// Prevent scroll wheel from changing number inputs
+document.addEventListener('wheel', function(e) {
+  if (e.target && e.target.type === 'number' && e.target === document.activeElement) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 // ── AUTH FUNCTIONS ──

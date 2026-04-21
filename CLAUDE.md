@@ -1,8 +1,8 @@
-# MagiLib Project Status — Session 41
+# MagiLib Project Status — Session 42
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Current Focus:** 3-session sprint to beta readiness. Redundancy cleanup → Settings/Onboarding overhaul → Pricing simplification + QA.
+- **Current Focus:** Device walkthrough + beta sign-off. All 18 UX fixes shipped. Ready for end-to-end device test.
 
 ---
 
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 41)
-- ### 1. `catalog.js` (MODIFIED) — event delegation refactor
-- **#modalOverlay (12 handlers removed)**
-- Cover zoom div: `onclick="zoomCover(...)"` → `data-action="zoom-cover" data-zoom-src="..."`
-- Google search button: `onclick="window.open(...)"` → `data-action="google-search" data-url="..."`
-- All 10 actionsArea buttons (Edit, eBay, Wishlist, Delete, Market Value, Mark Sold): inline `onclick` → `data-action="..."` (b._id no longer embedded in HTML strings)
-- **#batchActionsBar (7 handlers removed)**
+## Last Session (Session 42)
+- ### 1. Deploy prep
+- `sw.js`: `CACHE_NAME` bumped → `magilib-sw-s42`
+- `index.html`: all `?v=s37/s41` → `?v=s42` (10 script tags incl. fuse.min.js)
+- `vercel.json`: removed dead Cloudinary entries from `connect-src`
+- ### 2. Auth — Enter key submit (Fix #1)
+- `index.html`: Auth inputs wrapped in `<form id="authForm" onsubmit="event.preventDefault();authSubmit()">`, submit button `type="submit"`, forgot password `type="button"`
 
 **Known issues carried forward:**
 - ### Needs device verification
-- B1: Sign-in no longer hangs — needs confirming on device
-- B2: Save Password prompt fix — needs device confirm
+- B1: Sign-in no longer hangs
+- B2: Save Password prompt fix
 
 ---
 
@@ -258,6 +258,10 @@ Before running `handoff`, Claude Code MUST:
 - **Auth**: check if `authSwitchMode()` / `authUsernameField` still needed once OAuth is primary signup path
 
 ## Technical Learnings
+- **`S._priceUserEdited` flag pattern**: track manual price edits with a flag on `S`; reset on fetch and `clearForm()`; check before condition-adjustment overwrites. Prevents fetch result clobbering user entry.
+- **`showView()` guard + `_doShowView()` split**: to add a confirmation guard before navigation, extract the nav body into `_doShowView()` and call it from the `magiConfirm` callback. Keeps the guard isolated.
+- **`created_at` vs `dateAdded` for sort**: Supabase `created_at` (ISO timestamp) is the reliable sort key. `dateAdded` was display-only `DD/MM/YYYY`. Map `createdAt: row.created_at` in `loadCatalog()` and parse with `new Date().getTime()`.
+- **`passive:false` on wheel events**: required to call `preventDefault()`. Register on `document`, check `e.target.type === 'number' && e.target === document.activeElement`.
 - **`autocomplete="new-password"` suppresses Save Password**: browsers only offer to save credentials when a `current-password` field is submitted. Dynamically switch `autocomplete` on the password field in sign-up vs sign-in mode — no HTML changes needed.
 - **`decodeURIComponent` for data-attribute group keys**: `groupKey` output contains `||` and spaces — safe to store in a data attribute using `encodeURIComponent`, read back with `decodeURIComponent`. No double-quote escaping needed.
 - **Two separate select systems in catalog.js**: `S.selectMode` ('edit'/'move') is the main toolbar batch-select; `_on` is the IIFE inline bulk-select. The `.bk-ov` overlay (IIFE) uses `e.stopPropagation()` — delegated `#booksGrid` listener is not reached when `_on` is active, which is correct.

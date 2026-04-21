@@ -240,6 +240,37 @@ async function signOut() {
     if (emailEl) { emailEl.removeAttribute('disabled'); emailEl.focus(); }
   }, 350);
 }
+function confirmDeleteAccount() {
+  magiConfirm(
+    'Delete your account?',
+    'This will permanently erase your entire library and account. This action cannot be undone.',
+    'Yes, delete everything',
+    'Cancel',
+    () => {
+      magiConfirm(
+        'Are you absolutely sure?',
+        'All ' + S.books.length + ' book' + (S.books.length !== 1 ? 's' : '') + ' and your account will be permanently deleted. There is no recovery.',
+        'Delete permanently',
+        'Cancel',
+        async () => {
+          try {
+            await _supa.from('books').delete().eq('user_id', _supaUser.id);
+            await _supa.from('profiles').delete().eq('id', _supaUser.id);
+            await _supa.auth.admin ? _supa.auth.admin.deleteUser(_supaUser.id) : _supa.rpc('delete_user');
+            await _supa.auth.signOut();
+            showToast('Account deleted.', 'success', 3000);
+            setTimeout(() => location.reload(), 1500);
+          } catch(e) {
+            showToast('Could not delete account. Contact support.', 'error', 4000);
+          }
+        },
+        'danger'
+      );
+    },
+    'danger'
+  );
+}
+
 function confirmSignOut() {
   magiConfirm({
     title: 'Sign out?',

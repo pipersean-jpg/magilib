@@ -267,18 +267,20 @@ function saveSettings(skipCurrencyGuard){
   if(curWarn) curWarn.style.display = 'block';
 }
 function showView(v){
-  // Safety lock: block leaving Add tab if queue or key fields have content
   if(v!=='entry'){
     const entryActive=document.getElementById('view-entry');
     if(entryActive&&entryActive.classList.contains('active')){
       const titleVal=(document.getElementById('f-title')||{value:''}).value.trim();
       const authorVal=(document.getElementById('f-author')||{value:''}).value.trim();
       if(photoQueue.length>0||titleVal||authorVal){
-        showToast('Save or clear the form before switching tabs.','error',4000);
+        magiConfirm('Leave this page?','You have unsaved entries. Your progress will be lost.','Leave page','Stay and complete',()=>{clearForm();_doShowView(v);},'danger');
         return;
       }
     }
   }
+  _doShowView(v);
+}
+function _doShowView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
   // Update bottom nav active state
@@ -353,7 +355,7 @@ function renderHomeView(){
   if(el('homeStatValue'))el('homeStatValue').textContent=totalVal>0?(sym+Math.round(totalVal).toLocaleString()):'—';
   if(el('homeStatWishlist'))el('homeStatWishlist').textContent=wishlist.length||'0';
   // Greeting
-  const name=(S.settings&&S.settings.displayName)||(_supaUser&&_supaUser.email&&_supaUser.email.split('@')[0])||'Collector';
+  const name=(S.profile&&S.profile.username)||(S.settings&&S.settings.displayName)||'Collector';
   if(el('homeGreeting'))el('homeGreeting').textContent='Welcome back, '+name+'.';
   if(el('homeGreetingSub')){
     if(lib.length===0){
@@ -394,14 +396,15 @@ function setCondition(c){
 }
 function _applyConditionAdjustment(){
   if(!S.priceBase)return;
+  if(S._priceUserEdited)return;
   const pct=getConditionPct(S.condition);
-  const adjusted=Math.round(S.priceBase*pct*100)/100;
+  const adjusted=Math.round(S.priceBase*pct);
   const priceEl=document.getElementById('f-price');
-  if(priceEl)priceEl.value=adjusted.toFixed(2);
+  if(priceEl)priceEl.value=adjusted;
   const hint=document.getElementById('condAdjHintAdd');
   if(hint){
     const sym=currSym();
-    hint.textContent='Base '+sym+S.priceBase.toFixed(0)+' × '+Math.round(pct*100)+'% ('+S.condition+') = '+sym+adjusted.toFixed(0);
+    hint.textContent='Base '+sym+S.priceBase+' × '+Math.round(pct*100)+'% ('+S.condition+') = '+sym+adjusted;
     hint.style.display='block';
   }
 }
@@ -604,6 +607,7 @@ async function loadCatalog(){
         coverUrl: row.cover_url || '',
         rawCover: row.cover_url || '',
         dateAdded: row.date_added || '',
+        createdAt: row.created_at || '',
         flags: row.condition_flags || '',
         sold: row.sold_status || '',
         star: row.star_rating != null ? String(row.star_rating) : '',
@@ -644,6 +648,7 @@ async function loadCatalog(){
               coverUrl: row.cover_url || '',
               rawCover: row.cover_url || '',
               dateAdded: row.date_added || '',
+              createdAt: row.created_at || '',
               flags: row.condition_flags || '',
               sold: row.sold_status || '',
               star: row.star_rating != null ? String(row.star_rating) : '',
@@ -711,8 +716,8 @@ function renderCatalog(){
       if(sort==='price') return dir==='asc'?(parseFloat(a.price)||0)-(parseFloat(b2.price)||0):(parseFloat(b2.price)||0)-(parseFloat(a.price)||0);
       if(sort==='year') return dir==='asc'?(parseInt(a.year)||0)-(parseInt(b2.year)||0):(parseInt(b2.year)||0)-(parseInt(a.year)||0);
       if(sort==='star') return dir==='asc'?(parseInt(a.star)||0)-(parseInt(b2.star)||0):(parseInt(b2.star)||0)-(parseInt(a.star)||0);
-      const parseDate=d=>{if(!d)return 0;const p=d.split('/');return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():0;};
-      const da=parseDate(a.dateAdded), db=parseDate(b2.dateAdded);
+      const parseTs=b=>b.createdAt?new Date(b.createdAt).getTime():(b.dateAdded?new Date(b.dateAdded).getTime():0);
+      const da=parseTs(a), db=parseTs(b2);
       if(da!==db) return dir==='asc'?da-db:db-da;
       const ia=S.books.indexOf(a), ib=S.books.indexOf(b2);
       return dir==='asc'?ia-ib:ib-ia;
@@ -1348,7 +1353,6 @@ function openModal(idx){
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
           <button class="btn-action" data-action="edit-book">Edit Details</button>
-          <button class="btn-action" data-action="ebay-check">${ebayIcon} Check eBay</button>
         </div>
         <div class="ms-actions-secondary">
           <button class="btn-ghost" style="width:100%" data-action="toggle-wishlist">Move to Library</button>
@@ -1361,12 +1365,8 @@ function openModal(idx){
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
           <button class="btn-action" id="btnMarketValue" data-action="market-value">Market Value</button>
-          <button class="btn-action" data-action="ebay-check">${ebayIcon} Check eBay</button>
           <button class="btn-action" data-action="edit-book">Edit Details</button>
           <button class="btn-action" id="modalSoldBtn" data-action="mark-sold">Mark Sold</button>
-        </div>
-        <div class="ms-actions-secondary">
-          <button class="btn-ghost" id="modalWishlistBtn" style="width:100%" data-action="toggle-wishlist">+ Wishlist</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
@@ -1418,7 +1418,7 @@ function toggleEditMode() {
   S.selectMode = 'edit';
   S.selectedBooks.clear();
   _setModeBtn('editModeBtn', 'Exit Edit', true);
-  _setModeBtn('moveModeBtn', 'Move', false);
+  _setModeBtn('moveModeBtn', 'Bulk Select', false);
   renderCatalog();
 }
 window.toggleEditMode = toggleEditMode;
@@ -1427,8 +1427,7 @@ function toggleMoveMode() {
   if (S.selectMode === 'move') { exitSelectMode(); return; }
   S.selectMode = 'move';
   S.selectedBooks.clear();
-  _setModeBtn('moveModeBtn', 'Exit Move', true);
-  _setModeBtn('editModeBtn', 'Edit', false);
+  _setModeBtn('moveModeBtn', 'Exit Select', true);
   renderCatalog();
 }
 window.toggleMoveMode = toggleMoveMode;
@@ -1437,7 +1436,7 @@ function exitSelectMode() {
   S.selectMode = null;
   S.selectedBooks.clear();
   _setModeBtn('editModeBtn', 'Edit', false);
-  _setModeBtn('moveModeBtn', 'Move', false);
+  _setModeBtn('moveModeBtn', 'Bulk Select', false);
   const bar = document.getElementById('batchActionsBar');
   if (bar) bar.classList.remove('is-visible');
   renderCatalog();
@@ -1466,22 +1465,11 @@ function updateBatchBar() {
   if (count) count.textContent = n === 1 ? '1 selected' : `${n} selected`;
   if (bar) bar.classList.toggle('is-visible', n > 0);
   if (!stack) return;
-  if (S.selectMode === 'edit') {
-    stack.innerHTML =
-      '<button data-action="bulk-autofill" class="batch-btn">Auto-fill</button>' +
-      '<button data-action="bulk-price-update" class="batch-btn">Price Update</button>' +
-      '<div class="danger-separator"><button data-action="bulk-delete" class="batch-btn batch-btn--danger">Delete</button></div>';
-  } else if (S.selectMode === 'move') {
-    const allWishlist = S.selectedBooks.size > 0 && [...S.selectedBooks].every(id => {
-      const b = S.books.find(x => x._id === id);
-      return b && b.sold === 'Wishlist';
-    });
+  if (S.selectMode === 'move') {
     stack.innerHTML =
       '<button data-action="bulk-mark-sold" class="batch-btn">Mark Sold</button>' +
-      (allWishlist
-        ? '<button data-action="bulk-move-library" class="batch-btn">Move to Library</button>'
-        : '<button data-action="bulk-wishlist" class="batch-btn">Wishlist</button>') +
-      '<button data-action="bulk-draft" class="batch-btn">Draft</button>';
+      '<button data-action="bulk-draft" class="batch-btn">Move to Draft</button>' +
+      '<button data-action="bulk-delete" class="batch-btn batch-btn--danger">Delete</button>';
   }
 }
 
@@ -1498,11 +1486,14 @@ window.triggerPoof = triggerPoof;
 async function bulkMarkSold() {
   const ids = [...S.selectedBooks];
   if (!ids.length) return;
-  const { error } = await _supa.from('books').update({ sold_status: 'Sold' }).in('id', ids);
-  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
-  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Sold'; });
-  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as sold.`, 'success', 2500);
-  triggerPoof(ids, () => { exitSelectMode(); });
+  const n = ids.length;
+  magiConfirm(`Mark ${n} book${n>1?'s':''} as Sold?`, `These books will move to your Sold view and be hidden from the main library.`, 'Mark Sold', 'Cancel', async () => {
+    const { error } = await _supa.from('books').update({ sold_status: 'Sold' }).in('id', ids);
+    if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+    ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Sold'; });
+    showToast(`${n} book${n > 1 ? 's' : ''} marked as sold.`, 'success', 2500);
+    triggerPoof(ids, () => { exitSelectMode(); });
+  }, 'warning');
 }
 window.bulkMarkSold = bulkMarkSold;
 
@@ -1675,11 +1666,14 @@ window.bulkMoveToLibrary = bulkMoveToLibrary;
 async function bulkDraft() {
   const ids = [...S.selectedBooks];
   if (!ids.length) return;
-  const { error } = await _supa.from('books').update({ draft_status: 'Draft' }).in('id', ids);
-  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
-  ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.draft = 'Draft'; });
-  showToast(`${ids.length} book${ids.length > 1 ? 's' : ''} marked as Draft.`, 'success', 2500);
-  triggerPoof(ids, () => { exitSelectMode(); });
+  const n = ids.length;
+  magiConfirm(`Move ${n} book${n>1?'s':''} to Draft?`, `These books will be moved to Drafts and hidden from the main library.`, 'Move to Draft', 'Cancel', async () => {
+    const { error } = await _supa.from('books').update({ draft_status: 'Draft' }).in('id', ids);
+    if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
+    ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.draft = 'Draft'; });
+    showToast(`${n} book${n > 1 ? 's' : ''} moved to Draft.`, 'success', 2500);
+    triggerPoof(ids, () => { exitSelectMode(); });
+  }, 'warning');
 }
 window.bulkDraft = bulkDraft;
 
@@ -1961,15 +1955,11 @@ function resetPickerState() {
   const statusEl = document.getElementById('coverPickerStatus');
   if (statusEl) statusEl.textContent = '';
   const res = document.getElementById('coverPickerResults');
-  if (res) { res.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">Choose an option above to find a cover</div>'; res.style.display = 'grid'; }
-  const card = document.getElementById('googleImagesCard');
-  const urlArea = document.getElementById('pickerUrlArea');
+  if (res) { res.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--ink-faint);font-size:13px;">Searching Magic Sources…</div>'; res.style.display = 'grid'; }
+  ['pickerShelfArea','googleImagesCard','pickerUrlArea'].forEach(id => { const el=document.getElementById(id); if(el)el.style.display='none'; });
   const urlInput = document.getElementById('pickerUrlInput');
-  if (card) card.style.display = 'none';
-  if (urlArea) urlArea.style.display = 'none';
   if (urlInput) urlInput.value = '';
   S._googleImgUrl = '';
-  const pf = document.getElementById('pickerFooter'); if (pf) pf.style.display = 'block';
   document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
 }
 function _openPickerOverlay() {
@@ -1979,15 +1969,7 @@ function _openPickerOverlay() {
   requestAnimationFrame(() => { requestAnimationFrame(() => { _cp.style.pointerEvents = ''; }); });
   // Reset option highlighting
   document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
-  const ca=document.getElementById('pickerContentArea');
-  if(ca){
-    const gic=document.getElementById('googleImagesCard');
-    const pua=document.getElementById('pickerUrlArea');
-    const res=document.getElementById('coverPickerResults');
-    if(gic)gic.style.display='none';
-    if(pua)pua.style.display='none';
-    if(res){res.style.display='grid';res.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-faint);font-size:13px;">Choose an option above to find a cover</div>';}
-  }
+  ['pickerShelfArea','googleImagesCard','pickerUrlArea'].forEach(id => { const el=document.getElementById(id); if(el)el.style.display='none'; });
 }
 function openCoverPicker() {
   S.coverPickerTarget = 'add';
@@ -2001,24 +1983,26 @@ function openCoverPickerForEdit() {
 }
 
 function selectCoverOpt(opt) {
+  // Close all accordion panels first
+  ['pickerShelfArea','googleImagesCard','pickerUrlArea'].forEach(id => { const el=document.getElementById(id); if(el)el.style.display='none'; });
   document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
   const idMap={shelf:'cpoShelf',link:'cpoLink',images:'cpoImages'};
   const btn=document.getElementById(idMap[opt]);
   if(btn)btn.classList.add('active');
-  const gic=document.getElementById('googleImagesCard');
-  const pua=document.getElementById('pickerUrlArea');
-  const res=document.getElementById('coverPickerResults');
   if(opt==='shelf'){
-    if(gic)gic.style.display='none';
-    if(pua)pua.style.display='none';
-    if(res){res.style.display='grid';}
+    const area=document.getElementById('pickerShelfArea');
+    if(area)area.style.display='block';
     searchCoverSource('conjuring');
   } else if(opt==='images'){
-    searchCoverSource('images');
+    const area=document.getElementById('googleImagesCard');
+    if(area)area.style.display='block';
+    // Pre-fill Google Images URL
+    const {title,author}=getSearchTerms();
+    const searchQuery=encodeURIComponent('"'+title+'"'+(author?' "'+author+'"':'')+' book cover');
+    S._googleImgUrl='https://www.google.com/search?tbm=isch&q='+searchQuery;
   } else if(opt==='link'){
-    if(gic)gic.style.display='none';
-    if(pua){pua.style.display='block';setTimeout(()=>document.getElementById('pickerUrlInput').focus(),100);}
-    if(res){res.style.display='none';}
+    const area=document.getElementById('pickerUrlArea');
+    if(area){area.style.display='block';setTimeout(()=>{const inp=document.getElementById('pickerUrlInputDirect');if(inp)inp.focus();},100);}
   }
 }
 
@@ -2066,18 +2050,8 @@ async function searchCoverSource(source) {
     if (_gPf) _gPf.style.display = 'block';
   }
 
-  // ── GOOGLE IMAGES — show instruction card + URL field, no results grid ──
+  // Google Images — accordion already open via selectCoverOpt; just return
   if (source === 'images') {
-    const searchQuery = encodeURIComponent('"' + title + '"' + (author ? ' "' + author + '"' : '') + ' book cover');
-    S._googleImgUrl = 'https://www.google.com/search?tbm=isch&q=' + searchQuery;
-    const card = document.getElementById('googleImagesCard');
-    const urlArea = document.getElementById('pickerUrlArea');
-    const resultsEl = document.getElementById('coverPickerResults');
-    const pf = document.getElementById('pickerFooter');
-    if (card) card.style.display = 'block';
-    if (urlArea) { urlArea.style.display = 'flex'; setTimeout(() => { const inp = document.getElementById('pickerUrlInput'); if (inp) inp.focus(); }, 200); }
-    if (resultsEl) resultsEl.style.display = 'none';
-    if (pf) pf.style.display = 'none';
     statusEl.textContent = '';
     return;
   }

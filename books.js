@@ -277,7 +277,7 @@ function clearForm() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   // Reset condition
-  S.condition = ''; S.coverUrl = ''; S.coverUrlHighRes = '';
+  S.condition = ''; S.coverUrl = ''; S.coverUrlHighRes = ''; S._priceUserEdited = false; S.priceBase = null;
   document.querySelectorAll('.condition-opt').forEach(b => b.classList.remove('selected'));
   // Reset cover display
   const coverImg = document.getElementById('coverImg');
@@ -612,13 +612,13 @@ function setEditCondition(c) {
 function _applyEditConditionAdjustment(){
   if(!S.editPriceBase)return;
   const pct=getConditionPct(S.editCondition);
-  const adjusted=Math.round(S.editPriceBase*pct*100)/100;
+  const adjusted=Math.round(S.editPriceBase*pct);
   const priceEl=document.getElementById('edit-price');
-  if(priceEl)priceEl.value=adjusted.toFixed(2);
+  if(priceEl)priceEl.value=adjusted;
   const hint=document.getElementById('condAdjHintEdit');
   if(hint){
     const sym=currSym();
-    hint.textContent='Base '+sym+S.editPriceBase.toFixed(0)+' × '+Math.round(pct*100)+'% ('+S.editCondition+') = '+sym+adjusted.toFixed(0);
+    hint.textContent='Base '+sym+Math.round(S.editPriceBase)+' × '+Math.round(pct*100)+'% ('+S.editCondition+') = '+sym+adjusted;
     hint.style.display='block';
   }
 }
