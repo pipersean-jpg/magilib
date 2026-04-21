@@ -1,97 +1,68 @@
-# SESSION HANDOFF — 2026-04-21 (Session 42)
+# SESSION HANDOFF — 2026-04-21 (Session 43)
 
 ## Session Summary
-Beta prep + 18 UI/UX fixes. SW cache bumped to s42. CSP cleaned. 18 polish items implemented across auth, add form, library, cover picker, settings, and danger zone.
+7 UI/UX fixes: magiConfirm "undefined" bug, bulk select checkboxes restored, batch bar actions wired, detail slider stacked vertically, cover picker redesigned, sign out moved, danger zone turned into collapsible accordion with 2 options.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. Deploy prep
-- `sw.js`: `CACHE_NAME` bumped → `magilib-sw-s42`
-- `index.html`: all `?v=s37/s41` → `?v=s42` (10 script tags incl. fuse.min.js)
-- `vercel.json`: removed dead Cloudinary entries from `connect-src`
+### 1. magiConfirm "undefined" fix — catalog.js + auth.js
+- `showView()` line 276: positional args → object style `{title, message, confirmText, onConfirm}`
+- `bulkMarkSold()` line 1490: same fix
+- `bulkDraft()` line 1670: same fix
+- `auth.js` `confirmDeleteAccount()`: positional → object style (nested double-confirm)
 
-### 2. Auth — Enter key submit (Fix #1)
-- `index.html`: Auth inputs wrapped in `<form id="authForm" onsubmit="event.preventDefault();authSubmit()">`, submit button `type="submit"`, forgot password `type="button"`
+### 2. Bulk select checkboxes restored — catalog.js
+- Exposed `window._bkSetOn(v)` from IIFE to allow external code to set `_on`
+- `toggleMoveMode()`: calls `window._bkSetOn(true)` before `renderCatalog()`
+- `exitSelectMode()`: calls `window._bkSetOn(false)` at start
 
-### 3. Home welcome name (Fix #2)
-- `catalog.js` `renderHomeView()`: greeting now reads `S.profile.username || S.settings.displayName || 'Collector'` (not email handle)
+### 3. Batch bar buttons wired — catalog.js
+- `_tog()` inside IIFE now syncs to `S.selectedBooks` when `S.selectMode === 'move'`
+- Calls `updateBatchBar()` on every toggle → batch bar appears with correct count
 
-### 4. Pricing — integers + scroll wheel (Fixes #4, #5)
-- `f-price` / `f-cost`: `step="1"`, `placeholder="0"`, `oninput="S._priceUserEdited=true"` on price field
-- `_applyConditionAdjustment()`: `Math.round()` instead of `toFixed(2)`
-- `books.js` `_applyEditConditionAdjustment()`: same `Math.round()` fix
-- `globals.js`: passive:false wheel listener blocks scroll on focused number inputs
+### 4. Detail slider — 3 buttons stacked vertically — catalog.js
+- `ms-actions-primary` div for library books: added `style="grid-template-columns:1fr;"` inline override
 
-### 5. Price estimate logic (Fix #6)
-- `S._priceUserEdited` flag: set on `oninput` f-price, reset in `clearForm()` and `fetchPrice()`
-- `_applyConditionAdjustment()`: early return if `S._priceUserEdited`
-- `pricing.js`: sets `S.priceBase` + clears `S._priceUserEdited` before updating field; applies condition only if already selected
+### 5. Cover picker redesign — index.html + catalog.js
+- Removed "Paste Image URL" accordion option (`#cpoLink` + `#pickerUrlArea`)
+- Renamed "Google Images" → "Paste Image URL" (kept same `#cpoImages` / `#googleImagesCard` IDs)
+- Changed icon to link icon
+- Expanded card: full-width input with `box-sizing:border-box`, two equal-flex buttons below ("Paste" + "Set as Cover")
+- `selectCoverOpt()`: removed `link` from `idMap`, removed `else if(opt==='link')` block
 
-### 6. Book Intelligence position (Fix #7)
-- `index.html`: `#aiInfoCard` moved from cover section → after publisher field in details section
+### 6. Sign Out moved to bottom of Settings — index.html
+- Removed from inside Account & Security panel
+- Added as standalone `settings-panel` just above Danger Zone
 
-### 7. Save button mobile padding (Fix #8)
-- `magilib.css`: `.el-save { padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 72px)); }`
-
-### 8. Leave-page warning (Fix #9)
-- `catalog.js`: `showView()` checks for dirty add form → `magiConfirm` 'Leave this page?' → on confirm: `clearForm()` + `_doShowView(v)`; extracted `_doShowView(v)` with original nav body
-
-### 9. Library sort/filter rename (Fix #10)
-- `index.html`: "Filters" button → "Sort"; sheet title → "Sort & Filter"; sort options condensed to toggle buttons
-- `catalog.js`: `loadCatalog()` maps `createdAt: row.created_at`; sort uses `new Date(b.createdAt).getTime()` — fixes Newest First ordering
-
-### 10. Bulk select changes (Fix #11)
-- `index.html`: removed Edit button from toolbar; "Move" → "Bulk Select"
-- `catalog.js`: `updateBatchBar()` 'move' mode shows Mark Sold / Move to Draft / Delete (removed Wishlist option)
-- `bulkMarkSold()` + `bulkDraft()` wrapped in `magiConfirm` with 'warning' type
-
-### 11. Clear Filter resets sold/draft state (Fix #12)
-- `ui.js` `clearFilters()`: sets `S.showSold=false`, `S.showDrafts=false`, removes `.active` from sold/draft chips
-
-### 12. Detail slider button cleanup (Fix #13)
-- `catalog.js`: removed eBay Check + Wishlist buttons from both library and wishlist modal views
-
-### 13. Cover picker accordion redesign (Fixes #14, #15)
-- `index.html`: cover picker restructured as accordion — Magic Sources / Google Images / Upload Cover Image / Paste Image URL
-- Google Images card: full-width flex row for URL input + buttons
-- `catalog.js`: `resetPickerState()`, `_openPickerOverlay()`, `selectCoverOpt()`, `searchCoverSource()` updated for new structure
-
-### 14. Settings — merged Account + Security (Fix #16)
-- `index.html`: combined "Account" + "Security" panels → single "Account & Security" panel
-
-### 15. CSV button centred (Fix #17)
-- `index.html`: Download CSV button wrapped in `<div style="text-align:center">`
-
-### 16. Danger Zone (Fix #18)
-- `index.html`: Danger Zone `settings-panel` added with `border-color:#fca5a5`, mobile-nav-clearing bottom padding
-- `auth.js`: `confirmDeleteAccount()` — two nested `magiConfirm` calls, type='danger', deletes books + profile + auth user
+### 7. Danger Zone accordion — index.html + auth.js
+- Danger Zone panel is now a collapsible accordion (chevron toggle)
+- Two options inside: "Delete My Library" (ghost outline) + "Delete My Account" (solid red)
+- Both buttons full-width, centred
+- Added `confirmDeleteLibrary()` in auth.js — deletes all books for user, clears `S.books`, re-renders; two-step confirmation
+- `window.confirmDeleteLibrary` exported
 
 ---
 
 ## Unresolved / Carried Forward
 
 ### Needs device verification
+- All 7 session fixes
+- All 18 Session 42 fixes (still not device-tested)
 - B1: Sign-in no longer hangs
 - B2: Save Password prompt fix
-- All 18 session fixes — need device walkthrough
-
-### Ongoing
-- **Full beta walkthrough**: auth → add → library → edit → status → pricing → settings → onboarding
-- **Section 4 dirty-check**: verify `magiConfirm` fires after PWA reload
-- **CSV import**: confirm `importFromCSV` uses `_supaUser.id` (scoped per user) — code review only, no change needed
+- Full beta walkthrough: auth → add → library → edit → status → pricing → settings → onboarding
 
 ---
 
 ## Next Session Priorities
-1. **Device walkthrough** — all 18 fixes + full beta checklist end-to-end
+1. **Device walkthrough** — all fixes end-to-end
 2. **Beta sign-off** — if walkthrough passes, ship to beta testers
 
 ---
 
 ## Model Learnings This Session
-- **`S._priceUserEdited` flag pattern**: track manual price edits with a flag on `S`; reset on fetch and `clearForm()`; check before condition-adjustment overwrites. Prevents fetch result clobbering user entry.
-- **`showView()` guard + `_doShowView()` split**: to add a confirmation guard before navigation, extract the nav body into `_doShowView()` and call it from the `magiConfirm` callback. Keeps the guard isolated without duplicating nav logic.
-- **`created_at` vs `dateAdded` for sort**: Supabase `created_at` (ISO timestamp) is the reliable sort key. `dateAdded` was a display-only `DD/MM/YYYY` string. Map `createdAt: row.created_at` in `loadCatalog()` and parse with `new Date().getTime()` for accurate newest-first ordering.
-- **`passive:false` on wheel events**: required to call `preventDefault()` on wheel events — passive listeners cannot prevent default. Register on `document`, check `e.target.type === 'number' && e.target === document.activeElement`.
+- **`magiConfirm` object vs positional calling style**: the function uses destructured object `{title, message, confirmText, onConfirm}`. Positional callers silently pass a string as `this`, destructuring returns `undefined` for all fields. Always use object style; check all callers when signature changes.
+- **Two-select-system bridge pattern**: when `S.selectMode` (outer) and `_on` (IIFE) need to co-operate, expose a setter `window._bkSetOn` from inside the IIFE, and sync the IIFE's `_tog()` back to `S.selectedBooks` only when `S.selectMode === 'move'`. Avoids refactoring either system.
+- **IIFE `_on` / `S.selectMode` are independent by design**: `_bkEnter` (IIFE enter) and `toggleMoveMode` (outer) are separate entry points. Bridge with `_bkSetOn`, not by merging them.

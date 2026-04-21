@@ -446,9 +446,6 @@
         <div id="s-password-status" style="font-size:12px;margin-top:8px;min-height:16px;color:#b91c1c;"></div>
       </div>
     </div>
-    <div class="settings-row" style="margin-top:4px;border-top:0.5px solid var(--border);padding-top:14px;">
-      <button class="btn-secondary" style="width:100%;text-align:center;color:#b91c1c;border-color:#fca5a5;" onclick="confirmSignOut()">Sign Out</button>
-    </div>
   </div>
   <div class="settings-panel">
     <div class="section-title">Currency &amp; Marketplace</div>
@@ -630,14 +627,30 @@
     </div>
   </div>
 
-  <!-- Danger Zone -->
-  <div class="settings-panel" style="margin-top:0;border-color:#fca5a5;padding-bottom:max(20px,calc(env(safe-area-inset-bottom) + 72px));">
-    <div class="section-title" style="color:#b91c1c;">Danger Zone</div>
-    <div style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">Permanently delete your account and all library data. This cannot be undone.</div>
-    <button onclick="confirmDeleteAccount()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:transparent;border:0.5px solid #fca5a5;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#b91c1c;cursor:pointer;min-height:40px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-      Delete My Account
+  <!-- Sign Out -->
+  <div class="settings-panel" style="margin-top:0;">
+    <button class="btn-secondary" style="width:100%;text-align:center;color:#b91c1c;border-color:#fca5a5;" onclick="confirmSignOut()">Sign Out</button>
+  </div>
+
+  <!-- Danger Zone (accordion) -->
+  <div class="settings-panel" style="margin-top:0;border-color:#fca5a5;padding:0;padding-bottom:max(20px,calc(env(safe-area-inset-bottom) + 72px));overflow:hidden;">
+    <button onclick="const c=document.getElementById('dangerZoneContent');const open=c.style.display!=='none';c.style.display=open?'none':'block';this.querySelector('.dz-chevron').style.transform=open?'':'rotate(180deg)';" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#b91c1c;text-align:left;">
+      <span>⚠ Danger Zone</span>
+      <svg class="dz-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
+    <div id="dangerZoneContent" style="display:none;padding:0 20px 20px;text-align:center;">
+      <p style="font-size:13px;color:var(--ink-light);margin:0 0 16px;">These actions are permanent and cannot be undone.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+        <button onclick="confirmDeleteLibrary()" style="display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:transparent;border:0.5px solid #fca5a5;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#b91c1c;cursor:pointer;min-height:40px;width:100%;justify-content:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete My Library
+        </button>
+        <button onclick="confirmDeleteAccount()" style="display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:#b91c1c;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#fff;cursor:pointer;min-height:40px;width:100%;justify-content:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete My Account
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Version footer -->
@@ -852,36 +865,24 @@ if ('serviceWorker' in navigator) {
           <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--ink-faint);font-size:13px;">Searching Magic Sources…</div>
         </div>
       </div>
-      <!-- Google Images accordion -->
+      <!-- Paste Image URL accordion -->
       <button class="cover-picker-opt" id="cpoImages" onclick="selectCoverOpt('images')">
-        <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-        Google Images
+        <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        Paste Image URL
       </button>
-      <div id="googleImagesCard" style="display:none;padding:14px 20px;background:var(--paper-warm);border-top:0.5px solid var(--border);">
-        <button onclick="openGoogleImagesTab()" style="display:block;width:100%;padding:9px 0;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;">Open Google Images →</button>
-        <ol style="font-size:12px;color:var(--ink-light);margin:0 0 10px;padding-left:20px;line-height:1.8;">
+      <div id="googleImagesCard" style="display:none;padding:16px 20px 20px;background:var(--paper-warm);border-top:0.5px solid var(--border);">
+        <button onclick="openGoogleImagesTab()" style="display:block;width:100%;padding:10px 0;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:12px;">Search Google Images →</button>
+        <ol style="font-size:12px;color:var(--ink-light);margin:0 0 14px;padding-left:20px;line-height:1.8;">
           <li>Click an image to open the preview</li>
           <li>Right-click → <strong style="color:var(--ink);">Copy Image Address</strong></li>
           <li>Paste in the URL field below</li>
         </ol>
-        <div style="display:flex;gap:6px;width:100%;">
-          <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…" style="flex:1;min-width:0;"/>
-          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" title="Paste" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
-          <button onclick="applyPickerUrl()" style="flex-shrink:0;">Set</button>
+        <input type="text" id="pickerUrlInput" placeholder="Paste image URL here…" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;margin-bottom:10px;"/>
+        <div style="display:flex;gap:8px;">
+          <button id="pickerClipboardBtn" onclick="pasteUrlFromClipboard()" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
+          <button onclick="applyPickerUrl()" style="flex:1;padding:10px 0;">Set as Cover</button>
         </div>
-        <p style="font-size:11px;color:var(--ink-faint);margin:8px 0 0;text-align:center;">⚠ On iOS: copy URL then paste above.</p>
-      </div>
-      <!-- Paste image URL accordion -->
-      <button class="cover-picker-opt" id="cpoLink" onclick="selectCoverOpt('link')">
-        <div class="cpo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-        Paste Image URL
-      </button>
-      <div id="pickerUrlArea" style="display:none;padding:14px 20px;border-top:0.5px solid var(--border);">
-        <div style="display:flex;gap:6px;width:100%;">
-          <input type="text" id="pickerUrlInputDirect" placeholder="Paste image URL here…" style="flex:1;min-width:0;" oninput="document.getElementById('pickerUrlInput').value=this.value"/>
-          <button id="pickerClipboardBtnDirect" onclick="pasteUrlFromClipboard();setTimeout(()=>{const v=document.getElementById('pickerUrlInput').value;document.getElementById('pickerUrlInputDirect').value=v;},100)" title="Paste" style="padding:0 10px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Paste</button>
-          <button onclick="document.getElementById('pickerUrlInput').value=document.getElementById('pickerUrlInputDirect').value;applyPickerUrl()" style="flex-shrink:0;">Set</button>
-        </div>
+        <p style="font-size:11px;color:var(--ink-faint);margin:10px 0 0;text-align:center;">⚠ On iOS: copy URL then paste above.</p>
       </div>
     </div>
     <div id="pickerContentArea" style="display:none;"></div>

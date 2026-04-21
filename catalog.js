@@ -273,7 +273,7 @@ function showView(v){
       const titleVal=(document.getElementById('f-title')||{value:''}).value.trim();
       const authorVal=(document.getElementById('f-author')||{value:''}).value.trim();
       if(photoQueue.length>0||titleVal||authorVal){
-        magiConfirm('Leave this page?','You have unsaved entries. Your progress will be lost.','Leave page','Stay and complete',()=>{clearForm();_doShowView(v);},'danger');
+        magiConfirm({title:'Leave this page?',message:'You have unsaved entries. Your progress will be lost.',confirmText:'Leave page',onConfirm:()=>{clearForm();_doShowView(v);}});
         return;
       }
     }
@@ -1363,7 +1363,7 @@ function openModal(idx){
         </div>`;
     } else {
       actionsArea.innerHTML =
-        `<div class="ms-actions-primary">
+        `<div class="ms-actions-primary" style="grid-template-columns:1fr;">
           <button class="btn-action" id="btnMarketValue" data-action="market-value">Market Value</button>
           <button class="btn-action" data-action="edit-book">Edit Details</button>
           <button class="btn-action" id="modalSoldBtn" data-action="mark-sold">Mark Sold</button>
@@ -1428,11 +1428,13 @@ function toggleMoveMode() {
   S.selectMode = 'move';
   S.selectedBooks.clear();
   _setModeBtn('moveModeBtn', 'Exit Select', true);
+  if (window._bkSetOn) window._bkSetOn(true);
   renderCatalog();
 }
 window.toggleMoveMode = toggleMoveMode;
 
 function exitSelectMode() {
+  if (window._bkSetOn) window._bkSetOn(false);
   S.selectMode = null;
   S.selectedBooks.clear();
   _setModeBtn('editModeBtn', 'Edit', false);
@@ -1487,13 +1489,13 @@ async function bulkMarkSold() {
   const ids = [...S.selectedBooks];
   if (!ids.length) return;
   const n = ids.length;
-  magiConfirm(`Mark ${n} book${n>1?'s':''} as Sold?`, `These books will move to your Sold view and be hidden from the main library.`, 'Mark Sold', 'Cancel', async () => {
+  magiConfirm({title:`Mark ${n} book${n>1?'s':''} as Sold?`,message:`These books will move to your Sold view and be hidden from the main library.`,confirmText:'Mark Sold',onConfirm:async()=>{
     const { error } = await _supa.from('books').update({ sold_status: 'Sold' }).in('id', ids);
     if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
     ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.sold = 'Sold'; });
     showToast(`${n} book${n > 1 ? 's' : ''} marked as sold.`, 'success', 2500);
     triggerPoof(ids, () => { exitSelectMode(); });
-  }, 'warning');
+  }});
 }
 window.bulkMarkSold = bulkMarkSold;
 
@@ -1667,13 +1669,13 @@ async function bulkDraft() {
   const ids = [...S.selectedBooks];
   if (!ids.length) return;
   const n = ids.length;
-  magiConfirm(`Move ${n} book${n>1?'s':''} to Draft?`, `These books will be moved to Drafts and hidden from the main library.`, 'Move to Draft', 'Cancel', async () => {
+  magiConfirm({title:`Move ${n} book${n>1?'s':''} to Draft?`,message:`These books will be moved to Drafts and hidden from the main library.`,confirmText:'Move to Draft',onConfirm:async()=>{
     const { error } = await _supa.from('books').update({ draft_status: 'Draft' }).in('id', ids);
     if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
     ids.forEach(id => { const b = S.books.find(x => x._id === id); if (b) b.draft = 'Draft'; });
     showToast(`${n} book${n > 1 ? 's' : ''} moved to Draft.`, 'success', 2500);
     triggerPoof(ids, () => { exitSelectMode(); });
-  }, 'warning');
+  }});
 }
 window.bulkDraft = bulkDraft;
 
@@ -1986,7 +1988,7 @@ function selectCoverOpt(opt) {
   // Close all accordion panels first
   ['pickerShelfArea','googleImagesCard','pickerUrlArea'].forEach(id => { const el=document.getElementById(id); if(el)el.style.display='none'; });
   document.querySelectorAll('.cover-picker-opt').forEach(el=>el.classList.remove('active'));
-  const idMap={shelf:'cpoShelf',link:'cpoLink',images:'cpoImages'};
+  const idMap={shelf:'cpoShelf',images:'cpoImages'};
   const btn=document.getElementById(idMap[opt]);
   if(btn)btn.classList.add('active');
   if(opt==='shelf'){
@@ -2000,9 +2002,6 @@ function selectCoverOpt(opt) {
     const {title,author}=getSearchTerms();
     const searchQuery=encodeURIComponent('"'+title+'"'+(author?' "'+author+'"':'')+' book cover');
     S._googleImgUrl='https://www.google.com/search?tbm=isch&q='+searchQuery;
-  } else if(opt==='link'){
-    const area=document.getElementById('pickerUrlArea');
-    if(area){area.style.display='block';setTimeout(()=>{const inp=document.getElementById('pickerUrlInputDirect');if(inp)inp.focus();},100);}
   }
 }
 
@@ -2551,6 +2550,10 @@ function _refreshCards(){
 
 function _tog(bid){
   _sel.has(bid)?_sel.delete(bid):_sel.add(bid);
+  if(typeof S!=='undefined'&&S.selectMode==='move'&&S.selectedBooks){
+    _sel.has(bid)?S.selectedBooks.add(bid):S.selectedBooks.delete(bid);
+    if(typeof updateBatchBar==='function')updateBatchBar();
+  }
   _refreshCards();_sync();
 }
 
@@ -2570,6 +2573,7 @@ function _bkExit(){
   _stamp();_sync();
 }
 window._bkExit=_bkExit;
+window._bkSetOn=function(v){_on=v;if(!v)_sel.clear();};
 
 function _bkAll(){
   var all=S.books.map(function(b,i){return b._id||('i'+i);});

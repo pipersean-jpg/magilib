@@ -241,18 +241,16 @@ async function signOut() {
   }, 350);
 }
 function confirmDeleteAccount() {
-  magiConfirm(
-    'Delete your account?',
-    'This will permanently erase your entire library and account. This action cannot be undone.',
-    'Yes, delete everything',
-    'Cancel',
-    () => {
-      magiConfirm(
-        'Are you absolutely sure?',
-        'All ' + S.books.length + ' book' + (S.books.length !== 1 ? 's' : '') + ' and your account will be permanently deleted. There is no recovery.',
-        'Delete permanently',
-        'Cancel',
-        async () => {
+  magiConfirm({
+    title: 'Delete your account?',
+    message: 'This will permanently erase your entire library and account. This action cannot be undone.',
+    confirmText: 'Yes, delete everything',
+    onConfirm: () => {
+      magiConfirm({
+        title: 'Are you absolutely sure?',
+        message: 'All ' + S.books.length + ' book' + (S.books.length !== 1 ? 's' : '') + ' and your account will be permanently deleted. There is no recovery.',
+        confirmText: 'Delete permanently',
+        onConfirm: async () => {
           try {
             await _supa.from('books').delete().eq('user_id', _supaUser.id);
             await _supa.from('profiles').delete().eq('id', _supaUser.id);
@@ -263,13 +261,38 @@ function confirmDeleteAccount() {
           } catch(e) {
             showToast('Could not delete account. Contact support.', 'error', 4000);
           }
-        },
-        'danger'
-      );
-    },
-    'danger'
-  );
+        }
+      });
+    }
+  });
 }
+
+function confirmDeleteLibrary() {
+  const n = S.books ? S.books.length : 0;
+  magiConfirm({
+    title: 'Delete your library?',
+    message: 'This will permanently delete all ' + n + ' book' + (n !== 1 ? 's' : '') + ' from your library. Your account will remain active.',
+    confirmText: 'Yes, delete library',
+    onConfirm: () => {
+      magiConfirm({
+        title: 'Are you absolutely sure?',
+        message: 'All ' + n + ' book' + (n !== 1 ? 's' : '') + ' will be permanently deleted. This cannot be undone.',
+        confirmText: 'Delete permanently',
+        onConfirm: async () => {
+          try {
+            await _supa.from('books').delete().eq('user_id', _supaUser.id);
+            S.books = [];
+            if (typeof renderCatalog === 'function') renderCatalog();
+            showToast('Library deleted.', 'success', 3000);
+          } catch(e) {
+            showToast('Could not delete library. Contact support.', 'error', 4000);
+          }
+        }
+      });
+    }
+  });
+}
+window.confirmDeleteLibrary = confirmDeleteLibrary;
 
 function confirmSignOut() {
   magiConfirm({

@@ -1,8 +1,8 @@
-# MagiLib Project Status — Session 42
+# MagiLib Project Status — Session 43
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Current Focus:** Device walkthrough + beta sign-off. All 18 UX fixes shipped. Ready for end-to-end device test.
+- **Current Focus:** Device walkthrough + beta sign-off. 7 more fixes shipped (s43). Ready for end-to-end device test.
 
 ---
 
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 42)
-- ### 1. Deploy prep
-- `sw.js`: `CACHE_NAME` bumped → `magilib-sw-s42`
-- `index.html`: all `?v=s37/s41` → `?v=s42` (10 script tags incl. fuse.min.js)
-- `vercel.json`: removed dead Cloudinary entries from `connect-src`
-- ### 2. Auth — Enter key submit (Fix #1)
-- `index.html`: Auth inputs wrapped in `<form id="authForm" onsubmit="event.preventDefault();authSubmit()">`, submit button `type="submit"`, forgot password `type="button"`
+## Last Session (Session 43)
+- ### 1. magiConfirm "undefined" fix — catalog.js + auth.js
+- `showView()` line 276: positional args → object style `{title, message, confirmText, onConfirm}`
+- `bulkMarkSold()` line 1490: same fix
+- `bulkDraft()` line 1670: same fix
+- `auth.js` `confirmDeleteAccount()`: positional → object style (nested double-confirm)
+- ### 2. Bulk select checkboxes restored — catalog.js
 
 **Known issues carried forward:**
 - ### Needs device verification
-- B1: Sign-in no longer hangs
-- B2: Save Password prompt fix
+- All 7 session fixes
+- All 18 Session 42 fixes (still not device-tested)
 
 ---
 
@@ -262,6 +262,8 @@ Before running `handoff`, Claude Code MUST:
 - **`showView()` guard + `_doShowView()` split**: to add a confirmation guard before navigation, extract the nav body into `_doShowView()` and call it from the `magiConfirm` callback. Keeps the guard isolated.
 - **`created_at` vs `dateAdded` for sort**: Supabase `created_at` (ISO timestamp) is the reliable sort key. `dateAdded` was display-only `DD/MM/YYYY`. Map `createdAt: row.created_at` in `loadCatalog()` and parse with `new Date().getTime()`.
 - **`passive:false` on wheel events**: required to call `preventDefault()`. Register on `document`, check `e.target.type === 'number' && e.target === document.activeElement`.
+- **`magiConfirm` object vs positional**: function signature is `{title, message, confirmText, onConfirm}` destructured object. Positional args silently yield `undefined` for all fields. Always use object style; audit all callers when signature changes.
+- **Two-select-system bridge (`_bkSetOn`)**: `S.selectMode` (outer batch) and IIFE `_on` are independent. Bridge with `window._bkSetOn(v)` exposed from the IIFE. Sync `_tog()` to `S.selectedBooks` only when `S.selectMode==='move'`. Never merge the two systems.
 - **`autocomplete="new-password"` suppresses Save Password**: browsers only offer to save credentials when a `current-password` field is submitted. Dynamically switch `autocomplete` on the password field in sign-up vs sign-in mode — no HTML changes needed.
 - **`decodeURIComponent` for data-attribute group keys**: `groupKey` output contains `||` and spaces — safe to store in a data attribute using `encodeURIComponent`, read back with `decodeURIComponent`. No double-quote escaping needed.
 - **Two separate select systems in catalog.js**: `S.selectMode` ('edit'/'move') is the main toolbar batch-select; `_on` is the IIFE inline bulk-select. The `.bk-ov` overlay (IIFE) uses `e.stopPropagation()` — delegated `#booksGrid` listener is not reached when `_on` is active, which is correct.
