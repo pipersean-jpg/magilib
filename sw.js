@@ -1,6 +1,6 @@
 // MagiLib Service Worker — Shell caching + offline read
 // Version bumped each session alongside ?v=sN script tags.
-const CACHE_NAME = 'magilib-sw-s37';
+const CACHE_NAME = 'magilib-sw-s42';
 
 // App shell: pre-cache these on install (no query string — matched ignoring search).
 const SHELL_ASSETS = [
