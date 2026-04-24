@@ -11,7 +11,7 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
-<script src="/fuse.min.js?v=s42"></script>
+<script src="/fuse.min.js?v=s46"></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://acuehbwbwsbbxuqcmnrp.supabase.co" crossorigin>
@@ -48,11 +48,17 @@
     </div>
     <div class="auth-field">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="auth-pw-wrap">
+        <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+        <button type="button" class="auth-reveal-btn" onclick="toggleReveal('authPassword')" aria-label="Show password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
     </div>
     <div class="auth-field" id="authConfirmField" style="display:none;">
       <label>Confirm Password</label>
-      <input type="password" id="authConfirmPassword" placeholder="••••••••" autocomplete="new-password"/>
+      <div class="auth-pw-wrap">
+        <input type="password" id="authConfirmPassword" placeholder="••••••••" autocomplete="new-password"/>
+        <button type="button" class="auth-reveal-btn" onclick="toggleReveal('authConfirmPassword')" aria-label="Show confirm password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
     </div>
     <button class="auth-forgot" id="authForgotLink" onclick="forgotPassword()" type="button">Forgot password?</button>
     <div class="auth-success" id="authSuccess"></div>
@@ -78,7 +84,17 @@
     <div id="resetStatus" style="font-family:'DM Sans',sans-serif;font-size:13px;margin-bottom:14px;min-height:18px;"></div>
     <div class="auth-field">
       <label>New Password</label>
-      <input type="password" id="resetPassword" placeholder="At least 6 characters" autocomplete="new-password"/>
+      <div class="auth-pw-wrap">
+        <input type="password" id="resetPassword" placeholder="At least 6 characters" autocomplete="new-password"/>
+        <button type="button" class="auth-reveal-btn" onclick="toggleReveal('resetPassword')" aria-label="Show password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div class="auth-field">
+      <label>Confirm Password</label>
+      <div class="auth-pw-wrap">
+        <input type="password" id="resetConfirmPassword" placeholder="Repeat new password" autocomplete="new-password"/>
+        <button type="button" class="auth-reveal-btn" onclick="toggleReveal('resetConfirmPassword')" aria-label="Show confirm password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
     </div>
     <button class="auth-btn" id="resetPasswordBtn" onclick="saveNewPassword()">Save Password</button>
   </div>
@@ -792,15 +808,15 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s42"></script>
-<script src="/globals.js?v=s42"></script>
-<script src="/auth.js?v=s42"></script>
-<script src="/catalog.js?v=s42"></script>
-<script src="/books.js?v=s42"></script>
-<script src="/pricing.js?v=s42"></script>
-<script src="/conjuring.js?v=s42"></script>
-<script src="/ui.js?v=s42"></script>
-<script src="/publishers.js?v=s42"></script>
+<script src="/supabase.min.js?v=s46"></script>
+<script src="/globals.js?v=s46"></script>
+<script src="/auth.js?v=s46"></script>
+<script src="/catalog.js?v=s46"></script>
+<script src="/books.js?v=s46"></script>
+<script src="/pricing.js?v=s46"></script>
+<script src="/conjuring.js?v=s46"></script>
+<script src="/ui.js?v=s46"></script>
+<script src="/publishers.js?v=s46"></script>
 
 <!-- SERVICE WORKER REGISTRATION -->
 <script>

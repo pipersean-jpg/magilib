@@ -1,5 +1,15 @@
 let _authMode = 'signin';
 
+function toggleReveal(id) {
+  const input = document.getElementById(id);
+  const btn = input.nextElementSibling;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.innerHTML = showing
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+}
+
 // ── LAZY DB LOADER ──
 // Dynamically loads the 4 static DB scripts after successful auth only.
 // All usage sites guard with typeof X === 'undefined' so this is safe to call async.
@@ -40,10 +50,12 @@ function authSwitchMode() {
 
 async function saveNewPassword() {
   const pw = document.getElementById('resetPassword').value;
+  const confirm = document.getElementById('resetConfirmPassword').value;
   const statusEl = document.getElementById('resetStatus');
   statusEl.style.color = '#b91c1c';
   statusEl.textContent = '';
   if (!pw || pw.length < 6) { statusEl.textContent = 'Password must be at least 6 characters.'; return; }
+  if (pw !== confirm) { statusEl.textContent = 'Passwords do not match.'; return; }
   const btn = document.getElementById('resetPasswordBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   const { error } = await _supa.auth.updateUser({ password: pw });
@@ -223,6 +235,9 @@ async function signOut() {
   document.getElementById('authTitle').textContent = 'Welcome back';
   document.getElementById('authSub').textContent = 'Sign in to your MagiLib collection';
   document.getElementById('authUsernameField').style.display = 'none';
+  document.getElementById('authConfirmField').style.display = 'none';
+  document.getElementById('authConfirmPassword').value = '';
+  document.getElementById('authPassword').autocomplete = 'current-password';
   document.getElementById('authSubmitBtn').textContent = 'Sign In';
   document.getElementById('authToggle').innerHTML = "Don't have an account? <a onclick='authSwitchMode()'>Create one</a>";
   document.getElementById('authSuccess').classList.remove('show');
