@@ -551,6 +551,102 @@ function handleTitleKey(e) {
   }
 }
 
+// ── EDIT MODAL TITLE LOOKUP ──
+let _editConjuringDebounce = null;
+
+function debouncedEditConjuringCheck(title) {
+  clearTimeout(_editConjuringDebounce);
+  if (!title || title.length < 3) { hideEditTitleDropdown(); return; }
+  _editConjuringDebounce = setTimeout(() => { showEditTitleDropdown(title); }, 350);
+}
+
+function showEditTitleDropdown(title) {
+  const dd = document.getElementById('editTitleDropdown');
+  if (!dd) return;
+  const raw = conjuringTopMatches(title, 12);
+  const seenTitles = new Set();
+  const matches = raw.filter(m => {
+    const label = (m.entry.t || m.key).trim().toLowerCase();
+    if (seenTitles.has(label)) return false;
+    seenTitles.add(label);
+    return true;
+  }).slice(0, 7);
+  if (matches.length === 0) { hideEditTitleDropdown(); return; }
+  dd.innerHTML = '';
+  matches.forEach(match => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:7px 10px;cursor:pointer;font-size:13px;font-family:inherit;color:var(--ink);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;';
+    const thumb = document.createElement('img');
+    thumb.src = match.url || '';
+    thumb.alt = '';
+    thumb.style.cssText = 'width:30px;height:40px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--paper-warm);border:0.5px solid var(--border);';
+    thumb.onerror = function() { this.style.display = 'none'; };
+    const textWrap = document.createElement('div');
+    textWrap.style.cssText = 'flex:1;min-width:0;';
+    const titleSpan = document.createElement('div');
+    titleSpan.textContent = match.entry.t || toTitleCase(match.key);
+    titleSpan.style.cssText = 'font-size:13px;font-weight:500;color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;';
+    textWrap.appendChild(titleSpan);
+    const authorFromDB = dbAuthor(match.entry);
+    if (authorFromDB) {
+      const authorSpan = document.createElement('div');
+      authorSpan.textContent = authorFromDB;
+      authorSpan.style.cssText = 'font-size:11px;color:var(--ink-light);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      textWrap.appendChild(authorSpan);
+    }
+    item.appendChild(thumb);
+    item.appendChild(textWrap);
+    item.addEventListener('mousedown', e => {
+      e.preventDefault();
+      hideEditTitleDropdown();
+      applyConjuringToEdit(match);
+    });
+    item.addEventListener('mouseenter', () => { item.style.background = 'var(--accent-light)'; });
+    item.addEventListener('mouseleave', () => { item.style.background = ''; });
+    dd.appendChild(item);
+  });
+  if (dd.lastChild) dd.lastChild.style.borderBottom = 'none';
+  dd.style.display = 'block';
+}
+
+function hideEditTitleDropdown() {
+  const dd = document.getElementById('editTitleDropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function applyConjuringToEdit(match) {
+  const entry = match.entry;
+  const fill = (id, val) => {
+    if (!val) return;
+    const el = document.getElementById(id);
+    if (el && !el.value.trim()) {
+      el.value = val;
+      el.classList.add('field-populated');
+      setTimeout(() => el.classList.remove('field-populated'), 3000);
+    }
+  };
+  const titleEl = document.getElementById('edit-title');
+  if (titleEl) {
+    titleEl.value = entry.t || toTitleCase(match.key);
+    titleEl.classList.add('field-populated');
+    setTimeout(() => titleEl.classList.remove('field-populated'), 3000);
+  }
+  const author = dbAuthor(entry);
+  const year   = dbYear(entry);
+  if (author) fill('edit-author', toTitleCase(normalizeConjuringAuthor(author)));
+  if (year)   fill('edit-year', year);
+  // Update cover only if none currently set
+  const coverUrl = dbCoverUrl(entry);
+  if (coverUrl && !S.editCoverUrl) {
+    S.editCoverUrl = coverUrl;
+    const img = document.getElementById('editCoverImg');
+    const ph  = document.getElementById('editCoverPh');
+    if (img) { img.src = coverUrl; img.style.display = 'block'; }
+    if (ph)  ph.style.display = 'none';
+  }
+  if (typeof _markEditDirty === 'function') _markEditDirty();
+}
+
 // ── TITLE FIELD BLUR ──
 // After user leaves title field: if no conjuring match auto-filled the author,
 // try book_catalog directly. Toast if nothing found.

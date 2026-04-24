@@ -171,6 +171,12 @@ async function importFromCSV(event) {
 
   // ── Insert to Supabase in batches of 100 ──
   const skippedCount = (allRows.length - 1) - dataRows.length;
+  const resultCard = document.getElementById('csvImportResult');
+  const resultContent = document.getElementById('csvImportResultContent');
+  if (resultCard && resultContent) {
+    resultContent.innerHTML = '<span style="color:var(--ink-faint);">Saving ' + dataRows.length + ' book' + (dataRows.length !== 1 ? 's' : '') + '…</span>';
+    resultCard.style.display = 'block';
+  }
   if (btn) btn.textContent = 'Saving…';
   let imported = 0;
   let failed = 0;
@@ -182,8 +188,9 @@ async function importFromCSV(event) {
     } else {
       console.error('Import chunk error:', error);
       // Retry row-by-row so we know exactly which rows failed
-      for (const row of chunk) {
-        const { error: rowErr } = await _supa.from('books').insert([row]);
+      for (let j = 0; j < chunk.length; j++) {
+        if (resultContent) resultContent.innerHTML = '<span style="color:var(--ink-faint);">Saving ' + (imported + j + 1) + ' of ' + dataRows.length + '…</span>';
+        const { error: rowErr } = await _supa.from('books').insert([chunk[j]]);
         if (!rowErr) imported++;
         else failed++;
       }
@@ -193,17 +200,16 @@ async function importFromCSV(event) {
   if (btn) { btn.disabled=false; btn.textContent='Upload CSV'; }
   event.target.value='';
 
-  // ── Static result card ──
-  const resultEl = document.getElementById('csvImportResult');
-  if (resultEl) {
+  // ── Static result card (stays open until user dismisses) ──
+  if (resultContent) {
     const lines = [];
     if (imported > 0) lines.push('<span style="color:#16a34a;">✓ ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' imported</span>');
     if (skippedCount > 0) lines.push('<span style="color:var(--ink-faint);">— ' + skippedCount + ' row' + (skippedCount !== 1 ? 's' : '') + ' skipped (no title)</span>');
-    if (failed > 0) lines.push('<span style="color:#b91c1c;">✗ ' + failed + ' row' + (failed !== 1 ? 's' : '') + ' failed — check console for details</span>');
+    if (failed > 0) lines.push('<span style="color:#b91c1c;">✗ ' + failed + ' row' + (failed !== 1 ? 's' : '') + ' failed — check details in browser console</span>');
     if (enriched > 0) lines.push('<span style="color:var(--ink-faint);">· ' + enriched + ' enriched from local database</span>');
-    resultEl.innerHTML = lines.join('<br>');
-    resultEl.style.display = lines.length ? 'block' : 'none';
+    resultContent.innerHTML = lines.join('<br>');
   }
+  if (resultCard) resultCard.style.display = 'block';
 
   if (failed > 0) showToast('Import complete — ' + failed + ' failed', 'error', 4000);
   else showToast('Imported ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' ✓', 'success', 3000);

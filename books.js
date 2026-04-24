@@ -589,9 +589,14 @@ function toggleShowSold(btn) {
 // ── DELETE BOOK ──
 function confirmDelete() {
   if (!window._isOnline) { showToast("You're offline \u2014 connect to delete books", 'error', 3500); return; }
-  const idx = S.currentModalIdx;
-  const b = S.books[idx];
-  if (!b) return;
+  // When called from Edit modal use currentEditId; from Detail modal use currentModalIdx
+  const editOverlay = document.getElementById('editModalOverlay');
+  const fromEdit = editOverlay && !editOverlay.classList.contains('hidden');
+  const b = fromEdit
+    ? S.books.find(book => book._id === S.currentEditId)
+    : S.books[S.currentModalIdx];
+  const idx = b ? S.books.indexOf(b) : -1;
+  if (!b || idx < 0) return;
   magiConfirm({
     title: 'Delete book?',
     message: `"${sanitize(b.title)}" will be permanently removed. This cannot be undone.`,
@@ -599,6 +604,7 @@ function confirmDelete() {
     onConfirm: async () => {
       if (b._id) await _supa.from('books').delete().eq('id', b._id);
       S.books.splice(idx, 1);
+      closeEditModal();
       closeModal();
       renderCatalog();
       showToast('Book deleted ✓', 'success');

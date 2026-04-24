@@ -602,7 +602,12 @@
           <span id="csvImportBtn">Upload CSV</span>
           <input type="file" accept=".csv" style="display:none;" onchange="importFromCSV(event)"/>
         </label>
-        <div id="csvImportResult" style="display:none;margin-top:12px;padding:10px 12px;background:var(--paper);border:0.5px solid var(--border-med);border-radius:8px;font-size:12px;line-height:2;"></div>
+        <div id="csvImportResult" style="display:none;margin-top:12px;background:var(--paper);border:0.5px solid var(--border-med);border-radius:8px;font-size:12px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;">
+            <div id="csvImportResultContent" style="flex:1;line-height:2;"></div>
+            <button onclick="document.getElementById('csvImportResult').style.display='none'" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:18px;padding:0 2px;line-height:1;">×</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -928,7 +933,7 @@ if ('serviceWorker' in navigator) {
         </div>
         <button onclick="openCoverPickerForEdit()" style="padding:7px 18px;border:0.5px solid var(--accent);border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;background:var(--accent-light);color:var(--accent);font-weight:500;">Update Cover</button>
       </div>
-      <div class="field"><label>Title</label><input type="text" id="edit-title" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
+      <div class="field" style="position:relative;"><label>Title</label><input type="text" id="edit-title" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;" oninput="debouncedEditConjuringCheck(this.value)" onblur="setTimeout(hideEditTitleDropdown,150)"/><div id="editTitleDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--paper-card);border:1.5px solid var(--border-med);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:3000;max-height:280px;overflow-y:auto;margin-top:2px;"></div></div>
       <div class="field"><label>Author</label><input type="text" id="edit-author" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
       <div class="field"><label>Artist / Subject</label><input type="text" id="edit-artist" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
       <div class="field"><label>Publisher</label><input type="text" id="edit-publisher" list="publisher-list" style="width:100%;padding:10px 12px;border:0.5px solid var(--border-med);border-radius:7px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;"/></div>
