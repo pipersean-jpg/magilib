@@ -615,6 +615,7 @@ async function addWishlistItem() {
   const price = parseFloat(document.getElementById('wl-price').value) || null;
   const notes = (document.getElementById('wl-notes').value || '').trim();
   if (!_supaUser) { showToast('Not signed in', 'error'); return; }
+  if (!window._isOnline) { showToast('You\'re offline — connect to add to wishlist', 'error'); return; }
   const row = {
     user_id: _supaUser.id,
     title,
