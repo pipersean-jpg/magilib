@@ -75,6 +75,7 @@ async function changePasswordFromSettings(btn) {
   const confirmPw = document.getElementById('s-confirm-password').value;
   const statusEl = document.getElementById('s-password-status');
   statusEl.textContent = '';
+  if (!window._isOnline) { statusEl.textContent = "You're offline — connect to change your password."; return; }
   if (!currentPw) { statusEl.textContent = 'Enter your current password.'; return; }
   if (!pw || pw.length < 6) { statusEl.textContent = 'New password must be at least 6 characters.'; return; }
   if (pw !== confirmPw) { statusEl.textContent = 'New passwords do not match.'; return; }
@@ -267,8 +268,10 @@ function confirmDeleteAccount() {
         confirmText: 'Delete permanently',
         onConfirm: async () => {
           try {
-            await _supa.from('books').delete().eq('user_id', _supaUser.id);
-            await _supa.from('profiles').delete().eq('id', _supaUser.id);
+            const { error: bErr } = await _supa.from('books').delete().eq('user_id', _supaUser.id);
+            if (bErr) { showToast('Could not delete account. Contact support.', 'error', 4000); return; }
+            const { error: pErr } = await _supa.from('profiles').delete().eq('id', _supaUser.id);
+            if (pErr) { showToast('Could not delete account. Contact support.', 'error', 4000); return; }
             await _supa.auth.admin ? _supa.auth.admin.deleteUser(_supaUser.id) : _supa.rpc('delete_user');
             await _supa.auth.signOut();
             showToast('Account deleted.', 'success', 3000);
@@ -295,7 +298,8 @@ function confirmDeleteLibrary() {
         confirmText: 'Delete permanently',
         onConfirm: async () => {
           try {
-            await _supa.from('books').delete().eq('user_id', _supaUser.id);
+            const { error } = await _supa.from('books').delete().eq('user_id', _supaUser.id);
+            if (error) { showToast('Could not delete library. Contact support.', 'error', 4000); return; }
             S.books = [];
             if (typeof renderCatalog === 'function') renderCatalog();
             showToast('Library deleted.', 'success', 3000);
@@ -324,7 +328,8 @@ function saveUsernameDebounced() {
   _usernameSaveTimer = setTimeout(async () => {
     const username = document.getElementById('s-username').value.trim();
     if (!_supaUser || !username) return;
-    await _supa.from('profiles').update({ username }).eq('id', _supaUser.id);
+    const { error } = await _supa.from('profiles').update({ username }).eq('id', _supaUser.id);
+    if (error) { showToast('Could not update display name.', 'error', 2500); return; }
     if (!S.profile) S.profile = {};
     S.profile.username = username;
     updateUserMenu();
