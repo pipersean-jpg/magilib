@@ -1,55 +1,82 @@
-# SESSION HANDOFF — 2026-04-24 (Session 45)
+# SESSION HANDOFF — 2026-04-24 (Session 46)
 
 ## Session Summary
-Documentation + audit session. No code changes. Integrated the external beta audit (`magilib_beta_fix_prompts.md`) into CLAUDE.md as a standing short-form backlog. Confirmed 13 of 16 audit items already resolved; one outstanding (event delegation, Phase 2); two are Phase 2 features. Next session: device walkthrough + beta sign-off.
+Device walkthrough sessions started. Auth (Feature 1) and Add (Feature 2) completed and verified on device. Max 3 features per session rule in place. Next session: Library, Edit, Status (Features 3–5).
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. CLAUDE.md — Pre-Beta Fix Backlog section inserted
-- New "Pre-Beta Fix Backlog (short-form)" section added immediately before "## Technical Learnings"
-- P1–P5 numbered items (16 total) with pointer to `magilib_beta_fix_prompts.md` for full detail
-- No existing content removed or overwritten
+### Feature 1 — Auth ✅ (device verified)
 
-### 2. SESSION_HANDOFF.md — Next Session Priorities updated (previous session)
-- Added items 3–5 to the priorities list:
-  - P1 #1: Lazy-load 4 static DB scripts (already done Session 20 — carried as reminder)
-  - P1 #4: inputmode="decimal" (already done Session 22 — carried as reminder)
-  - P3 #7: Splash pulse animation (already done Session 22 — carried as reminder)
-- Note: all three of those items are already implemented; they were added as reference pointers only
+**auth.js**
+- `toggleReveal(id)`: new eye/slash toggle for all password fields
+- `signOut()`: now hides `authConfirmField`, clears confirm value, resets autocomplete to `current-password`
+- `saveNewPassword()`: added `#resetConfirmPassword` field validation (passwords must match)
 
-### 3. Audit reconciliation (no file changes)
-- External audit (`magilib_beta_fix_prompts.md`) cross-referenced against CLAUDE.md completed tasks
-- 13/16 items resolved; item #13 (event delegation) deferred to Phase 2; items #15/#16 are Phase 2 features; item #14 (preconnect) was already present before the audit
+**index.html**
+- All password fields wrapped in `.auth-pw-wrap` with reveal button
+- Reset password form: second confirm field added
+- Save buttons redesigned (3-stack, see Feature 2 below)
+- All `?v=s42` → `?v=s46`
+
+**assets/css/magilib.css**
+- `.auth-pw-wrap`, `.auth-reveal-btn` — eye toggle layout
+
+**sw.js**
+- `CACHE_NAME` bumped to `magilib-sw-s46`
+
+### Feature 2 — Add ✅ (device verified, fixes committed)
+
+**books.js**
+- `saveBook()`: NaN price validation fix (`isNaN(parseFloat(price))`)
+- `saveBook()`: condition + price no longer required (title + author only)
+- `saveDraft()`: new function — saves current form as Draft, title required
+- `confirmClearForm()`: magiConfirm wrapper before `clearForm()`
+- `toTitleCasePublisher()`: strips trailing state codes (`, CA`) + decodes `&amp;`
+- `normalizeConjuringAuthor()`: new — parses Conjuring DB compound format
+
+**catalog.js**
+- Magic Sources CONJURING_DB lookup: tries `nk`, `'the ' + nkNoArt`, `nkNoArt` (article-tolerant)
+- Magic Sources book_catalog query: two sequential queries (bare title + "the " prefix) — avoids `.or()` special-char risk
+- `normalizeConjuringAuthor()` applied on author fill from book_catalog
+- Batch scan text: "Claude is reading…" → "AI is reading…"
+
+**conjuring.js**
+- `normalizeConjuringAuthor()` applied in `applyConjuringMatch()` author fill
+
+**ui.js**
+- `quickAddFromQueue()` catch block: failed scans now saved as `⚠ Unknown (scan failed)` drafts instead of silently dropped
+- Batch end: "Saving to your library…" progress shown before `renderCatalog()` to prevent frozen-screen appearance
+- FAQ text: removed "Claude AI" mention
+
+**index.html + assets/css/magilib.css**
+- Save area redesigned from `.save-bar` (2 buttons) to `.save-stack` (3 stacked buttons)
+- `.save-stack`, `.btn-ghost-danger` CSS added
 
 ---
 
 ## Unresolved / Carried Forward
 
-### Needs device verification (unchanged from Session 44)
-- All Session 43 fixes (7 items)
-- All Session 42 fixes (18 items)
-- Full beta walkthrough: auth → add → library → edit → status → pricing → settings → onboarding
-
-### Outstanding audit item
-- **#13 — Event delegation migration** (Phase 2): 100+ inline `onclick` handlers remain. Not a beta blocker. Defer until Phase 2 refactor sprint.
-
-### Pre-requisite for Magic Facts (unchanged)
-- Run `magilib-admin/sql/create_magic_facts.sql` in Supabase SQL Editor before using Magic Facts admin page
+- **Google Image URL copy in Google app** — OS-level restriction, not fixable in web app. User acknowledged.
+- **book_catalog Supabase author format** — Supabase `book_catalog` table may also store compound author strings (`"Jean & Fred Braue Hugard"`). Not verified. `normalizeConjuringAuthor()` is applied on fill, so it should handle it — but not device-tested yet.
+- **Feature 3 — Library**: search, filter, sort, view detail — not started
+- **Features 4–8** — not started
 
 ---
 
 ## Next Session Priorities
-1. **Device walkthrough** — full end-to-end beta checklist on device
-2. **Beta sign-off** — if walkthrough passes, ship to beta testers
-3. **P1 #1: Lazy-load the 4 static DB scripts after auth** (see magilib_beta_fix_prompts.md item 1)
-4. **P1 #4: Add `inputmode="decimal"` to all price/cost inputs** (see magilib_beta_fix_prompts.md item 4)
-5. **P3 #7: Add spinner/pulse animation to splash screen** (see magilib_beta_fix_prompts.md item 7)
+1. **Feature 3 — Library**: code review → device test (search, filter, sort, view detail)
+2. **Feature 4 — Edit**: code review → device test (all fields, cover update, dirty-check dialog)
+3. **Feature 5 — Status**: code review → device test (Mark Sold, + Wishlist, Move to Library)
 
 ---
 
 ## Model Learnings This Session
-- **Audit items 1–12 and 14 were all already resolved** before the audit was filed. The audit was written against an earlier build snapshot. Trust CLAUDE.md completed task list as ground truth.
-- **`magilib_beta_fix_prompts.md` is authoritative** for full fix descriptions. The short-form backlog in CLAUDE.md is a navigation index only — always open the source file for implementation detail.
-- **Event delegation (#13) is the only live code-quality debt** from the audit. Safe to skip for beta; flag for first Phase 2 engineering sprint.
+
+- **Conjuring DB compound author format**: `"First1 & SecondFull Last1"` — last word is always First Author's surname; middle words are Second Author's full name; single middle word means shared last name. Guard: if `first1.includes(' ')` it's already a proper "Full Name & Full Name" — skip parsing.
+- **`.or()` breaks on title strings**: Supabase PostgREST `.or()` with title values containing special chars (apostrophes, parens, commas) causes parse errors. Use sequential `.ilike()` queries instead when searching book titles.
+- **`toTitleCasePublisher` must decode HTML entities before PUBLISHERS match**: `&amp;` in raw DB data → `&` needed before canonical list lookup.
+- **State code stripping**: publisher strings from CONJURING_DB often include trailing `, CA` or `, NY`. Strip with `/,\s*[A-Za-z]{2}\.?\s*$/` before canonical lookup.
+- **`normalizeConjuringAuthor` placement**: apply before `toTitleCase()`, not after — title-casing first does not break parsing but it's cleaner to normalize raw DB string.
+- **toggleReveal pattern**: `input.nextElementSibling` to reach the button inside `.auth-pw-wrap`; swap `input.type` between `'password'` and `'text'`; swap button innerHTML between eye and eye-slash SVG.

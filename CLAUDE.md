@@ -1,8 +1,8 @@
-# MagiLib Project Status — Session 45
+# MagiLib Project Status — Session 46
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Current Focus:** Device walkthrough + beta sign-off. Admin portal improved (s44). Ready for end-to-end device test.
+- **Current Focus:** Device walkthrough in progress. Auth ✅ Add ✅ — next: Library, Edit, Status (Features 3–5).
 
 ---
 
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 45)
-- ### 1. CLAUDE.md — Pre-Beta Fix Backlog section inserted
-- New "Pre-Beta Fix Backlog (short-form)" section added immediately before "## Technical Learnings"
-- P1–P5 numbered items (16 total) with pointer to `magilib_beta_fix_prompts.md` for full detail
-- No existing content removed or overwritten
-- ### 2. SESSION_HANDOFF.md — Next Session Priorities updated (previous session)
-- Added items 3–5 to the priorities list:
+## Last Session (Session 46)
+- ### Feature 1 — Auth ✅ (device verified)
+- **auth.js**
+- `toggleReveal(id)`: new eye/slash toggle for all password fields
+- `signOut()`: now hides `authConfirmField`, clears confirm value, resets autocomplete to `current-password`
+- `saveNewPassword()`: added `#resetConfirmPassword` field validation (passwords must match)
+- **index.html**
 
 **Known issues carried forward:**
-- ### Needs device verification (unchanged from Session 44)
-- All Session 43 fixes (7 items)
-- All Session 42 fixes (18 items)
+- **Google Image URL copy in Google app** — OS-level restriction, not fixable in web app. User acknowledged.
+- **book_catalog Supabase author format** — Supabase `book_catalog` table may also store compound author strings (`"Jean & Fred Braue Hugard"`). Not verified. `normalizeConjuringAuthor()` is applied on fill, so it should handle it — but not device-tested yet.
+- **Feature 3 — Library**: search, filter, sort, view detail — not started
 
 ---
 
@@ -397,6 +397,11 @@ Before running `handoff`, Claude Code MUST:
 - **QTTE scraper data quality**: publisher fragments under 4 chars are regex garbage (e.g. "The" captured mid-sentence). `html.unescape()` required for HTML entities in scraped text.
 - **Murphy's price_db norm_key uses Last-First author**: `Artist/Magician` CSV field stored as-is. Won't match book_catalog (First Last). Migrate forward; don't fix backward.
 - **magilib-admin has no GitHub remote**: commits are local only. `git push` will fail silently.
+- **Conjuring DB compound author format**: `"First1 & SecondFull Last1"` — last word = First Author's surname; middle words = Second Author's full name; single middle word = shared last name. Guard: `first1.includes(' ')` → leave alone (already "Full Name & Full Name"). Applied via `normalizeConjuringAuthor()` before `toTitleCase()`.
+- **`.or()` on Supabase breaks with title strings**: apostrophes, parens, spaces cause PostgREST parse errors. Use sequential `.ilike()` queries instead when searching book titles with/without leading articles.
+- **`toTitleCasePublisher` must strip HTML entities + state codes**: decode `&amp;` → `&` and strip `/,\s*[A-Za-z]{2}\.?\s*$/` before matching against `PUBLISHERS` list.
+- **toggleReveal pattern**: `input.nextElementSibling` reaches the button inside `.auth-pw-wrap`; swap `input.type` between `'password'`/`'text'`; swap button `innerHTML` between eye and eye-slash SVG.
+- **signOut() must reset authConfirmField**: hide `#authConfirmField` + clear its value + reset `autocomplete` to `current-password` — otherwise sign-out from sign-up mode leaves a stale two-field form.
 
 ---
 
