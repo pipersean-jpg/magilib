@@ -1,16 +1,6 @@
 function downloadCSVTemplate() {
   const headers = ['Title','Author','Artist/Subject','Edition','Year','Publisher','ISBN','Condition','Market Price','Purchase Price','Notes','Cover URL','Date Added','Condition Flags','Sold Status','Star Rating','Collector Note','Where Acquired','Draft'];
-  // Condition: Fine | Very Good | Good | Fair
-  // Sold Status: Active | Sold | Wishlist  (leave blank = Active)
-  // Star Rating: 1–5  (leave blank = unrated)
-  // Draft: Draft  (leave blank = normal library entry)
-  const examples = [
-    ['The Art of Magic','Houdini Harry','','First Edition','1920','Sphinx Press','978-0-000-00001-1','Fine','150.00','80.00','Signed copy with dust jacket.','','2024-01-15','','Active','5','Purchased at auction.','Potter & Potter',''],
-    ['Card Technique','Hugard Jean','','Second Edition','1946','Faber and Faber','','Good','45.00','20.00','','','','','Sold','3','','eBay',''],
-    ['Expert Card Technique','Hugard Jean','Braue Frederick','Revised Edition','1950','Faber and Faber','','Very Good','95.00','','Classic reference work.','','','Spine faded','Wishlist','4','','',''],
-    ['Stars of Magic','Various','','','1961','Louis Tannen','','Fair','35.00','','','','','','Active','2','Needs closer inspection before cataloguing.','','Draft'],
-  ];
-  const rows = [headers, ...examples].map(function(r) {
+  const rows = [headers].map(function(r) {
     return r.map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
   });
   const csv = rows.join('\n');
@@ -180,23 +170,43 @@ async function importFromCSV(event) {
   }
 
   // ── Insert to Supabase in batches of 100 ──
+  const skippedCount = (allRows.length - 1) - dataRows.length;
   if (btn) btn.textContent = 'Saving…';
   let imported = 0;
   let failed = 0;
   for (let i = 0; i < dataRows.length; i += 100) {
-    const { error } = await _supa.from('books').insert(dataRows.slice(i, i+100));
-    if (!error) imported += Math.min(100, dataRows.length - i);
-    else { console.error('Import chunk error:', error); failed += Math.min(100, dataRows.length - i); }
+    const chunk = dataRows.slice(i, i + 100);
+    const { error } = await _supa.from('books').insert(chunk);
+    if (!error) {
+      imported += chunk.length;
+    } else {
+      console.error('Import chunk error:', error);
+      // Retry row-by-row so we know exactly which rows failed
+      for (const row of chunk) {
+        const { error: rowErr } = await _supa.from('books').insert([row]);
+        if (!rowErr) imported++;
+        else failed++;
+      }
+    }
   }
 
-  if (btn) { btn.disabled=false; btn.textContent='Import CSV'; }
+  if (btn) { btn.disabled=false; btn.textContent='Upload CSV'; }
   event.target.value='';
 
-  let msg = failed > 0
-    ? 'Imported ' + imported + ', ' + failed + ' failed'
-    : 'Imported ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' ✓';
-  if (enriched > 0 && failed === 0) msg += ' · ' + enriched + ' matched in local database';
-  showToast(msg, failed > 0 ? 'error' : 'success', 4000);
+  // ── Static result card ──
+  const resultEl = document.getElementById('csvImportResult');
+  if (resultEl) {
+    const lines = [];
+    if (imported > 0) lines.push('<span style="color:#16a34a;">✓ ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' imported</span>');
+    if (skippedCount > 0) lines.push('<span style="color:var(--ink-faint);">— ' + skippedCount + ' row' + (skippedCount !== 1 ? 's' : '') + ' skipped (no title)</span>');
+    if (failed > 0) lines.push('<span style="color:#b91c1c;">✗ ' + failed + ' row' + (failed !== 1 ? 's' : '') + ' failed — check console for details</span>');
+    if (enriched > 0) lines.push('<span style="color:var(--ink-faint);">· ' + enriched + ' enriched from local database</span>');
+    resultEl.innerHTML = lines.join('<br>');
+    resultEl.style.display = lines.length ? 'block' : 'none';
+  }
+
+  if (failed > 0) showToast('Import complete — ' + failed + ' failed', 'error', 4000);
+  else showToast('Imported ' + imported + ' book' + (imported !== 1 ? 's' : '') + ' ✓', 'success', 3000);
   loadCatalog();
 }
 function updatePriceLabels(cur) {
@@ -264,7 +274,8 @@ function saveSettings(skipCurrencyGuard){
   if(cl) cl.textContent = currency;
   updatePriceLabels(currency);
   const curWarn = document.getElementById('currencyChangeWarning');
-  if(curWarn) curWarn.style.display = 'block';
+  if (curWarn) curWarn.style.display = (existing.currency && currency !== existing.currency) ? 'block' : 'none';
+  showToast('Settings saved ✓', 'success', 1500);
 }
 function showView(v){
   if(v!=='entry'){
