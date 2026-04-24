@@ -409,7 +409,7 @@ async function saveBook() {
   const price = document.getElementById('f-price').value;
   if (!title || !author) { showToast('Title and Author are required', 'error'); return; }
   if (!S.condition) { showToast('Please select a condition', 'error'); return; }
-  if (!price) { showToast('Please enter or fetch a market price', 'error'); return; }
+  if (!price || isNaN(parseFloat(price))) { showToast('Please enter a valid market price', 'error'); return; }
   if (!_supaUser) { showToast('Not signed in', 'error'); return; }
 
   const artist = document.getElementById('f-artist') ? document.getElementById('f-artist').value.trim() : '';
