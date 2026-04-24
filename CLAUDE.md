@@ -1,8 +1,8 @@
-# MagiLib Project Status — Session 46
+# MagiLib Project Status — Session 47
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Current Focus:** Device walkthrough in progress. Auth ✅ Add ✅ — next: Library, Edit, Status (Features 3–5).
+- **Current Focus:** Device walkthrough in progress. Auth ✅ Add ✅ Library (code clean, 3 bugs fixed) — next: verify Edit modal fix on device, then Edit + Status (Features 4–5).
 
 ---
 
@@ -48,18 +48,18 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 46)
-- ### Feature 1 — Auth ✅ (device verified)
-- **auth.js**
-- `toggleReveal(id)`: new eye/slash toggle for all password fields
-- `signOut()`: now hides `authConfirmField`, clears confirm value, resets autocomplete to `current-password`
-- `saveNewPassword()`: added `#resetConfirmPassword` field validation (passwords must match)
-- **index.html**
+## Last Session (Session 47)
+- ### Library Code Review ✅
+- Subagent reviewed: search, filter, sort, view detail, modal wiring — all clean
+- `b._id` usage confirmed correct throughout
+- One pre-existing null-guard confirmed (`showWishlistChip` — already handled)
+- ### Bug Fix 1 — Drafts empty state + filter button count
+- **catalog.js**
 
 **Known issues carried forward:**
-- **Google Image URL copy in Google app** — OS-level restriction, not fixable in web app. User acknowledged.
-- **book_catalog Supabase author format** — Supabase `book_catalog` table may also store compound author strings (`"Jean & Fred Braue Hugard"`). Not verified. `normalizeConjuringAuthor()` is applied on fill, so it should handle it — but not device-tested yet.
-- **Feature 3 — Library**: search, filter, sort, view detail — not started
+- **Edit modal fix unverified on device** — z-index + scroll-lock changes look correct in code; needs device retest next session before proceeding
+- **Feature 4 — Edit**: full device test (all fields, cover update, dirty-check dialog) — pending Edit modal fix verify
+- **Feature 5 — Status**: code review → device test (Mark Sold, + Wishlist, Move to Library) — not started
 
 ---
 
@@ -401,6 +401,10 @@ Before running `handoff`, Claude Code MUST:
 - **`.or()` on Supabase breaks with title strings**: apostrophes, parens, spaces cause PostgREST parse errors. Use sequential `.ilike()` queries instead when searching book titles with/without leading articles.
 - **`toTitleCasePublisher` must strip HTML entities + state codes**: decode `&amp;` → `&` and strip `/,\s*[A-Za-z]{2}\.?\s*$/` before matching against `PUBLISHERS` list.
 - **toggleReveal pattern**: `input.nextElementSibling` reaches the button inside `.auth-pw-wrap`; swap `input.type` between `'password'`/`'text'`; swap button `innerHTML` between eye and eye-slash SVG.
+- **`updateFilterBtn()` must be called in ALL `renderCatalog` exit paths**: early-return when `!books.length` previously skipped the call — stale count persisted in "Show X Books". Always call before any return.
+- **Edit modal `body.sheet-open` pattern**: `openEditForm()` must add `sheet-open`; `closeEditModal()` must remove it in ALL close paths including the dirty-check `onConfirm` callback.
+- **`openEditFromModal()` without ID**: static `#modalActionsArea` Edit button calls it without args. Guard with `if (!id) id = S.books[S.currentModalIdx]?._id`.
+- **Edit modal z-index**: raise `#editModalOverlay` to `z-index:2001` inline style — same as `#coverPickerOverlay`. At z-index:1000 it competes with fading `.magi-sheet-overlay` overlays; 2001 is the defensive fix.
 - **signOut() must reset authConfirmField**: hide `#authConfirmField` + clear its value + reset `autocomplete` to `current-password` — otherwise sign-out from sign-up mode leaves a stale two-field form.
 
 ---

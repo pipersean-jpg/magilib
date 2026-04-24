@@ -677,6 +677,21 @@ async function loadCatalog(){
 }
 function renderCatalog(){
   renderStatsRow();
+  // Filter status strip
+  const _fs = document.getElementById('filterStatus');
+  if (_fs) {
+    if (S.showDrafts) {
+      _fs.style.display = 'block';
+      _fs.style.color = 'var(--status-draft)';
+      _fs.textContent = '▸ Showing Drafts';
+    } else if (S.showSold) {
+      _fs.style.display = 'block';
+      _fs.style.color = 'var(--status-sold)';
+      _fs.textContent = '▸ Showing Sold';
+    } else {
+      _fs.style.display = 'none';
+    }
+  }
   const search=(document.getElementById('catalogSearch').value||'').trim();
   const cond=S.filterCondition||'all';
   const pub=(document.getElementById('filterPublisher')||{}).value||'';
@@ -776,10 +791,15 @@ function renderStatsRow() {
     if (!S.books.length) {
       grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p style="font-weight:600;margin-bottom:6px;">Your library is empty</p><p style="font-size:13px;margin-top:0;">Tap <strong>Add</strong> in the menu to add your first book.</p></div>`;
     } else {
-      const msg = search ? `No results for \u201c${search}\u201d` : 'No books match your filters.';
+      let msg;
+      if (search) msg = `No results for \u201c${search}\u201d`;
+      else if (S.showDrafts) msg = 'No drafts found.';
+      else if (S.showSold) msg = 'No sold books found.';
+      else msg = 'No books match your filters.';
       const clearBtn = search ? `<button class="btn-ghost" onclick="clearSearch()">Clear search</button>` : '';
       grid.innerHTML = `<div class="empty-search-container"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><p>${msg}</p>${clearBtn}</div>`;
     }
+    updateFilterBtn();
     return;
   }
   const isListView = S.viewMode === 'list';
@@ -1401,6 +1421,10 @@ function openEbayModal(){
   window.open(S.currentModalUrl, '_blank');
 }
 function openEditFromModal(id){
+  if (!id && S.currentModalIdx !== undefined) {
+    const b = S.books[S.currentModalIdx];
+    if (b) id = b._id;
+  }
   const sheet = document.querySelector('#modalOverlay .magi-sheet');
   if (sheet) sheet.classList.add('is-fading');
   closeModal();

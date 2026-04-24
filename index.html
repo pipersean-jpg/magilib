@@ -11,7 +11,7 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
-<script src="/fuse.min.js?v=s46"></script>
+<script src="/fuse.min.js?v=s47"></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://acuehbwbwsbbxuqcmnrp.supabase.co" crossorigin>
@@ -424,6 +424,7 @@
       <button onclick="addWishlistItem()" style="margin-left:auto;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">+ Add</button>
     </div>
   </div>
+  <div id="filterStatus" style="display:none;padding:5px 4px 2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.04em;"></div>
   <div class="insights-bar" id="statsRow"></div>
   <div id="booksGrid" class="books-grid"></div>
 </div>
@@ -809,15 +810,15 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s46"></script>
-<script src="/globals.js?v=s46"></script>
-<script src="/auth.js?v=s46"></script>
-<script src="/catalog.js?v=s46"></script>
-<script src="/books.js?v=s46"></script>
-<script src="/pricing.js?v=s46"></script>
-<script src="/conjuring.js?v=s46"></script>
-<script src="/ui.js?v=s46"></script>
-<script src="/publishers.js?v=s46"></script>
+<script src="/supabase.min.js?v=s47"></script>
+<script src="/globals.js?v=s47"></script>
+<script src="/auth.js?v=s47"></script>
+<script src="/catalog.js?v=s47"></script>
+<script src="/books.js?v=s47"></script>
+<script src="/pricing.js?v=s47"></script>
+<script src="/conjuring.js?v=s47"></script>
+<script src="/ui.js?v=s47"></script>
+<script src="/publishers.js?v=s47"></script>
 
 <!-- SERVICE WORKER REGISTRATION -->
 <script>
@@ -910,7 +911,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- EDIT BOOK MODAL -->
-<div class="modal-overlay hidden" id="editModalOverlay" onclick="closeEditModal(event)">
+<div class="modal-overlay hidden" id="editModalOverlay" onclick="closeEditModal(event)" style="z-index:2001;">
   <div class="modal" style="max-width:680px;border-radius:var(--radius-lg);">
     <div class="modal-handle"></div>
     <div class="modal-header">

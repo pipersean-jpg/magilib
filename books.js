@@ -84,6 +84,7 @@ function openEditForm(bookId) {
   document.getElementById('editModalTitle').textContent = isWishlist ? 'Edit Wishlist — ' + b.title : 'Edit — ' + b.title;
 
   document.getElementById('editModalOverlay').classList.remove('hidden');
+  document.body.classList.add('sheet-open');
   // Scroll the modal's own content to top, not the page
   const editScroll = document.getElementById('editModalScroll');
   if (editScroll) editScroll.scrollTop = 0;
@@ -111,12 +112,13 @@ function closeEditModal(e) {
       title: 'Leave without saving?',
       message: 'Your changes will be lost.',
       confirmText: 'Leave',
-      onConfirm: () => { _editDirty = false; overlay.classList.add('hidden'); }
+      onConfirm: () => { _editDirty = false; overlay.classList.add('hidden'); document.body.classList.remove('sheet-open'); }
     });
     return;
   }
   _editDirty = false;
   overlay.classList.add('hidden');
+  document.body.classList.remove('sheet-open');
 }
 
 function _markEditDirty() { _editDirty = true; }
