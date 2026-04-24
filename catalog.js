@@ -1840,7 +1840,7 @@ async function processNextFromQueue() {
   statusEl.className = 'scan-status scanning';
   document.getElementById('scanIcon').textContent = '⏳';
   document.getElementById('scanTitle').textContent = 'Analysing queued photo…';
-  document.getElementById('scanDetail').textContent = 'Claude is reading the cover metadata.';
+  document.getElementById('scanDetail').textContent = 'AI is reading the cover metadata.';
   const b64 = scanDataUrl.split(',')[1];
   const mimeMatch = scanDataUrl.match(/data:([^;]+);/);
   const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
@@ -2111,10 +2111,19 @@ async function searchCoverSource(source) {
       // 1. Query book_catalog for stored cover — reliable direct URLs, no page scraping
       try {
         statusEl.textContent = 'Searching local database…';
+        var _titleBase = title.trim().replace(/^(the|a|an)\s+/i,'');
         var { data: catRows } = await _supa.from('book_catalog')
           .select('cover_url,cover_source')
-          .ilike('title', title.trim() + '%')
+          .ilike('title', _titleBase + '%')
           .limit(1);
+        // If no match on bare title, try with leading "The"
+        if ((!catRows || !catRows.length) && _titleBase !== title.trim()) {
+          const { data: catRows2 } = await _supa.from('book_catalog')
+            .select('cover_url,cover_source')
+            .ilike('title', 'the ' + _titleBase + '%')
+            .limit(1);
+          if (catRows2 && catRows2.length) catRows = catRows2;
+        }
         if (catRows && catRows.length && catRows[0].cover_url) {
           var catSrc = catRows[0].cover_source || '';
           if (catSrc === 'supabase_storage') {
@@ -2128,7 +2137,8 @@ async function searchCoverSource(source) {
       // 2. Look up CONJURING_DB — get CA cover from C: codes in entry.i or entry.c
       if (!caUrl && typeof CONJURING_DB !== 'undefined') {
         var nk = title.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
-        var entry = CONJURING_DB[nk];
+        var nkNoArt = nk.replace(/^(the|a|an)\s+/,'');
+        var entry = CONJURING_DB[nk] || CONJURING_DB['the ' + nkNoArt] || CONJURING_DB[nkNoArt];
         if (!entry) {
           var sk = nk.split(':')[0].trim();
           if (sk !== nk) entry = CONJURING_DB[sk];

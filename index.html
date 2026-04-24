@@ -365,10 +365,11 @@
     </div>
     <div class="el-save">
       <div id="duplicateBanner" style="display:none;background:#fdecea;color:#a32d2d;font-size:12px;padding:10px 16px;border-radius:8px;margin-bottom:10px;border:0.5px solid #f5b7b5;"></div>
-      <div class="save-bar">
-        <div class="save-note">Title, author, condition and price required.</div>
-        <button class="btn-secondary" onclick="clearForm()">Clear</button>
+      <div class="save-stack">
         <button class="btn-primary" id="saveBtn" onclick="saveBook()">Save to Library</button>
+        <div class="save-note">Title and author required</div>
+        <button class="btn-secondary" id="saveDraftBtn" onclick="saveDraft()">Save as Draft</button>
+        <button class="btn-ghost-danger" onclick="confirmClearForm()">Clear Form</button>
       </div>
     </div>
   </div>

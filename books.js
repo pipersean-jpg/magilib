@@ -241,12 +241,15 @@ function toTitleCase(str) {
 // For publisher fields: check the canonical PUBLISHERS list for an exact case-insensitive match first
 function toTitleCasePublisher(str) {
   if (!str) return str;
+  // Decode HTML entities and strip trailing US state abbreviations (e.g. ", CA")
+  let cleaned = str.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  cleaned = cleaned.replace(/,\s*[A-Za-z]{2}\.?\s*$/, '').trim();
   if (typeof PUBLISHERS !== 'undefined') {
-    const lower = str.toLowerCase().trim();
+    const lower = cleaned.toLowerCase();
     const match = PUBLISHERS.find(p => p.toLowerCase() === lower);
-    if (match) return match; // return the canonical casing from the list
+    if (match) return match;
   }
-  return toTitleCase(str);
+  return toTitleCase(cleaned);
 }
 
 // Apply title case to a field value
@@ -408,8 +411,6 @@ async function saveBook() {
   const author = document.getElementById('f-author').value.trim();
   const price = document.getElementById('f-price').value;
   if (!title || !author) { showToast('Title and Author are required', 'error'); return; }
-  if (!S.condition) { showToast('Please select a condition', 'error'); return; }
-  if (!price || isNaN(parseFloat(price))) { showToast('Please enter a valid market price', 'error'); return; }
   if (!_supaUser) { showToast('Not signed in', 'error'); return; }
 
   const artist = document.getElementById('f-artist') ? document.getElementById('f-artist').value.trim() : '';
@@ -461,6 +462,56 @@ async function saveBook() {
   clearForm();
   if (wasDraft) { showDraftsInCatalog(); } else { renderCatalog(); }
   btn.disabled = false; btn.textContent = 'Save to Library';
+}
+
+async function saveDraft() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { showToast('Title is required to save a draft', 'error'); return; }
+  if (!_supaUser) { showToast('Not signed in', 'error'); return; }
+  if (!window._isOnline) { showToast("You're offline — drafts can't be saved right now", 'error', 4000); return; }
+  const btn = document.getElementById('saveDraftBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
+  const price = document.getElementById('f-price').value;
+  const draftRow = {
+    user_id: _supaUser.id,
+    title,
+    author: document.getElementById('f-author').value.trim(),
+    artist_subject: document.getElementById('f-artist') ? document.getElementById('f-artist').value.trim() : '',
+    edition: document.getElementById('f-edition').value.trim(),
+    year: document.getElementById('f-year').value.trim(),
+    publisher: document.getElementById('f-publisher').value.trim(),
+    isbn: (document.getElementById('f-isbn')||{value:''}).value.trim(),
+    condition: S.condition || '',
+    market_price: parseFloat(price) || null,
+    purchase_price: parseFloat(document.getElementById('f-cost').value) || null,
+    notes: document.getElementById('f-notes').value.trim(),
+    cover_url: S.coverUrl || null,
+    date_added: new Date().toISOString().slice(0,10),
+    condition_flags: S.conditionFlags.join(', '),
+    sold_status: '', star_rating: null,
+    collectors_note: (document.getElementById('f-collector-note')||{value:''}).value.trim(),
+    where_acquired: (document.getElementById('f-location')||{value:''}).value.trim(),
+    draft_status: 'Draft',
+  };
+  const { error } = await _supa.from('books').insert(draftRow);
+  btn.disabled = false; btn.textContent = 'Save as Draft';
+  if (error) { showToast('Save failed: ' + error.message, 'error', 5000); return; }
+  showToast('✓ Saved to Drafts', 'success', 3000);
+  clearForm();
+  renderCatalog();
+}
+
+function confirmClearForm() {
+  magiConfirm({
+    title: 'Clear form?',
+    message: 'All unsaved details will be lost.',
+    confirmText: 'Clear',
+    onConfirm: () => {
+      clearForm();
+      window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0;
+      setTimeout(() => { window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; }, 50);
+    }
+  });
 }
 
 // ── SOLD / RETURN TO LIBRARY ──

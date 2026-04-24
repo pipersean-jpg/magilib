@@ -300,6 +300,10 @@ input[type=file].file-input{display:none;}
 .condition-opt:hover:not(.selected){background:var(--paper-warm);}
 .save-bar{display:flex;gap:12px;align-items:center;justify-content:flex-end;padding:16px 20px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);margin-bottom:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));box-sizing:border-box;}
 .save-bar .save-note{font-size:12px;color:var(--ink-faint);flex:1;}
+.save-stack{display:flex;flex-direction:column;gap:10px;padding:16px 20px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);margin-bottom:16px;}
+.save-stack .save-note{font-size:11px;color:var(--ink-faint);text-align:center;margin-top:-4px;}
+.btn-ghost-danger{padding:11px 18px;border:none;border-radius:var(--radius-btn);font-family:'DM Sans',sans-serif;font-size:var(--text-base);font-weight:500;cursor:pointer;background:transparent;color:var(--ink-faint);transition:color 0.1s;min-height:48px;-webkit-tap-highlight-color:transparent;}
+.btn-ghost-danger:active{color:#b91c1c;}
 
 /* ── Buttons ───────────────────────────────────────────────────── */
 .btn-secondary{padding:11px 18px;border:0.5px solid var(--border-med);border-radius:var(--radius-btn);font-family:'DM Sans',sans-serif;font-size:var(--text-base);font-weight:500;cursor:pointer;background:var(--paper-warm);color:var(--ink-light);transition:color 0.1s;min-height:48px;-webkit-tap-highlight-color:transparent;}

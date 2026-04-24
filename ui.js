@@ -148,12 +148,36 @@ async function quickAddFromQueue() {
       });
 
     } catch(e) {
-      failed++;
-      console.warn('Quick add failed for item ' + done + ':', e.message);
+      // Scan failed — save as draft so user can correct it manually
+      try {
+        const cover = item.dataUrl ? await compressImage(item.dataUrl, 300, 0.6).catch(() => null) : null;
+        const failRow = {
+          user_id: _supaUser.id, title: '⚠ Unknown (scan failed)', author: '',
+          artist_subject: '', edition: '', year: '', publisher: '', isbn: '',
+          condition: '', market_price: null, purchase_price: null,
+          notes: 'AI could not identify this book. Please edit details or delete.',
+          cover_url: cover, date_added: new Date().toISOString().slice(0,10),
+          condition_flags: '', sold_status: '', star_rating: null,
+          collectors_note: '', where_acquired: '', draft_status: 'Draft'
+        };
+        const { data: failInserted } = await _supa.from('books').insert(failRow).select().single();
+        S.books.unshift({
+          _id: failInserted ? failInserted.id : null,
+          title: '⚠ Unknown (scan failed)', author: '', artist: '', edition: '',
+          year: '', publisher: '', isbn: '', condition: '', price: '', cost: '',
+          notes: 'AI could not identify this book. Please edit details or delete.',
+          coverUrl: cover, rawCover: cover,
+          dateAdded: new Date().toISOString().slice(0,10),
+          flags: '', sold: '', star: '', collectorNote: '', location: '', draft: 'Draft'
+        });
+      } catch(saveErr) {
+        failed++;
+      }
     }
   }
 
-  // All done — re-render once at the end
+  // All done — show progress while re-render runs
+  _setQueueProgress('Saving to your library…', 100);
   renderCatalog();
   _clearQueueProgress();
 
@@ -162,8 +186,8 @@ async function quickAddFromQueue() {
   const added = total - failed;
   const summary = failed === 0
     ? added + ' draft' + (added !== 1 ? 's' : '') + ' added to your library.'
-    : added + ' added, ' + failed + ' failed.';
-  showToast('✓ ' + summary, failed === 0 ? 'success' : 'info', 3500);
+    : added + ' added' + (failed > 0 ? ', ' + failed + ' saved as drafts with scan warning' : '') + '.';
+  showToast('✓ ' + summary, 'success', 3500);
 
   if (added > 0) {
     setTimeout(() => {
@@ -804,7 +828,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "The price estimate seems wrong or missing.",
-    a: "Price estimates are pulled from eBay sold listings and specialist magic book dealers via the Claude AI. If results are missing, check your internet connection and try again. For obscure titles, results may be sparse — the eBay link in the detail modal lets you search manually."
+    a: "Price estimates are pulled from eBay sold listings and specialist magic book dealers. If results are missing, check your internet connection and try again. For obscure titles, results may be sparse — the eBay link in the detail modal lets you search manually."
   }
 ];
 
