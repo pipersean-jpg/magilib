@@ -10,7 +10,7 @@ const handoffPath   = path.join(rootPath, 'SESSION_HANDOFF.md');
 const syncScriptPath = path.join(__dirname, 'sync-claude-to-notion.js');
 const memoryPath    = path.join(
   process.env.HOME,
-  '.claude/projects/-Users-seanpiper/memory/project_magilib.md'
+  '.claude/projects/-Users-seanpiper-magilib/memory/project_magilib.md'
 );
 
 // ─── Parsers ──────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ if (hoursSince > 6) {
 const handoffContent = fs.readFileSync(handoffPath, 'utf-8');
 const { sessionNum, commitSummary, builtLines, issues, nextLines } = parseHandoff(handoffContent);
 
-// Step 1 — Inject "Last Session" summary into CLAUDE.md (so it's in auto-loaded context next session)
+// Step 1 — Inject "Last Session" summary into CLAUDE.md (compact — 6 build items + issues max)
 const claudeContent = fs.readFileSync(claudePath, 'utf-8');
 const updatedClaude = updateClaudeMd(claudeContent, sessionNum, builtLines, issues);
 if (updatedClaude !== claudeContent) {

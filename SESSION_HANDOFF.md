@@ -1,65 +1,59 @@
-# SESSION HANDOFF — 2026-04-24 (Session 47)
+# SESSION HANDOFF — 2026-04-24 (Session 48)
 
 ## Session Summary
-Device walkthrough continued. Feature 3 (Library) code-reviewed — clean. Three device bugs found and fixed: Drafts empty state message, filter active indicator on Library page, and Edit modal z-index/scroll-lock. SW bumped to s47. Not yet device-retested — verify Edit fix first thing next session, then continue walkthrough (Edit, Status).
+Feature 4 (Edit) code review + device walkthrough. Four bugs found and fixed: saveEdit ID lookup, z-index hierarchy (cover picker + edit modal), and dirty-check not firing after condition/flag button taps. All Edit flows confirmed working on device. Feature 5 (Status) not started.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### Library Code Review ✅
-- Subagent reviewed: search, filter, sort, view detail, modal wiring — all clean
-- `b._id` usage confirmed correct throughout
-- One pre-existing null-guard confirmed (`showWishlistChip` — already handled)
+### Feature 4 — Edit device walkthrough ✅
+- Steps 1–4 passed on device: modal opens/scrolls, all fields edit + save correctly, condition adjustment works
+- Step 5 (cover change): fixed — Magic Sources picker was appearing behind Edit modal
+- Step 6 (dirty-check on backdrop): fixed — was not firing after condition button taps
+- Step 7 (PWA kill/reopen): skipped — same code path as step 6; Sean confirmed comfortable
 
-### Bug Fix 1 — Drafts empty state + filter button count
-**catalog.js**
-- Empty state message is now context-aware: "No drafts found." / "No sold books found." / "No books match your filters."
-- `updateFilterBtn()` now called in the empty-state early-return path — fixes "Show 107 Books" showing when no drafts exist (count was stale from last full render)
-
-### Bug Fix 2 — Filter active indicator on Library page
-**index.html**
-- Added `<div id="filterStatus">` between toolbar and insights bar
-
-**catalog.js** (`renderCatalog`)
-- Drives `#filterStatus`: shows `▸ Showing Drafts` (draft colour) or `▸ Showing Sold` (sold colour) when active; hidden otherwise
-
-### Bug Fix 3 — Edit modal z-index + iOS scroll lock
-**index.html**
-- `#editModalOverlay` now has `style="z-index:2001"` — raised above all z-index:1000 overlays (same treatment as coverPickerOverlay)
-
+### Bug Fix 1 — saveEdit() ID lookup
 **books.js**
-- `openEditForm()`: adds `document.body.classList.add('sheet-open')` for iOS scroll lock
-- `closeEditModal()`: removes `sheet-open` in ALL close paths (normal close + dirty-check confirm callback)
+- `openEditForm()` now sets `S.currentEditId = b._id` at form-open time
+- `saveEdit()` now looks up book by `S.currentEditId` (was: `S.books[S.currentModalIdx]`) — safe against list re-sort between open and save
 
-**catalog.js**
-- `openEditFromModal(id)`: falls back to `S.books[S.currentModalIdx]._id` when called without an ID — fixes broken static "✏ Edit" button in `#modalActionsArea`
+### Bug Fix 2 — Z-index hierarchy
+**index.html**
+- `#coverPickerOverlay`: `z-index:2001` → `3000` (`--z-fullscreen`) — must open above edit modal
+- `#editModalOverlay`: `z-index:2001` → `2000` (`--z-dialog`) — correct semantic level; 2000 > sheets at 1000
+- `#dialogOverlay` (magiConfirm): unchanged at 2000 via CSS; later in DOM (line 1142 vs 914) → naturally stacks above edit modal on z-index tie
 
-### Version bump
-- All `?v=s46` → `?v=s47`; `CACHE_NAME` → `magilib-sw-s47`
+### Bug Fix 3 — Dirty-check not firing after condition/flag taps
+**books.js**
+- `setEditCondition()`: added `_markEditDirty()` — condition buttons are custom `<button>` elements, bypass input/change listeners
+- `toggleEditFlag()`: added `_markEditDirty()`
+- `clearEditFlags()`: added `_markEditDirty()`
+- Note: `_applyEditConditionAdjustment()` sets `priceEl.value` programmatically — does not fire `input` event, so marking dirty at setEditCondition() is the correct point
+
+### CLAUDE.md updates
+- Added "Diagnose before implementing" absolute rule
+- Fixed "Pro Shelf" → "Magic Sources" in two historical references
+- SW bumped to s48
 
 ---
 
 ## Unresolved / Carried Forward
 
-- **Edit modal fix unverified on device** — z-index + scroll-lock changes look correct in code; needs device retest next session before proceeding
-- **Feature 4 — Edit**: full device test (all fields, cover update, dirty-check dialog) — pending Edit modal fix verify
 - **Feature 5 — Status**: code review → device test (Mark Sold, + Wishlist, Move to Library) — not started
 - **Features 6–8** (Pricing, Settings, Onboarding) — not started
-- **book_catalog Supabase author format** — `normalizeConjuringAuthor()` applied on fill; not device-tested yet
 
 ---
 
 ## Next Session Priorities
-1. **Verify Edit modal fix on device** — open a book → Edit Details → confirm modal is scrollable and interactive
-2. **Feature 4 — Edit**: all fields, cover update, dirty-check dialog after PWA reload
-3. **Feature 5 — Status**: Mark Sold, + Wishlist, Move to Library
+1. **Feature 5 — Status**: subagent code review → device test (Mark Sold, + Wishlist, Move to Library)
+2. **Features 6–8**: Pricing, Settings, Onboarding walkthroughs
 
 ---
 
 ## Model Learnings This Session
 
-- **`updateFilterBtn()` must be called in ALL renderCatalog exit paths**: the early-return when `!books.length` skipped the call — stale count persisted in the "Show X Books" button. Always call `updateFilterBtn()` before returning from any branch.
-- **Edit modal `body.sheet-open` pattern**: `openEditForm()` must add `sheet-open` to body (iOS scroll lock); `closeEditModal()` must remove it in ALL close paths including the dirty-check `onConfirm` callback — missing it in the callback leaves the body locked.
-- **`openEditFromModal()` without ID**: the static `#modalActionsArea` Edit button calls it without args. Guard with `if (!id) id = S.books[S.currentModalIdx]?._id` to handle both call sites.
-- **Same z-index + opacity:0 does not guarantee non-blocking**: at z-index:1000, a fading `.magi-sheet-overlay` (opacity:0, pointer-events:none) should not block, but raising `#editModalOverlay` to z-index:2001 is the safe, defensive fix — matches the coverPickerOverlay pattern already established.
+- **Custom button handlers bypass input/change dirty listeners**: `setEditCondition()`, `toggleEditFlag()`, `clearEditFlags()` are all wired to `<button>` elements — not inputs. The `setTimeout` listener attachment in `openEditForm()` only covers `input`, `textarea`, `select`. All custom state-mutating handlers must call `_markEditDirty()` directly.
+- **`_applyEditConditionAdjustment()` sets `.value` programmatically**: programmatic `.value` assignment does not fire `input` or `change` events. Mark dirty at the call site (`setEditCondition`), not inside the adjustment function.
+- **Z-index tie-breaking by DOM order**: two `position:fixed` elements at the same z-index — the later element in the DOM wins. `#dialogOverlay` (line 1142) > `#editModalOverlay` (line 914) at z-index:2000. Exploit this rather than incrementing values by 1.
+- **saveEdit() should look up by ID, not array index**: `S.currentModalIdx` reflects the open modal, not the open edit form — they can diverge if the list re-sorts. Always store the target ID at form-open time (`S.currentEditId`) and look up by `.find()` in the save path.
