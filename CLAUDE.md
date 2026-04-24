@@ -1,8 +1,8 @@
-# MagiLib — Session 49
+# MagiLib — Session 50
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — next: Settings (Feature 7), then Onboarding.
+- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Settings (Feature 7) code review ✅ + 9 bugs fixed, needs re-test. Next: Settings re-test, then Onboarding (Feature 8).
 
 ---
 
@@ -47,18 +47,18 @@
 
 ---
 
-## Last Session (Session 49)
-- ### Feature 5 — Status code review + device walkthrough ✅
-- Subagent code review identified two real issues; both fixed before device test
-- Device walkthrough: all 3 flows confirmed on device (Mark Sold, + Wishlist, Move to Library)
-- ### Bug Fix 1 — Dead toggleSold removed
-- **catalog.js**
-- Removed stale `toggleSold()` (lines 1712–1723) — no-confirmation, no-offline version
+## Last Session (Session 50)
+- ### Feature 7 — Settings code review (subagent)
+- Subagent reviewed: profile, security, currency, condition presets, stat cards, CSV export/import, danger zone.
+- ### Bug Fix 1 — Offline guard on password change
+- **auth.js**
+- Added `if (!window._isOnline)` check at top of `changePasswordFromSettings()`
+- Without it: offline failure showed "Current password is incorrect" — wrong message
 
 **Known issues carried forward:**
-- **Feature 7 — Settings**: code review → device test (profile, security, currency, condition presets, stat cards, CSV export/import) — not started
-- **Feature 8 — Onboarding**: welcome + feature tour — not started
-- **Wishlist UX polish**: pre-beta, small layout changes only — not started
+- **Feature 7 — Settings device walkthrough**: needs re-test with all fixes applied. Key flows to verify:
+-   - Condition preset save → toast fires
+-   - Display name → no Google Save Password prompt on desktop
 
 ---
 
