@@ -28,6 +28,7 @@ function openEditForm(bookId) {
   const b = S.books.find(book => book._id === bookId);
   if (!b) return;
   const idx = S.books.indexOf(b);
+  S.currentEditId = b._id;
   S.editRowNum = idx + 2; // +2 for header row and 0-index offset
   S.editCoverUrl = b.rawCover || b.coverUrl || '';
 
@@ -124,8 +125,8 @@ function closeEditModal(e) {
 function _markEditDirty() { _editDirty = true; }
 
 async function saveEdit() {
-  const idx = S.currentModalIdx;
-  const b = S.books[idx];
+  const b = S.books.find(book => book._id === S.currentEditId);
+  const idx = b ? S.books.indexOf(b) : -1;
   if (!b || !b._id) { showToast('Could not determine book to update', 'error'); return; }
   if (!_supaUser) { showToast('Not signed in', 'error'); return; }
 

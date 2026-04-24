@@ -45,6 +45,7 @@ Before running `handoff`, Claude Code MUST:
 - **Subagent discipline:** for any open-ended grep, multi-file exploration, or research task, spawn an Explore or general-purpose subagent. Never burn main context on raw file-digging.
 - **Auto-retro:** after any session with bugfixes, architecture changes, or multi-step work, write `docs/retros/YYYY-MM-DD-topic.md` with: What was attempted · What worked · What didn't · What to carry forward.
 - **Consultation:** for risky architecture, security, or migration decisions, the trigger phrase **`consult panel`** spawns 2–3 parallel subagents with independent analytical framings. Synthesize all before proceeding.
+- **Diagnose before implementing:** Always understand root cause and review the full solution before writing code. Aim for best practice — not a quick fix. Keep code efficient and consistent with the app's established patterns for robust, future-proof operation.
 
 ---
 
@@ -167,7 +168,7 @@ Before running `handoff`, Claude Code MUST:
 **New Layout (Session 36) — needs device review next session:**
 - [x] Home/Summary page (`#view-home`) — greeting, stats, Magic Fact, recent books, CTA
 - [x] Bottom nav (mobile) — 5 tabs: Home · Library · Add · Wishlist · Settings
-- [x] Cover picker restructured — 4-option icon list (Take photo · Gallery · Pro Shelf · Link)
+- [x] Cover picker restructured — 4-option icon list (Take photo · Gallery · Magic Sources · Link)
 - [x] Desktop 50/50 — Cover + Details side by side on ≥768px
 - [ ] Device test: all New Layout changes (see SESSION_HANDOFF.md checklist)
 
@@ -445,7 +446,7 @@ Before running `handoff`, Claude Code MUST:
 - `updatePriceLabels()` — dynamic price labels on Add + Edit modal tied to currency setting
 - Cover picker z-index fix: `#coverPickerOverlay` at `--z-dialog` (2000)
 - Add screen scroll-to-top robust fix: triple-target + 50ms setTimeout repeat
-- Cover picker: "Local Database" → "The Pro Shelf" (button); thumbnail label → "Courtesy of"
+- Cover picker: "Local Database" → "Magic Sources" (button); thumbnail label → "Courtesy of"
 - Lazy-load 3.4 MB static DB scripts post-auth: `loadStaticDBs()` in `auth.js`, 4 `<script defer>` tags removed from `<head>`
 - MagicRef-first search priority: `_isMagicRef()` + split in `conjuringTopMatches()`
 - Currency switching guard: `magiConfirm` in `saveSettings()` warns when switching currency with existing books
