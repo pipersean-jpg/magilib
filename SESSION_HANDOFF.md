@@ -1,60 +1,55 @@
-# SESSION HANDOFF — 2026-04-21 (Session 44)
+# SESSION HANDOFF — 2026-04-24 (Session 45)
 
 ## Session Summary
-4 admin portal improvements: price CSV template download, library health fix actions with root-cause explanations, Magic Facts management page (add/delete/CSV upload), and main app now merges Supabase magic_facts with static array.
+Documentation + audit session. No code changes. Integrated the external beta audit (`magilib_beta_fix_prompts.md`) into CLAUDE.md as a standing short-form backlog. Confirmed 13 of 16 audit items already resolved; one outstanding (event delegation, Phase 2); two are Phase 2 features. Next session: device walkthrough + beta sign-off.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### 1. Price CSV — template download + description fix — magilib-admin/prices.js + index.html
-- Added `downloadPriceTemplate()` — generates a `price_db_template.csv` with correct headers and two example rows
-- Updated hint text: now explains upsert/merge behaviour (rows with same title+author+source are updated; all other rows preserved)
-- "Download CSV Template" button added above the file input
+### 1. CLAUDE.md — Pre-Beta Fix Backlog section inserted
+- New "Pre-Beta Fix Backlog (short-form)" section added immediately before "## Technical Learnings"
+- P1–P5 numbered items (16 total) with pointer to `magilib_beta_fix_prompts.md` for full detail
+- No existing content removed or overwritten
 
-### 2. Library Health — fix actions with explanations — magilib-admin/app.js + index.html
-- Each health card now has a plain-English explanation of why the issue occurs
-- **Missing Cover → "Enrich from book_catalog"**: queries `book_catalog` by norm_key, copies `cover_url` to matched books
-- **Missing Price → "Enrich from price_db"**: queries `price_db` by norm_key, applies highest matched price per book
-- **Stuck in Draft → "Publish All Drafts"**: sets `draft_status = null` for all Draft books
-- Each button has an inline status message; loadHealth() refreshes after fix
-- style.css: `button.small`, `button.secondary.danger`, `.fix-bar` classes added
+### 2. SESSION_HANDOFF.md — Next Session Priorities updated (previous session)
+- Added items 3–5 to the priorities list:
+  - P1 #1: Lazy-load 4 static DB scripts (already done Session 20 — carried as reminder)
+  - P1 #4: inputmode="decimal" (already done Session 22 — carried as reminder)
+  - P3 #7: Splash pulse animation (already done Session 22 — carried as reminder)
+- Note: all three of those items are already implemented; they were added as reference pointers only
 
-### 3. Magic Facts admin page — magilib-admin/app.js + index.html
-- New "Magic Facts" nav item + `section-facts` section
-- Add single fact via text field + Add button
-- Upload CSV with a single `fact` column — batched insert, with Download Template button
-- Delete individual facts with confirmation
-- "Custom Facts" list table refreshes after each action
-- If `magic_facts` table doesn't exist, shows inline SQL to run in Supabase dashboard
-- SQL migration: `magilib-admin/sql/create_magic_facts.sql` — run once in Supabase SQL Editor
-
-### 4. Main app — magic_facts Supabase merge — catalog.js
-- `renderHomeView()` magic fact block now async: fetches `magic_facts` from Supabase and merges with `MAGIC_FACTS` static array
-- Falls back silently to static array if table doesn't exist or fetch fails
-- Rotation index applies across the combined pool
+### 3. Audit reconciliation (no file changes)
+- External audit (`magilib_beta_fix_prompts.md`) cross-referenced against CLAUDE.md completed tasks
+- 13/16 items resolved; item #13 (event delegation) deferred to Phase 2; items #15/#16 are Phase 2 features; item #14 (preconnect) was already present before the audit
 
 ---
 
 ## Unresolved / Carried Forward
 
-### Needs device verification
+### Needs device verification (unchanged from Session 44)
 - All Session 43 fixes (7 items)
 - All Session 42 fixes (18 items)
 - Full beta walkthrough: auth → add → library → edit → status → pricing → settings → onboarding
 
-### Pre-requisite for Magic Facts
+### Outstanding audit item
+- **#13 — Event delegation migration** (Phase 2): 100+ inline `onclick` handlers remain. Not a beta blocker. Defer until Phase 2 refactor sprint.
+
+### Pre-requisite for Magic Facts (unchanged)
 - Run `magilib-admin/sql/create_magic_facts.sql` in Supabase SQL Editor before using Magic Facts admin page
 
 ---
 
 ## Next Session Priorities
-1. **Device walkthrough** — all fixes end-to-end
+1. **Device walkthrough** — full end-to-end beta checklist on device
 2. **Beta sign-off** — if walkthrough passes, ship to beta testers
+3. **P1 #1: Lazy-load the 4 static DB scripts after auth** (see magilib_beta_fix_prompts.md item 1)
+4. **P1 #4: Add `inputmode="decimal"` to all price/cost inputs** (see magilib_beta_fix_prompts.md item 4)
+5. **P3 #7: Add spinner/pulse animation to splash screen** (see magilib_beta_fix_prompts.md item 7)
 
 ---
 
 ## Model Learnings This Session
-- **magilib-admin has no GitHub remote**: all admin commits are local only — do not attempt `git push` from that repo.
-- **Health fix queries use publishable key**: RLS applies. Works because all books belong to the same user (Sean). If multi-tenant, would need service role key.
-- **magic_facts Supabase table**: created via SQL migration, not via SDK DDL. Admin page shows inline SQL if table is missing — graceful degradation.
+- **Audit items 1–12 and 14 were all already resolved** before the audit was filed. The audit was written against an earlier build snapshot. Trust CLAUDE.md completed task list as ground truth.
+- **`magilib_beta_fix_prompts.md` is authoritative** for full fix descriptions. The short-form backlog in CLAUDE.md is a navigation index only — always open the source file for implementation detail.
+- **Event delegation (#13) is the only live code-quality debt** from the audit. Safe to skip for beta; flag for first Phase 2 engineering sprint.

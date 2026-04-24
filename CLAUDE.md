@@ -1,4 +1,4 @@
-# MagiLib Project Status — Session 44
+# MagiLib Project Status — Session 45
 
 ## Current Project Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
@@ -48,16 +48,16 @@ Before running `handoff`, Claude Code MUST:
 
 ---
 
-## Last Session (Session 44)
-- ### 1. Price CSV — template download + description fix — magilib-admin/prices.js + index.html
-- Added `downloadPriceTemplate()` — generates a `price_db_template.csv` with correct headers and two example rows
-- Updated hint text: now explains upsert/merge behaviour (rows with same title+author+source are updated; all other rows preserved)
-- "Download CSV Template" button added above the file input
-- ### 2. Library Health — fix actions with explanations — magilib-admin/app.js + index.html
-- Each health card now has a plain-English explanation of why the issue occurs
+## Last Session (Session 45)
+- ### 1. CLAUDE.md — Pre-Beta Fix Backlog section inserted
+- New "Pre-Beta Fix Backlog (short-form)" section added immediately before "## Technical Learnings"
+- P1–P5 numbered items (16 total) with pointer to `magilib_beta_fix_prompts.md` for full detail
+- No existing content removed or overwritten
+- ### 2. SESSION_HANDOFF.md — Next Session Priorities updated (previous session)
+- Added items 3–5 to the priorities list:
 
 **Known issues carried forward:**
-- ### Needs device verification
+- ### Needs device verification (unchanged from Session 44)
 - All Session 43 fixes (7 items)
 - All Session 42 fixes (18 items)
 
@@ -256,6 +256,37 @@ Before running `handoff`, Claude Code MUST:
 - **Market Sync panel in detail sheet**: `toggleMarketSync()`, `loadMarketSync()`, `.btn-action` grid in modal — remove from beta, keep in code as Phase 2 (comment out rather than delete)
 - **`magilib_market_db.js`**: large static JS file loaded on every page — can be deferred or removed from `<head>` if Market Sync is hidden
 - **Auth**: check if `authSwitchMode()` / `authUsernameField` still needed once OAuth is primary signup path
+
+## Pre-Beta Fix Backlog (short-form)
+> Full detail: see magilib_beta_fix_prompts.md
+
+### P1 — Performance & Load Time
+1. Lazy-load the 4 static DB scripts after auth
+2. Move the publisher `<datalist>` to a JS array
+3. Add `loading="lazy"` to all book cover `<img>` tags
+4. Add `inputmode="decimal"` to all price/cost inputs
+
+### P2 — Data Integrity & Offline
+5. Fix currency switching to prevent mixed-currency data
+6. Add a basic Service Worker for shell caching + offline read
+
+### P3 — UX & Trust
+7. Add a spinner/pulse animation to the splash screen
+8. Show live condition price adjustment in Add and Edit
+9. Add batch queue progress indicator
+10. Replace iOS ghost-click `setTimeout` with `requestAnimationFrame`
+
+### P4 — Code Quality & Accessibility
+11. Add `aria-label` to all icon-only buttons
+12. Sanitize user input before DOM insertion
+13. Migrate inline `onclick` handlers to event delegation (Phase 2 prep)
+14. Add `rel="preconnect"` for Supabase and CDN domains
+
+### P5 — Delight (Phase 2 Seeds)
+15. Condition flag value modifiers in Settings
+16. Populate the AI Info Card with book trivia
+
+---
 
 ## Technical Learnings
 - **`S._priceUserEdited` flag pattern**: track manual price edits with a flag on `S`; reset on fetch and `clearForm()`; check before condition-adjustment overwrites. Prevents fetch result clobbering user entry.
