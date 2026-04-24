@@ -1,8 +1,8 @@
-# MagiLib — Session 48
+# MagiLib — Session 49
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ — next: Status (Feature 5), then Pricing, Settings, Onboarding.
+- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — next: Settings (Feature 7), then Onboarding.
 
 ---
 
@@ -47,17 +47,18 @@
 
 ---
 
-## Last Session (Session 48)
-- ### Feature 4 — Edit device walkthrough ✅
-- Steps 1–4 passed on device: modal opens/scrolls, all fields edit + save correctly, condition adjustment works
-- Step 5 (cover change): fixed — Magic Sources picker was appearing behind Edit modal
-- Step 6 (dirty-check on backdrop): fixed — was not firing after condition button taps
-- Step 7 (PWA kill/reopen): skipped — same code path as step 6; Sean confirmed comfortable
-- ### Bug Fix 1 — saveEdit() ID lookup
+## Last Session (Session 49)
+- ### Feature 5 — Status code review + device walkthrough ✅
+- Subagent code review identified two real issues; both fixed before device test
+- Device walkthrough: all 3 flows confirmed on device (Mark Sold, + Wishlist, Move to Library)
+- ### Bug Fix 1 — Dead toggleSold removed
+- **catalog.js**
+- Removed stale `toggleSold()` (lines 1712–1723) — no-confirmation, no-offline version
 
 **Known issues carried forward:**
-- **Feature 5 — Status**: code review → device test (Mark Sold, + Wishlist, Move to Library) — not started
-- **Features 6–8** (Pricing, Settings, Onboarding) — not started
+- **Feature 7 — Settings**: code review → device test (profile, security, currency, condition presets, stat cards, CSV export/import) — not started
+- **Feature 8 — Onboarding**: welcome + feature tour — not started
+- **Wishlist UX polish**: pre-beta, small layout changes only — not started
 
 ---
 
@@ -66,8 +67,8 @@
 - [ ] Add: scan/photo, manual entry, batch queue, save
 - [ ] Library: search, filter, sort, view detail
 - [ ] Edit: all fields, cover update, dirty-check dialog after PWA reload
-- [ ] Status: Mark Sold, + Wishlist, Move to Library
-- [ ] Pricing: Fetch estimate (Add) + stored price display + eBay link (Library)
+- [x] Status: Mark Sold, + Wishlist, Move to Library
+- [x] Pricing: Fetch estimate (Add) + stored price display + eBay link (Library)
 - [ ] Settings: profile, security, currency, condition presets, stat cards, CSV export/import
 - [ ] Onboarding: welcome + feature tour for new users
 
@@ -77,6 +78,7 @@
 - **P4:** Migrate inline `onclick` handlers to event delegation — 100+ handlers, memory leak under re-render. Use `event.target.closest()` on stable containers (`#view-catalog`, `#modalOverlay`, `#view-entry`).
 - **P5:** Condition flag value modifiers in Settings (Signed +20%, No Dustjacket -30%) alongside `condPct_*`
 - **P5:** AI Info Card (`#aiInfoCard`) — 2-sentence book trivia from cover scan → `#aiInfoContent`
+- **P3 (pre-beta):** Wishlist page layout — too clunky, needs small layout/UX polish before launch
 - **Multi-currency:** all `market_price` stored in USD; display layer × FX rate; migrate `fx_rates` table; rates currently hardcoded in catalog.js + ui.js + pricing.js
 
 ---
