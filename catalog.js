@@ -792,7 +792,14 @@ function renderStatsRow() {
   if (row) row.innerHTML = parts.join(sep);
 }
 
-  document.getElementById('statTotal') && (document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='— / '+S.books.length));
+  const sectionTotal = S.showWishlist
+    ? S.books.filter(b => b.sold === 'Wishlist').length
+    : S.showDrafts
+      ? S.books.filter(b => b.draft === 'Draft').length
+      : S.showSold
+        ? S.books.filter(b => b.sold === 'Sold').length
+        : S.books.filter(b => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft').length;
+  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent='— / '+sectionTotal);
   document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—');
   document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—');
   document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—');
@@ -836,8 +843,7 @@ function renderStatsRow() {
     if (!groupMap.has(k)) groupMap.set(k, []);
     groupMap.get(k).push(b);
   });
-  const wishlistTotal=S.books.filter(b=>b.sold==='Wishlist').length;
-  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=S.showWishlist?(groupMap.size+' / '+wishlistTotal):(groupMap.size+' / '+S.books.length));
+  document.getElementById('statTotal') && (document.getElementById('statTotal').textContent=groupMap.size+' / '+sectionTotal);
 
   // Badge count: active + wishlist + draft (not sold)
   const badgeCount = copies => copies.filter(b => b.sold !== 'Sold').length;

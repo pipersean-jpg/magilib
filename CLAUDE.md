@@ -1,8 +1,8 @@
-# MagiLib — Session 50
+# MagiLib — Session 51
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Settings (Feature 7) code review ✅ + 9 bugs fixed, needs re-test. Next: Settings re-test, then Onboarding (Feature 8).
+- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Settings (Feature 7) code review ✅ + 9 bugs fixed, needs re-test. Onboarding (Feature 8) ✅ built. Next: Settings re-test + Onboarding first walkthrough.
 
 ---
 
@@ -47,16 +47,16 @@
 
 ---
 
-## Last Session (Session 50)
-- ### Feature 7 — Settings code review (subagent)
-- Subagent reviewed: profile, security, currency, condition presets, stat cards, CSV export/import, danger zone.
-- ### Bug Fix 1 — Offline guard on password change
-- **auth.js**
-- Added `if (!window._isOnline)` check at top of `changePasswordFromSettings()`
-- Without it: offline failure showed "Current password is incorrect" — wrong message
+## Last Session (Session 51)
+- ### Bug Fix 1 — Stats bar showed global total, not section total
+- **catalog.js**
+- `sectionTotal` computed per-section: library books only when in library view, sold-only in sold view, drafts-only in drafts view, wishlist-only in wishlist view
+- Both the loading placeholder (`— / N`) and the final count use `sectionTotal` instead of `S.books.length`
+- Removed `wishlistTotal` local variable (folded into `sectionTotal`)
+- Root cause: `S.books.length` includes all books regardless of section — wishlist items were inflating the denominator in library view
 
 **Known issues carried forward:**
-- **Feature 7 — Settings device walkthrough**: needs re-test with all fixes applied. Key flows to verify:
+- **Feature 7 — Settings device walkthrough**: still needs re-test. Skipped again this session to build Feature 8. Key flows:
 -   - Condition preset save → toast fires
 -   - Display name → no Google Save Password prompt on desktop
 
@@ -70,7 +70,7 @@
 - [x] Status: Mark Sold, + Wishlist, Move to Library
 - [x] Pricing: Fetch estimate (Add) + stored price display + eBay link (Library)
 - [ ] Settings: profile, security, currency, condition presets, stat cards, CSV export/import
-- [ ] Onboarding: welcome + feature tour for new users
+- [ ] Onboarding: welcome + feature tour for new users — built, needs walkthrough
 
 ---
 
@@ -98,7 +98,8 @@
 ### Modals & Overlays
 - Book detail: `openModal()` → `#modalOverlay` + `.is-active`. `closeModal()` removes it.
 - Edit modal: `#editModalOverlay` at `z-index:2001`. `openEditForm()` adds `body.sheet-open`; all close paths remove it.
-- Legacy modals (support, changelog, wizard): `.modal-overlay` + `.hidden` — do NOT touch.
+- Legacy modals (support, changelog): `.modal-overlay` + `.hidden` — do NOT touch.
+- Onboarding wizard (`#wizardOverlay`): full-screen `position:fixed;inset:0;z-index:9998` — uses `.hidden` class toggle. Not a `.modal-overlay`.
 - Magi-Sheet: `.magi-sheet-overlay` uses `opacity` + `pointer-events` (not `display:none`). Toggle `.is-active`.
 - `magiConfirm({title, message, confirmText, onConfirm})` — always object style. Replaces all `window.confirm()`.
 

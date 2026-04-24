@@ -1,91 +1,88 @@
-# SESSION HANDOFF — 2026-04-25 (Session 50)
+# SESSION HANDOFF — 2026-04-25 (Session 51)
 
 ## Session Summary
-Feature 7 (Settings) code review → 3 bugs fixed → device walkthrough → 7 more fixes from walkthrough feedback. Settings code review complete. Device walkthrough incomplete — needs re-test next session.
+Two bug fixes (stats denominator + price refresh wishlist leak) + Feature 8 (Onboarding) — full-screen 5-step wizard replacing the old welcome card + modal approach.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### Feature 7 — Settings code review (subagent)
-Subagent reviewed: profile, security, currency, condition presets, stat cards, CSV export/import, danger zone.
+### Bug Fix 1 — Stats bar showed global total, not section total
+**catalog.js**
+- `sectionTotal` computed per-section: library books only when in library view, sold-only in sold view, drafts-only in drafts view, wishlist-only in wishlist view
+- Both the loading placeholder (`— / N`) and the final count use `sectionTotal` instead of `S.books.length`
+- Removed `wishlistTotal` local variable (folded into `sectionTotal`)
+- Root cause: `S.books.length` includes all books regardless of section — wishlist items were inflating the denominator in library view
 
-### Bug Fix 1 — Offline guard on password change
-**auth.js**
-- Added `if (!window._isOnline)` check at top of `changePasswordFromSettings()`
-- Without it: offline failure showed "Current password is incorrect" — wrong message
+### Bug Fix 2 — Refresh All Prices (Settings) showed wishlist books
+**ui.js** (`startBulkPriceRefresh`)
+- Added `b.sold !== 'Wishlist'` to the filter alongside existing `!== 'Sold'` and `!== 'Draft'`
+- Root cause: wishlist books are not sold, not drafted — they passed the old filter silently
 
-### Bug Fix 2 — Display name save: no error check
-**auth.js**
-- `saveUsernameDebounced()` now destructures `{ error }` from Supabase update
-- Shows error toast on failure instead of false success
+---
 
-### Bug Fix 3 — Delete library/account: Supabase error not checked
-**auth.js**
-- Both `confirmDeleteLibrary()` and `confirmDeleteAccount()` now check `{ error }` from Supabase response
-- Prevents `S.books = []` and "deleted" toast firing when Supabase returns an error instead of throwing
+### Feature 8 — Onboarding (full-screen wizard)
 
-### Device walkthrough feedback fixes (7 issues)
+#### Architecture change
+- **`afterSplash()`** (`ui.js:779`): new users now go directly to `openWizard(false)` — the intermediate `#welcomeScreen` card is no longer shown. Welcome card HTML kept in DOM for backwards compat but unreachable in the new flow.
+- Settings "Revisit tour" button still calls `openWizard(true)` — `_wizardFromSettings = true` prevents redirecting away from Settings on close.
 
-#### Fix 4 — Condition preset: no feedback on save
-**catalog.js** (`saveSettings`)
-- Added `showToast('Settings saved ✓', 'success', 1500)` at end of `saveSettings()`
-- Also fixed: currency change warning was showing on EVERY save, now only shows when currency actually changed
+#### HTML — `#wizardOverlay` rewrite (`index.html`)
+- Removed: `.modal-overlay`, `.modal` wrapper (max-width:540px), `wizardProgress` bar, `btn-icon-dismiss` ×
+- New: `position:fixed;inset:0;z-index:9998` — truly full-screen, same z-level as auth screens
+- Top bar: `#wizardDots` (progress dots) + `#wizardSkipBtn` ("Skip" text button, always visible except last step)
+- Scrollable `#wizardStepContent`
+- Bottom bar: `#wizardBackBtn` (hidden on step 0) + `#wizardNextBtn` (flex:1, 46px tall)
+- `padding-bottom: max(20px, env(safe-area-inset-bottom))` — handles iPhone home indicator
 
-#### Fix 5 — Display name triggers Google Save Password prompt
-**index.html**
-- Changed `autocomplete="nickname"` → `autocomplete="name"` on `#s-username`
-- Browser was treating it as a username field for the nearby password inputs
+#### JS — wizard logic (`ui.js`)
+- `WIZARD_STEPS = 5` (was 4)
+- `_wizardFromSettings` flag — controls whether close/skip redirects to home+catalog or stays in current view
+- `skipWizard()` — new function, wraps `closeWizard(true)` + conditional navigation; wired to Skip button
+- `wizardSkipUsername()` — updated: no longer just advances to next step; now closes the whole wizard (it's the last step) with "All set!" toast
+- `wizardNext()`: username validation moved to `wizardStep === 4` (was 0); final-step close now also calls `loadCatalog()` + `checkChangelog()`
+- Touch swipe: IIFE wired to `document` touchstart/touchend — left swipe = next, right = back, 60px threshold. Guards check `wizardOverlay.classList.contains('hidden')` so swipe doesn't fire when wizard is closed.
 
-#### Fix 6 — CSV template had 4 example rows
-**catalog.js** (`downloadCSVTemplate`)
-- Removed all example rows — template now contains headers only
-- Updated Step 2 hint in Settings: "The template contains only the header row. Start entering your books from row 2."
-
-#### Fix 7 — CSV import: silent failures, no result breakdown
-**catalog.js** (`importFromCSV`), **index.html**
-- Added `skippedCount` tracking for rows missing a title (were silently skipped)
-- Batch failures now retry row-by-row to get exact per-row success/fail counts
-- New static result card (`#csvImportResult`) shows "Saving N books…" during upload, then persists with ✓ imported / — skipped / ✗ failed until user dismisses with ×
-- Button text reset corrected: was 'Import CSV', now 'Upload CSV' (matches HTML label)
-
-#### Fix 8 — Edit modal: no Conjuring DB lookup for mismatched CSV titles
-**conjuring.js**, **index.html**
-- Added `debouncedEditConjuringCheck()`, `showEditTitleDropdown()`, `hideEditTitleDropdown()`, `applyConjuringToEdit()` to conjuring.js
-- `#edit-title` now has `oninput="debouncedEditConjuringCheck(this.value)"` — same live dropdown as Add Book flow
-- `applyConjuringToEdit()` fills empty author/year fields and sets cover if none currently set; marks edit dirty
-- `#editTitleDropdown` positioned absolutely below the title field, z-index:3000
-
-#### Fix 9 — Edit modal: delete book leaves Edit card open
-**books.js** (`confirmDelete`)
-- `confirmDelete()` now detects if called from Edit modal (checks `editModalOverlay.classList`)
-- If from Edit: uses `S.currentEditId` (correct) instead of `S.currentModalIdx` (stale)
-- After confirmed delete: calls `closeEditModal()` then `closeModal()` so both overlays close
+#### 5-step content (all full-screen hero treatment)
+- **Step 0 (Welcome):** Dark `#1a1625` hero with logo + "v1.0 beta", then "Your magic library, beautifully organised." headline + 3 feature pills (Catalogue · Value · Search). Next = "Start tour →"
+- **Step 1 (Add):** Accent-coloured hero + pencil icon + "Add in seconds". Content: 3 method pills (Scan cover · Type title · Batch add). "1 of 3"
+- **Step 2 (Library):** Paper-warm hero + search icon. "Find anything instantly". 3 feature pills (Fuzzy search · Filter · Sort). "2 of 3"
+- **Step 3 (Pricing):** Paper-warm hero + dollar icon. "Know what it's worth". Tip box about condition presets. "3 of 3"
+- **Step 4 (Name):** Dark hero + person icon + "One last thing". Display name input (pre-filled). "Skip — I'll set this later in Settings" link. Next = "Finish →". Skip button hidden on this step.
 
 ---
 
 ## Unresolved / Carried Forward
 
-- **Feature 7 — Settings device walkthrough**: needs re-test with all fixes applied. Key flows to verify:
+- **Feature 7 — Settings device walkthrough**: still needs re-test. Skipped again this session to build Feature 8. Key flows:
   - Condition preset save → toast fires
   - Display name → no Google Save Password prompt on desktop
   - CSV template download → headers only, no example rows
   - CSV import → result card shows, persists, dismissable with ×
   - Edit title field → Conjuring DB dropdown appears while typing
   - Delete from Edit modal → edit card closes after confirm
-- **Feature 8 — Onboarding**: welcome + feature tour — not started
-- **Wishlist UX polish**: pre-beta, small layout changes only — not started
+- **Feature 8 — Onboarding device walkthrough**: needs first test on device. Key flows:
+  - New user → full-screen wizard fires (not welcome card)
+  - Skip visible on steps 0–3, hidden on step 4
+  - Swipe left/right navigates steps
+  - Finish → lands on Library with catalog loaded
+  - Skip → lands on Home with catalog loaded
+  - Settings "Revisit tour" → wizard opens; close stays on Settings
+  - Returning user → wizard does NOT fire (welcomeSeen flag)
+- **Beta launch checklist**: Settings and Onboarding re-test remaining before beta
 
 ---
 
 ## Next Session Priorities
-1. **Feature 7 — Settings device walkthrough** (re-test all fixes above)
-2. **Feature 8 — Onboarding** if walkthrough passes cleanly
+1. **Feature 7 — Settings device walkthrough** (still pending from Session 50)
+2. **Feature 8 — Onboarding device walkthrough** (first test)
+3. **Beta launch prep** if both walkthroughs pass
 
 ---
 
 ## Model Learnings This Session
 
-- **`confirmDelete` called from two contexts**: The same delete function is wired to both the Book Detail modal and the Edit modal. `S.currentModalIdx` is only reliable when called from Detail. When called from Edit, `S.currentEditId` is the correct reference. Always check which overlay is visible to determine context.
-- **Browser Save Password trigger**: `autocomplete="nickname"` on a text input near `<input type="password">` causes Chrome/Safari to treat the text input as a username field and offer to save credentials on page navigation. Use `autocomplete="name"` or `autocomplete="off"` for display-name fields that aren't login credentials.
-- **Edit tool and Unicode em dash**: The Edit tool's string-matching fails if the old_string contains a regular hyphen where the file has a Unicode em dash (U+2014). Always Read the exact lines before crafting old_string, especially for toast/error messages which often contain em dashes.
+- **Wizard step numbering shift**: When inserting a new step 0 into an existing wizard, every `if (wizardStep === N)` block in `wizardNext()` must shift. Easy to miss — always grep all step-number comparisons before changing `WIZARD_STEPS`.
+- **`_wizardFromSettings` flag pattern**: When the same overlay can be opened from two different contexts (onboarding vs. Settings), store the context at open time as a module-level flag rather than passing it through every function in the call chain. Cleaner than threading `fromSettings` through `closeWizard`, `skipWizard`, `wizardSkipUsername`, etc.
+- **Touch swipe IIFE guard**: Swipe listeners wired to `document` need an explicit guard checking that the overlay is visible — otherwise they fire whenever the user swipes anywhere in the app.
+- **`env(safe-area-inset-bottom)` on full-screen overlays**: Any `position:fixed;inset:0` overlay that has a bottom action bar needs `padding-bottom: max(Npx, env(safe-area-inset-bottom))` to avoid the iPhone home indicator covering the CTA button.

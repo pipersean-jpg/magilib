@@ -347,7 +347,7 @@ let _bulkPending = null; // {idx, newPrice}
 function startBulkPriceRefresh() {
   const unsold = S.books
     .map((b,i) => ({b,i}))
-    .filter(({b}) => b.sold !== 'Sold' && b.draft !== 'Draft' && b.title);
+    .filter(({b}) => b.sold !== 'Sold' && b.sold !== 'Wishlist' && b.draft !== 'Draft' && b.title);
   if (unsold.length === 0) { showToast('No unsold books found','error'); return; }
   _bulkQueue = unsold;
   _bulkIdx = 0;
@@ -777,8 +777,8 @@ function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!_supaUser) return; // not authenticated — auth screen is showing
   if (!stored.welcomeSeen) {
-    document.getElementById('welcomeScreen').classList.remove('hidden');
     updateUserMenu();
+    openWizard(false);
   } else {
     showView('home');
     if (typeof loadCatalog === 'function') loadCatalog();
@@ -997,14 +997,28 @@ function checkChangelog() {
   }
 }
 
-// ── SETUP WIZARD ──
-const WIZARD_STEPS = 4;
+// ── ONBOARDING WIZARD ──
+const WIZARD_STEPS = 5;
 let wizardStep = 0;
-let wizardSkippedFrom = null;
+let _wizardFromSettings = false;
+
+// Touch swipe support — wired up once
+(function() {
+  let _tx = 0;
+  document.addEventListener('touchstart', function(e) {
+    if (!document.getElementById('wizardOverlay') || document.getElementById('wizardOverlay').classList.contains('hidden')) return;
+    _tx = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (!document.getElementById('wizardOverlay') || document.getElementById('wizardOverlay').classList.contains('hidden')) return;
+    const dx = e.changedTouches[0].clientX - _tx;
+    if (Math.abs(dx) > 60) { if (dx < 0) wizardNext(); else wizardBack(); }
+  }, { passive: true });
+})();
 
 function openWizard(fromSettings) {
+  _wizardFromSettings = !!fromSettings;
   wizardStep = 0;
-  wizardSkippedFrom = null;
   document.getElementById('wizardOverlay').classList.remove('hidden');
   renderWizardStep();
 }
@@ -1018,9 +1032,18 @@ function closeWizard(markSeen) {
   }
 }
 
+function skipWizard() {
+  closeWizard(true);
+  if (!_wizardFromSettings) {
+    showView('home');
+    if (typeof loadCatalog === 'function') loadCatalog();
+    if (typeof checkChangelog === 'function') checkChangelog();
+  }
+}
+
 async function wizardNext() {
-  if (wizardStep === 0) {
-    // Username step — validate + save, allow skip
+  if (wizardStep === 4) {
+    // Name step (last) — validate + save, allow skip
     const input = document.getElementById('wiz-username');
     const val = input ? input.value.trim() : '';
     const errEl = document.getElementById('wiz-username-error');
@@ -1035,10 +1058,10 @@ async function wizardNext() {
       }
       if (errEl) errEl.style.display = 'none';
       const btn = document.getElementById('wizardNextBtn');
-      btn.disabled = true; btn.textContent = 'Checking…';
+      btn.disabled = true; btn.textContent = 'Saving…';
       const { data: existing } = await _supa.from('profiles').select('id').eq('username', val).neq('id', _supaUser.id).maybeSingle();
       if (existing) {
-        btn.disabled = false; btn.textContent = 'Next →';
+        btn.disabled = false; btn.textContent = 'Finish →';
         if (errEl) { errEl.textContent = 'That name is already taken — try another.'; errEl.style.display = 'block'; }
         return;
       }
@@ -1046,16 +1069,20 @@ async function wizardNext() {
       if (!S.profile) S.profile = {};
       S.profile.username = val;
       updateUserMenu();
-      btn.disabled = false; btn.textContent = 'Next →';
+      btn.disabled = false;
     }
+    closeWizard(true);
+    showToast('All set! Welcome to MagiLib ✓', 'success');
+    if (!_wizardFromSettings) {
+      showView('catalog');
+      if (typeof loadCatalog === 'function') loadCatalog();
+      if (typeof checkChangelog === 'function') checkChangelog();
+    }
+    return;
   }
   if (wizardStep < WIZARD_STEPS - 1) {
     wizardStep++;
     renderWizardStep();
-  } else {
-    closeWizard(true);
-    showToast('All set! Welcome to MagiLib', 'success');
-    showView('catalog');
   }
 }
 
@@ -1066,13 +1093,13 @@ function wizardBack() {
 function wizardSkipUsername() {
   const el = document.getElementById('wiz-username');
   if (el) el.value = '';
-  wizardNext();
-}
-
-function wizardSkipToStep(n) {
-  wizardSkippedFrom = wizardStep;
-  wizardStep = n;
-  renderWizardStep();
+  closeWizard(true);
+  showToast('All set! Welcome to MagiLib ✓', 'success');
+  if (!_wizardFromSettings) {
+    showView('catalog');
+    if (typeof loadCatalog === 'function') loadCatalog();
+    if (typeof checkChangelog === 'function') checkChangelog();
+  }
 }
 
 function showWizardError(msg) {
@@ -1084,121 +1111,155 @@ function renderWizardStep() {
   const content = document.getElementById('wizardStepContent');
   const backBtn = document.getElementById('wizardBackBtn');
   const nextBtn = document.getElementById('wizardNextBtn');
-  const progress = document.getElementById('wizardProgress');
   const dots = document.getElementById('wizardDots');
+  const skipBtn = document.getElementById('wizardSkipBtn');
 
-  progress.style.width = ((wizardStep / (WIZARD_STEPS - 1)) * 100) + '%';
+  // Dots — exclude step 0 (intro) from count, show progress through steps 1–4
+  const tourStep = Math.max(0, wizardStep);
   dots.innerHTML = Array.from({length: WIZARD_STEPS}, (_, i) =>
-    `<div style="width:${i===wizardStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===wizardStep?'var(--accent)':i<wizardStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
+    `<div style="width:${i===tourStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===tourStep?'var(--accent)':i<tourStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
   ).join('');
+
   backBtn.style.visibility = wizardStep > 0 ? 'visible' : 'hidden';
+  skipBtn.style.display = wizardStep < WIZARD_STEPS - 1 ? 'block' : 'none';
 
   if (wizardStep === 0) {
-    // Choose display name
-    nextBtn.textContent = 'Next →';
-    const suggested = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
+    // Welcome / intro
+    nextBtn.textContent = 'Start tour →';
     content.innerHTML = `
-      <div style="margin-bottom:22px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 1 of 4</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px;">Choose your name</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.6;">This is how you'll appear in MagiLib. It must be unique.</div>
+      <div style="background:#1a1625;padding:52px 24px 44px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;">
+        <img src="/logo@3x.png" style="height:72px;width:auto;filter:brightness(0) invert(1);display:block;margin:0 auto 14px;" onerror="this.src='/logo.png'">
+        <div style="font-size:11px;color:rgba(250,249,246,0.4);letter-spacing:0.12em;text-transform:uppercase;">v1.0 beta</div>
       </div>
-      <div style="margin-bottom:6px;">
-        <label style="font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:6px;">Display name</label>
-        <input type="text" id="wiz-username" value="${suggested}" placeholder="e.g. CardShark42"
-          style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
-          oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
-          maxlength="30"/>
-        <div id="wiz-username-error" style="display:none;font-size:12px;color:var(--status-sold);margin-top:6px;padding:6px 10px;background:var(--status-sold-bg);border-radius:6px;"></div>
-        <div style="font-size:11px;color:var(--ink-faint);margin-top:8px;">Letters, numbers, _ and - only. At least 3 characters. <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:0;color:var(--ink-faint);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit;">Skip for now</button></div>
+      <div style="padding:28px 24px 20px;">
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink);margin-bottom:10px;line-height:1.3;">Your magic library,<br>beautifully organised.</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:24px;">The collector's catalogue for conjuring books — add, value and search your whole collection in minutes.</div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">📚</div>
+            <div style="font-size:11px;font-weight:600;color:var(--ink);">Catalogue</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">💰</div>
+            <div style="font-size:11px;font-weight:600;color:var(--ink);">Value</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">🔍</div>
+            <div style="font-size:11px;font-weight:600;color:var(--ink);">Search</div>
+          </div>
+        </div>
       </div>
     `;
-    setTimeout(() => { const el = document.getElementById('wiz-username'); if (el) { el.focus(); el.select(); } }, 80);
   }
 
   else if (wizardStep === 1) {
-    // Feature tour: Add a book
+    // Add a book
     nextBtn.textContent = 'Next →';
     content.innerHTML = `
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 2 of 4</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Adding a book</div>
+      <div style="background:var(--accent);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;">Add in seconds</div>
       </div>
-      <div style="background:var(--accent);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#fff;margin-bottom:8px;">Add in seconds</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.7;">Tap <strong style="color:#fff;">Add</strong> in the nav bar. Search by title or author — AI fills in the details. Snap a cover photo or find one from the database.</div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Scan cover</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
-        </div>
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">✍️</div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Type title</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Manual entry</div>
-        </div>
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">📋</div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Batch add</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Queue multiple</div>
+      <div style="padding:24px 24px 20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">1 of 3</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Adding a book</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">Tap <strong>Add</strong> in the nav bar. Search by title — MagiLib looks up the details automatically. Three ways to add:</div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Scan cover</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">✍️</div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Type title</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Manual entry</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">📋</div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Batch add</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Queue multiple</div>
+          </div>
         </div>
       </div>
     `;
   }
 
   else if (wizardStep === 2) {
-    // Feature tour: Search
+    // Library
     nextBtn.textContent = 'Next →';
     content.innerHTML = `
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 3 of 4</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Your library</div>
+      <div style="background:var(--paper-warm);border-bottom:0.5px solid var(--border);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);">Find anything instantly</div>
       </div>
-      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:8px;">Find anything instantly</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;">Search by title, author, or publisher. Filter by condition, status, or price. Sort any way you like.</div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">🔍</div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Fuzzy search</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Typos welcome</div>
-        </div>
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">🏷️</div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Filter</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Condition, status</div>
-        </div>
-        <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">↕️</div>
-          <div style="font-size:12px;font-weight:500;color:var(--ink);">Sort</div>
-          <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Price, date, A–Z</div>
+      <div style="padding:24px 24px 20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">2 of 3</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Your library</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">Search by title, author, or publisher. Fuzzy matching means typos are fine. Filter and sort any way you like.</div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">🔍</div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Fuzzy search</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Typos welcome</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">🏷️</div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Filter</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Condition, status</div>
+          </div>
+          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">↕️</div>
+            <div style="font-size:12px;font-weight:600;color:var(--ink);">Sort</div>
+            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Price, date, A–Z</div>
+          </div>
         </div>
       </div>
     `;
   }
 
   else if (wizardStep === 3) {
-    // Feature tour: Pricing
-    nextBtn.textContent = 'Go to Library →';
-    backBtn.style.visibility = 'hidden';
+    // Pricing
+    nextBtn.textContent = 'Next →';
     content.innerHTML = `
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;">Step 4 of 4</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--ink);">Pricing</div>
+      <div style="background:var(--paper-warm);border-bottom:0.5px solid var(--border);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);">Know what it's worth</div>
       </div>
-      <div style="background:var(--paper-warm);border:0.5px solid var(--border);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:18px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 14px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:8px;">Know what it's worth</div>
-        <div style="font-size:13px;color:var(--ink-light);line-height:1.7;">When adding a book, tap <strong>Fetch Price Estimate</strong> to see a value based on eBay sales and dealer listings. In the library, tap any book then <strong>eBay</strong> to see live results.</div>
-      </div>
-      <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:12px 14px;">
-        <div style="font-size:12px;color:var(--ink);line-height:1.6;"><strong>Tip:</strong> Set your condition presets in Settings (Fine / Very Good / Good / Fair) so every estimate is adjusted to the condition of your copy.</div>
+      <div style="padding:24px 24px 20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">3 of 3</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Pricing</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">When adding a book tap <strong>Fetch Price Estimate</strong> — values from eBay sales and dealer listings. In the library, tap any book then <strong>eBay</strong> for live results.</div>
+        <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:13px;color:var(--ink);line-height:1.6;"><strong>Tip:</strong> Set condition presets in Settings — Fine / Very Good / Good / Fair — so every estimate adjusts to the condition of your copy.</div>
+        </div>
       </div>
     `;
+  }
+
+  else if (wizardStep === 4) {
+    // Choose name (last step — optional, can skip)
+    nextBtn.textContent = 'Finish →';
+    const suggested = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
+    content.innerHTML = `
+      <div style="background:#1a1625;padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;">One last thing</div>
+      </div>
+      <div style="padding:24px 24px 20px;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">What should we call you?</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.6;margin-bottom:20px;">Your display name in MagiLib. Letters, numbers, _ and - only.</div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px;">Display name</label>
+        <input type="text" id="wiz-username" value="${suggested}" placeholder="e.g. CardShark42" autocomplete="nickname"
+          style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
+          oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
+          maxlength="30"/>
+        <div id="wiz-username-error" style="display:none;font-size:12px;color:var(--status-sold);margin-top:6px;padding:6px 10px;background:var(--status-sold-bg);border-radius:6px;"></div>
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:8px;">
+          <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:0;color:var(--ink-faint);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit;">Skip — I'll set this later in Settings</button>
+        </div>
+      </div>
+    `;
+    setTimeout(() => { const el = document.getElementById('wiz-username'); if (el) { el.focus(); el.select(); } }, 80);
   }
 }
