@@ -679,6 +679,7 @@ function setEditCondition(c) {
   const hidden = document.getElementById('edit-condition');
   if (hidden) hidden.value = c;
   _applyEditConditionAdjustment();
+  _markEditDirty();
 }
 function _applyEditConditionAdjustment(){
   if(!S.editPriceBase)return;
@@ -697,10 +698,12 @@ function toggleEditFlag(btn, value) {
   const active = btn.classList.toggle('active');
   if (active) { if (!S.editFlags.includes(value)) S.editFlags.push(value); }
   else { S.editFlags = S.editFlags.filter(v => v !== value); }
+  _markEditDirty();
 }
 function clearEditFlags() {
   document.querySelectorAll('#editConditionFlags .flag-btn').forEach(b => b.classList.remove('active'));
   S.editFlags = [];
+  _markEditDirty();
 }
 function populateEditCondition(condition, flags) {
   S.editCondition = condition || '';
