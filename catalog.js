@@ -1709,19 +1709,6 @@ async function bulkDraft() {
 }
 window.bulkDraft = bulkDraft;
 
-async function toggleSold() {
-  const b = S.books[S.currentModalIdx];
-  if (!b) return;
-  const newStatus = (b.sold === 'Sold') ? '' : 'Sold';
-  const { error } = await _supa.from('books').update({ sold_status: newStatus }).eq('id', b._id);
-  if (error) { showToast('Update failed. Please try again.', 'error', 3000); return; }
-  b.sold = newStatus;
-  closeModal();
-  renderCatalog();
-  showToast(newStatus === 'Sold' ? 'Marked as sold.' : 'Returned to library.', 'success', 2500);
-}
-window.toggleSold = toggleSold;
-
 async function toggleWishlistStatus() {
   const b = S.books[S.currentModalIdx];
   if (!b) return;
