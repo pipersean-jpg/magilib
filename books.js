@@ -239,6 +239,23 @@ function toTitleCase(str) {
 }
 
 // For publisher fields: check the canonical PUBLISHERS list for an exact case-insensitive match first
+// Parses Conjuring DB compound author format: "First1 & SecondFull Last1"
+// e.g. "Jean & Fred Braue Hugard" → "Jean Hugard & Fred Braue"
+//      "Stephen & Daryl Minch"    → "Stephen Minch & Daryl Minch" (shared last name)
+function normalizeConjuringAuthor(str) {
+  if (!str || !str.includes(' & ')) return str;
+  const ampIdx = str.indexOf(' & ');
+  const first1 = str.slice(0, ampIdx).trim();
+  if (first1.includes(' ')) return str; // already "Full Name & Full Name" — leave alone
+  const rest = str.slice(ampIdx + 3).trim().split(/\s+/);
+  if (rest.length < 2) return str;
+  const last1 = rest[rest.length - 1];
+  const auth2Words = rest.slice(0, -1);
+  const author1 = first1 + ' ' + last1;
+  const author2 = auth2Words.length === 1 ? auth2Words[0] + ' ' + last1 : auth2Words.join(' ');
+  return author1 + ' & ' + author2;
+}
+
 function toTitleCasePublisher(str) {
   if (!str) return str;
   // Decode HTML entities and strip trailing US state abbreviations (e.g. ", CA")

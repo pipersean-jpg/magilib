@@ -302,7 +302,7 @@ async function applyConjuringMatch(match, scanSource) {
 
   const author = dbAuthor(entry);
   const year   = dbYear(entry);
-  if (author) fill('f-author', toTitleCase(author));
+  if (author) fill('f-author', toTitleCase(normalizeConjuringAuthor(author)));
   if (year)   fill('f-year', year);
 
   const filledFromDB = [author, year].filter(Boolean).length;

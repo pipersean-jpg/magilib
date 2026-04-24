@@ -166,7 +166,7 @@ async function importFromCSV(event) {
     }
     if (!row.author && isObj) {
       const a = dbAuthor(entry);
-      if (a) row.author = toTitleCase(a);
+      if (a) row.author = toTitleCase(normalizeConjuringAuthor(a));
     }
     if (!row.year && isObj) {
       const y = dbYear(entry);
