@@ -157,8 +157,8 @@ async function authSubmit() {
         return;
       }
       _supaUser = data.user;
-      // Ensure welcome screen always shows for new signups, regardless of device history
-      try { const _s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}'); delete _s.welcomeSeen; localStorage.setItem('arcana_books_v2', JSON.stringify(_s)); } catch(e) {}
+      // Ensure wizard always shows for new signups, regardless of device history
+      try { const _s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}'); delete _s.wizardSeen; localStorage.setItem('arcana_books_v2', JSON.stringify(_s)); } catch(e) {}
     } else {
       const { data, error } = await _supa.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -221,7 +221,8 @@ document.addEventListener('click', function(e) {
 async function signOut() {
   await _supa.auth.signOut();
   _supaUser = null; S.books = []; S.profile = {};
-  if (typeof renderCatalog === 'function') renderCatalog();
+  const _grid = document.getElementById('booksGrid');
+  if (_grid) _grid.innerHTML = '';
   // Close all overlays so nothing blocks auth inputs on iOS
   ['editModalOverlay','coverPickerOverlay','magiDialogOverlay'].forEach(id => {
     const el = document.getElementById(id);
@@ -337,24 +338,11 @@ function saveUsernameDebounced() {
   }, 800);
 }
 
-// ── WELCOME SCREEN ──
-function _markWelcomeSeen() {
-  try {
-    const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-    s.welcomeSeen = true;
-    localStorage.setItem('arcana_books_v2', JSON.stringify(s));
-  } catch(e) {}
-}
-
 function startWizardTour() {
-  document.getElementById('welcomeScreen').classList.add('hidden');
-  _markWelcomeSeen();
-  openWizard(true);
+  openWizard(false);
 }
 
 function dismissWelcome(action) {
-  document.getElementById('welcomeScreen').classList.add('hidden');
-  _markWelcomeSeen();
   if (action === 'import') {
     showView('settings');
     setTimeout(() => { const el = document.getElementById('csvImportSection'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 200);

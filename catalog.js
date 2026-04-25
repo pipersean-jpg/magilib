@@ -268,7 +268,7 @@ function saveSettings(skipCurrencyGuard){
     statValue:    getCheck('s-stat-value'),
     statAvg:      getCheck('s-stat-avg'),
     statTop:      getCheck('s-stat-top'),
-    welcomeSeen:  existing.welcomeSeen || false,
+    wizardSeen:   existing.wizardSeen || false,
     condPct_fine: getNum('s-cond-fine', 100),
     condPct_vg:   getNum('s-cond-vg',   80),
     condPct_good: getNum('s-cond-good',  60),
@@ -604,11 +604,15 @@ function buildNotesWithInPrint(notes, inPrint) {
   return base ? base + tag : tag.trim();
 }
 
+let _catalogLoading = false;
+
 async function loadCatalog(){
+  if (_catalogLoading) return;
+  _catalogLoading = true;
   const grid=document.getElementById('booksGrid');
   initScrollTopBtn();
   grid.innerHTML='<div class="catalog-loading"><span class="spinner dark"></span> Loading...</div>';
-  if (!_supaUser) { grid.innerHTML=''; return; }
+  if (!_supaUser) { grid.innerHTML=''; _catalogLoading = false; return; }
   try{
     const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
     if (error) throw error;
@@ -690,8 +694,34 @@ async function loadCatalog(){
       }
     }
     grid.innerHTML='<div class="empty-state"><div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p>'+e.message+'</p><button onclick="loadCatalog()">Retry</button></div>';
+  } finally {
+    _catalogLoading = false;
   }
 }
+function renderStatsRow() {
+  const settings = S.settings || {};
+  const chk = id => {
+    const el = document.getElementById(id);
+    return el ? el.checked : true;
+  };
+  const show = {
+    total: chk('s-stat-total') && settings.statTotal !== false,
+    value: chk('s-stat-value') && settings.statValue !== false,
+    avg:   chk('s-stat-avg')   && settings.statAvg   !== false,
+    top:   chk('s-stat-top')   && settings.statTop   !== false,
+  };
+  const isWL = !!S.showWishlist;
+  const parts = [
+    show.total ? `<span class="stat-item"><span id="statTotal">—</span> ${isWL ? 'wishlist' : 'books'}</span>` : '',
+    show.value ? `<span class="stat-item"><span id="statValue">—</span> total</span>` : '',
+    (show.avg && !isWL) ? `<span class="stat-item">avg <span id="statAvg">—</span></span>` : '',
+    show.top   ? `<span class="stat-item">top <span id="statTop">—</span></span>` : '',
+  ].filter(Boolean);
+  const sep = '<span class="insights-sep">·</span>';
+  const row = document.getElementById('statsRow');
+  if (row) row.innerHTML = parts.join(sep);
+}
+
 function renderCatalog(){
   renderStatsRow();
   // Filter status strip
@@ -768,29 +798,6 @@ function renderCatalog(){
   const avg=prices.length?totalVal/prices.length:0;
   const top=prices.length?Math.max(...prices):0;
   const sym=currSym();
-function renderStatsRow() {
-  const settings = S.settings || {};
-  const chk = id => {
-    const el = document.getElementById(id);
-    return el ? el.checked : true;
-  };
-  const show = {
-    total: chk('s-stat-total') && settings.statTotal !== false,
-    value: chk('s-stat-value') && settings.statValue !== false,
-    avg:   chk('s-stat-avg')   && settings.statAvg   !== false,
-    top:   chk('s-stat-top')   && settings.statTop   !== false,
-  };
-  const isWL = !!S.showWishlist;
-  const parts = [
-    show.total ? `<span class="stat-item"><span id="statTotal">—</span> ${isWL ? 'wishlist' : 'books'}</span>` : '',
-    show.value ? `<span class="stat-item"><span id="statValue">—</span> total</span>` : '',
-    (show.avg && !isWL) ? `<span class="stat-item">avg <span id="statAvg">—</span></span>` : '',
-    show.top   ? `<span class="stat-item">top <span id="statTop">—</span></span>` : '',
-  ].filter(Boolean);
-  const sep = '<span class="insights-sep">·</span>';
-  const row = document.getElementById('statsRow');
-  if (row) row.innerHTML = parts.join(sep);
-}
 
   const sectionTotal = S.showWishlist
     ? S.books.filter(b => b.sold === 'Wishlist').length
@@ -902,9 +909,9 @@ function renderStatsRow() {
     return `<div class="book-card${isSold&&!isGrouped?' is-sold':''}${b.sold==='Wishlist'&&!isGrouped?' is-wishlist':''}${b.draft==='Draft'&&!isGrouped?' is-draft':''}${isSelected?' is-selected':''}" data-id="${b._id}" data-idx="${idx}"${isGrouped?` data-grouped="1" data-group-key="${encodeURIComponent(groupKey(b))}"`:''}  style="position:relative;">
       <div class="book-cover">
         ${hasCover?`<img src="${effectiveCover}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">`:''}<div class="book-cover-ph"><p style="margin-top:4px">${sanitize(b.title)}</p></div>
-        ${!isGrouped?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
-        ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
+        ${(b.sold==='Sold'&&!isGrouped)?'<div class="sold-overlay"><span class="sold-badge">Sold</span></div>':''}
       </div>
+      ${isGrouped?`<span class="copies-badge">×${totalCopies}</span>`:''}
       <div class="book-info">
         ${isListView?`<div class="book-info-thumb">${thumbHtml}</div>`:''}
         <div class="book-info-main">
@@ -981,8 +988,6 @@ function clearSearch() {
   if (icon) icon.style.display = '';
   renderCatalog();
 }
-function setFilter(val,btn){S.filterCondition=val;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCatalog();}
-
 function openCopiesSheet(key) {
   const normTitle = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
   const groupKey  = b => normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();

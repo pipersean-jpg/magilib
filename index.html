@@ -11,7 +11,6 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
-<script src="/fuse.min.js?v=s52"></script>
 <title>MagiLib</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://acuehbwbwsbbxuqcmnrp.supabase.co" crossorigin>
@@ -24,7 +23,7 @@
 <body>
 
 <!-- SPLASH SCREEN -->
-<div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#2A1F6B;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;animation:splashTimeout 0.6s ease forwards 6s;">
+<div id="splashScreen" style="position:fixed;inset:0;background:#2A1F6B;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;">
   <img src="/logo@3x.png" alt="MagiLib" id="splashLogo" onerror="this.src='/logo.png'" style="height:180px;width:auto;opacity:0;transform:scale(0.94);transition:opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;filter:brightness(0) invert(1);"/>
   <div id="splashWordmark" style="display:none;"></div>
   <div id="splashVersion" style="position:absolute;bottom:44px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.06em;opacity:0;transition:opacity 0.4s ease 0.5s;">v1.0 beta</div>
@@ -100,18 +99,6 @@
   </div>
 </div>
 
-<!-- WELCOME / ONBOARDING SCREEN -->
-<div id="welcomeScreen" class="hidden">
-  <div class="welcome-card">
-    <div style="margin-bottom:16px;text-align:center;"><img src="/logo.png" alt="MagiLib" style="height:52px;width:auto;display:block;margin:0 auto;"></div>
-    <div class="welcome-title">Welcome to MagiLib, <span class="welcome-name" id="welcomeName">Collector</span>!</div>
-    <div class="welcome-sub">Your personal catalogue for magic and conjuring books. Take a quick tour, or dive straight in.</div>
-    <div class="welcome-actions">
-      <button class="welcome-btn-primary" onclick="startWizardTour()">Take the tour →</button>
-      <button class="welcome-btn-secondary" onclick="dismissWelcome('explore')">Explore first</button>
-    </div>
-  </div>
-</div>
 
 <nav class="nav">
   <div class="nav-brand" style="gap:0;cursor:pointer;" onclick="showView('home')"><img src="/logo.png" alt="MagiLib" id="navLogo" style="height:36px;width:auto;display:block;"/></div>
@@ -152,7 +139,7 @@
       </div>
       <div class="user-dropdown-divider"></div>
       <div class="user-dropdown-item" style="cursor:default;color:var(--ink-faint);font-size:11px;justify-content:center;padding:6px 12px;">
-        <span>Version 1.1.0</span>
+        <span>v1.0 beta</span>
       </div>
       <div class="user-dropdown-divider"></div>
       <div class="user-dropdown-item danger" onclick="signOut()">
@@ -723,7 +710,7 @@
 </div>
 
 <!-- ONBOARDING WIZARD — full-screen -->
-<div id="wizardOverlay" class="hidden" style="position:fixed;inset:0;z-index:9998;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;">
+<div id="wizardOverlay" class="hidden" style="position:fixed;inset:0;z-index:4000;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;">
   <!-- Top bar: dots + skip -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;flex-shrink:0;">
     <div id="wizardDots" style="display:flex;gap:6px;align-items:center;"></div>
@@ -815,28 +802,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/supabase.min.js?v=s52"></script>
-<script src="/globals.js?v=s52"></script>
-<script src="/auth.js?v=s52"></script>
-<script src="/catalog.js?v=s52"></script>
-<script src="/books.js?v=s52"></script>
-<script src="/pricing.js?v=s52"></script>
-<script src="/conjuring.js?v=s52"></script>
-<script src="/ui.js?v=s52"></script>
-<script src="/publishers.js?v=s52"></script>
-
-<!-- SERVICE WORKER REGISTRATION -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log('[MagiLib] SW registered:', reg.scope);
-    }).catch(function(err) {
-      console.warn('[MagiLib] SW registration failed:', err);
-    });
-  });
-}
-</script>
 
 <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--status-sold);color:white;padding:14px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;gap:12px;">
   <div style="display:flex;align-items:center;gap:10px;">
@@ -856,7 +821,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- COVER PICKER MODAL -->
-<div class="modal-overlay hidden" id="coverPickerOverlay" onclick="closeCoverPicker(event)" style="z-index:3000;">
+<div class="modal-overlay hidden" id="coverPickerOverlay" onclick="closeCoverPicker(event)" style="z-index:2500;">
   <div class="modal" style="max-width:760px;">
     <div class="modal-handle"></div>
     <div class="modal-header">
@@ -994,7 +959,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- DRAFT ACTION SHEET -->
-<div class="modal-overlay hidden" id="draftActionOverlay" onclick="if(event.target===this)closeDraftActions()" style="align-items:flex-end;z-index:350;">
+<div class="modal-overlay hidden" id="draftActionOverlay" onclick="if(event.target===this)closeDraftActions()" style="align-items:flex-end;z-index:1000;">
   <div class="modal" style="border-radius:20px 20px 0 0;max-width:520px;padding-bottom:max(0px,env(safe-area-inset-bottom));">
     <div class="modal-handle"></div>
     <div style="padding:18px 20px 8px;">
@@ -1030,7 +995,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- ── TUTORIAL OVERLAY ── -->
-<div id="tutorialOverlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(10,8,20,0.88);align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+<div id="tutorialOverlay" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(10,8,20,0.88);align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
   <div style="background:#1a1630;border-radius:20px;width:100%;max-width:420px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6);">
 
     <!-- Header -->
@@ -1053,7 +1018,7 @@ if ('serviceWorker' in navigator) {
 
 
 <!-- ── PRICE REVIEW OVERLAY ── -->
-<div id="priceReviewOverlay" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(10,8,20,0.82);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+<div id="priceReviewOverlay" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(10,8,20,0.82);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
   <div style="background:var(--paper-card);border-radius:var(--radius-lg);width:100%;max-width:480px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
 
     <!-- Header -->
@@ -1106,7 +1071,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- ── TUTORIAL ZOOM LIGHTBOX ── -->
-<div id="tutZoomOverlay" onclick="closeTutorialZoom()" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.96);align-items:center;justify-content:center;cursor:zoom-out;padding:20px;box-sizing:border-box;">
+<div id="tutZoomOverlay" onclick="closeTutorialZoom()" style="display:none;position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,0.96);align-items:center;justify-content:center;cursor:zoom-out;padding:20px;box-sizing:border-box;">
   <img id="tutZoomImg" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;pointer-events:none;" />
   <div style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.12);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;pointer-events:none;">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1145,5 +1110,29 @@ if ('serviceWorker' in navigator) {
   <div id="batchActionsStack" class="batch-actions-stack"></div>
 </div>
 <div id="dialogOverlay" class="magi-dialog-overlay" onclick="if(event.target === this) closeDialog()"></div>
+
+<script src="/fuse.min.js?v=s53"></script>
+<script src="/supabase.min.js?v=s53"></script>
+<script src="/globals.js?v=s53"></script>
+<script src="/auth.js?v=s53"></script>
+<script src="/catalog.js?v=s53"></script>
+<script src="/books.js?v=s53"></script>
+<script src="/pricing.js?v=s53"></script>
+<script src="/conjuring.js?v=s53"></script>
+<script src="/ui.js?v=s53"></script>
+<script src="/publishers.js?v=s53"></script>
+
+<!-- SERVICE WORKER REGISTRATION -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('[MagiLib] SW registered:', reg.scope);
+    }).catch(function(err) {
+      console.warn('[MagiLib] SW registration failed:', err);
+    });
+  });
+}
+</script>
 </body>
 </html>

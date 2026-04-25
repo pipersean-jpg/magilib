@@ -1,8 +1,8 @@
-# MagiLib — Session 52
+# MagiLib — Session 53
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Onboarding (Feature 8) redesigned + 3 bugs fixed, needs first walkthrough. Settings (Feature 7) needs re-test. Next: Onboarding walkthrough + Settings re-test.
+- **Focus:** Stabilisation pass complete (17 fixes — onboarding unification, splash, z-index scale, Library bugs, cache). Needs device walkthrough. Next: Onboarding walkthrough (Feature 8) + Settings re-test (Feature 7).
 
 ---
 
@@ -47,16 +47,16 @@
 
 ---
 
-## Last Session (Session 52)
-- ### Bug Fix 1 — Wizard blank white page (root cause)
-- **assets/css/magilib.css**
-- Added `#wizardOverlay.hidden{display:none!important;}`
-- Root cause: no CSS rule existed for `.hidden` on `#wizardOverlay`. The overlay had `display:flex` as an inline style that was never overridden, so it was always visible from page load — covering the entire app. The splash screen (z-index:99999) hid it during loading, but `classList.add/remove('hidden')` had zero visual effect.
-- ### Bug Fix 2 — Returning users saw wizard every time
-- **ui.js** (`afterSplash`)
+## Last Session (Session 53)
+- ### assets/css/magilib.css
+- Expanded `:root` z-index scale from 3 vars to 12-level hierarchy:
+-   `--z-nav:100` · `--z-dropdown:200` · `--z-toolbar:300` · `--z-banner:500` · `--z-batch:900`
+-   `--z-sheet:1000` · `--z-modal:2000` · `--z-cover-picker:2500` · `--z-price-review:3000`
+-   `--z-onboarding:4000` · `--z-auth:4500` · `--z-splash:5000`
+-   (Legacy `--z-dialog` and `--z-fullscreen` kept as aliases)
 
 **Known issues carried forward:**
-- **Feature 8 — Onboarding device walkthrough**: needs first test on device now that bugs are fixed. Key flows:
+- **Feature 8 — Onboarding device walkthrough**: still needs first test on device (same as Session 52). Bugs are now fixed + flow is unified. Key flows to verify:
 -   - New user → wizard fires with dark step 0 hero (not blank white)
 -   - Skip visible on steps 0–3, hidden on step 4
 

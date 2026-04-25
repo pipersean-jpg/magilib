@@ -750,27 +750,25 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function showSplash() {
-  var old = document.getElementById('_splashOverlay');
-  if (old) old.remove();
-
-  var overlay = document.createElement('div');
-  overlay.id = '_splashOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:var(--accent);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:1;transition:opacity 0.5s ease;';
-
-overlay.innerHTML = '<img src="/logo@3x.png" class="splash-pulse" style="width:180px;max-width:70vw;object-fit:contain;filter:brightness(0) invert(1);" onerror="this.style.display=\'none\'">'
-    + '<div style="font-family:\'DM Sans\',Arial,sans-serif;font-size:12px;color:rgba(250,249,246,0.5);letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">v1.0 beta</div>';
-
-  document.body.appendChild(overlay);
-  var htmlSplash = document.getElementById('splashScreen');
-if (htmlSplash) htmlSplash.style.display = 'none';
-
+  var splash = document.getElementById('splashScreen');
+  if (!splash) { afterSplash(); return; }
+  splash.style.opacity = '1';
+  splash.style.visibility = 'visible';
+  splash.style.display = 'flex';
+  splash.style.pointerEvents = 'auto';
+  var logo = document.getElementById('splashLogo');
+  var ver  = document.getElementById('splashVersion');
+  if (logo) { logo.style.opacity = '1'; logo.style.transform = 'scale(1)'; }
+  if (ver)  ver.style.opacity = '1';
   setTimeout(function() {
-    overlay.style.opacity = '0';
+    splash.style.opacity = '0';
+    splash.style.pointerEvents = 'none';
     setTimeout(function() {
-      overlay.remove();
+      splash.style.visibility = 'hidden';
+      splash.style.display = 'none';
       afterSplash();
     }, 500);
-  }, 2200);
+  }, 1200);
 }
 
 function afterSplash() {
