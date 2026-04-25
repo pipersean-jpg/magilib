@@ -137,26 +137,29 @@ async function saveEdit() {
   if (!window._isOnline) {
     const _rawNotesOffline = document.getElementById('edit-notes').value.trim();
     const _editInPrintOffline = S.editInPrint !== undefined ? S.editInPrint : (b.inPrint !== undefined ? b.inPrint : null);
-    const _savedNotesOffline = (b.sold === 'Wishlist')
-      ? buildNotesWithInPrint(_rawNotesOffline, _editInPrintOffline)
-      : _rawNotesOffline;
+    const _offlinePrice = parseFloat(document.getElementById('edit-price').value) || null;
+    const _offlineNow = new Date().toISOString();
+    const _offlineCur = (S.settings && S.settings.currency) || 'AUD';
     const offlineFields = {
-      title:          document.getElementById('edit-title').value.trim(),
-      author:         document.getElementById('edit-author').value.trim(),
-      artist_subject: document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
-      edition:        document.getElementById('edit-edition').value.trim(),
-      year:           document.getElementById('edit-year').value.trim(),
-      publisher:      document.getElementById('edit-publisher').value.trim(),
-      isbn:           document.getElementById('edit-isbn').value.trim(),
-      condition:      S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
-      market_price:   parseFloat(document.getElementById('edit-price').value) || null,
-      purchase_price: parseFloat(document.getElementById('edit-cost').value) || null,
-      notes:          _savedNotesOffline,
-      cover_url:      S.editCoverUrl || b.coverUrl || '',
-      condition_flags:(S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
-      collectors_note:(document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
-      where_acquired: (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
-      updated_at:     new Date().toISOString(),
+      title:            document.getElementById('edit-title').value.trim(),
+      author:           document.getElementById('edit-author').value.trim(),
+      artist_subject:   document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
+      edition:          document.getElementById('edit-edition').value.trim(),
+      year:             document.getElementById('edit-year').value.trim(),
+      publisher:        document.getElementById('edit-publisher').value.trim(),
+      isbn:             document.getElementById('edit-isbn').value.trim(),
+      condition:        S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
+      in_print:         _editInPrintOffline,
+      market_price:     _offlinePrice,
+      price_currency:   _offlinePrice !== null ? _offlineCur : null,
+      price_updated_at: _offlinePrice !== null ? _offlineNow : null,
+      purchase_price:   parseFloat(document.getElementById('edit-cost').value) || null,
+      notes:            _rawNotesOffline,
+      cover_url:        S.editCoverUrl || b.coverUrl || '',
+      condition_flags:  (S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
+      collectors_note:  (document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
+      where_acquired:   (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
+      updated_at:       _offlineNow,
     };
     _mgQueuePush({ op: 'update', id: b._id, payload: offlineFields, ts: Date.now() });
     // Optimistic in-memory update so the UI reflects the change immediately.
@@ -166,6 +169,8 @@ async function saveEdit() {
       year: offlineFields.year, publisher: offlineFields.publisher,
       isbn: offlineFields.isbn, condition: offlineFields.condition,
       price: offlineFields.market_price != null ? String(offlineFields.market_price) : '',
+      priceCurrency: offlineFields.price_currency || '',
+      priceUpdatedAt: offlineFields.price_updated_at || '',
       cost: offlineFields.purchase_price != null ? String(offlineFields.purchase_price) : '',
       notes: _rawNotesOffline, coverUrl: offlineFields.cover_url, rawCover: offlineFields.cover_url,
       flags: offlineFields.condition_flags, collectorNote: offlineFields.collectors_note,
@@ -181,35 +186,37 @@ async function saveEdit() {
 
   const _rawNotes   = document.getElementById('edit-notes').value.trim();
   const _editInPrint = S.editInPrint !== undefined ? S.editInPrint : (b.inPrint !== undefined ? b.inPrint : null);
-  // For wishlist items, encode In Print status into the notes field (no dedicated DB column)
-  const _savedNotes = (b.sold === 'Wishlist')
-    ? buildNotesWithInPrint(_rawNotes, _editInPrint)
-    : _rawNotes;
+  const _newPrice = parseFloat(document.getElementById('edit-price').value) || null;
+  const _editNow = new Date().toISOString();
+  const _editCur = (S.settings && S.settings.currency) || 'AUD';
 
   const updatedFields = {
-    title:          document.getElementById('edit-title').value.trim(),
-    author:         document.getElementById('edit-author').value.trim(),
-    artist_subject: document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
-    edition:        document.getElementById('edit-edition').value.trim(),
-    year:           document.getElementById('edit-year').value.trim(),
-    publisher:      document.getElementById('edit-publisher').value.trim(),
-    isbn:           document.getElementById('edit-isbn').value.trim(),
-    condition:      S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
-    market_price:   parseFloat(document.getElementById('edit-price').value) || null,
-    purchase_price: parseFloat(document.getElementById('edit-cost').value) || null,
-    notes:          _savedNotes,
-    cover_url:      S.editCoverUrl || b.coverUrl || '',
-    condition_flags:(S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
-    collectors_note:(document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
-    where_acquired: (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
-    updated_at:     new Date().toISOString(),
+    title:            document.getElementById('edit-title').value.trim(),
+    author:           document.getElementById('edit-author').value.trim(),
+    artist_subject:   document.getElementById('edit-artist') ? document.getElementById('edit-artist').value.trim() : (b.artist || ''),
+    edition:          document.getElementById('edit-edition').value.trim(),
+    year:             document.getElementById('edit-year').value.trim(),
+    publisher:        document.getElementById('edit-publisher').value.trim(),
+    isbn:             document.getElementById('edit-isbn').value.trim(),
+    condition:        S.editCondition || document.getElementById('edit-condition').value || b.condition || '',
+    in_print:         _editInPrint,
+    market_price:     _newPrice,
+    price_currency:   _newPrice !== null ? _editCur : null,
+    price_updated_at: _newPrice !== null ? _editNow : null,
+    purchase_price:   parseFloat(document.getElementById('edit-cost').value) || null,
+    notes:            _rawNotes,
+    cover_url:        S.editCoverUrl || b.coverUrl || '',
+    condition_flags:  (S.editFlags && S.editFlags.length ? S.editFlags.join(', ') : '') || b.flags || '',
+    collectors_note:  (document.getElementById('edit-collector-note')||{value:''}).value.trim() || b.collectorNote || '',
+    where_acquired:   (document.getElementById('edit-location')||{value:''}).value.trim() || b.location || '',
+    updated_at:       _editNow,
   };
 
   const { error } = await _supa.from('books').update(updatedFields).eq('id', b._id);
   if (error) { showToast('Update failed: ' + error.message, 'error'); btn.disabled=false; btn.textContent='Save Changes'; return; }
 
   // Update local cache — store clean notes (no IP tag) so UI always shows readable text
-  S.books[idx] = { ...b, title:updatedFields.title, author:updatedFields.author, artist:updatedFields.artist_subject, edition:updatedFields.edition, year:updatedFields.year, publisher:updatedFields.publisher, isbn:updatedFields.isbn, condition:updatedFields.condition, price:updatedFields.market_price!=null?String(updatedFields.market_price):'', cost:updatedFields.purchase_price!=null?String(updatedFields.purchase_price):'', notes:_rawNotes, coverUrl:updatedFields.cover_url, rawCover:updatedFields.cover_url, flags:updatedFields.condition_flags, collectorNote:updatedFields.collectors_note, location:updatedFields.where_acquired, inPrint:_editInPrint };
+  S.books[idx] = { ...b, title:updatedFields.title, author:updatedFields.author, artist:updatedFields.artist_subject, edition:updatedFields.edition, year:updatedFields.year, publisher:updatedFields.publisher, isbn:updatedFields.isbn, condition:updatedFields.condition, price:updatedFields.market_price!=null?String(updatedFields.market_price):'', priceCurrency:updatedFields.price_currency||'', priceUpdatedAt:updatedFields.price_updated_at||'', cost:updatedFields.purchase_price!=null?String(updatedFields.purchase_price):'', notes:_rawNotes, coverUrl:updatedFields.cover_url, rawCover:updatedFields.cover_url, flags:updatedFields.condition_flags, collectorNote:updatedFields.collectors_note, location:updatedFields.where_acquired, inPrint:_editInPrint };
   renderCatalog();
   _editDirty = false;
   showToast('✓ Book updated', 'success', 3000);
@@ -435,6 +442,8 @@ async function saveBook() {
 
   const artist = document.getElementById('f-artist') ? document.getElementById('f-artist').value.trim() : '';
   const flags = S.conditionFlags.join(', ');
+  const _saveBookPrice = parseFloat(price) || null;
+  const _saveBookNow = new Date().toISOString();
   const bookRow = {
     user_id: _supaUser.id,
     title,
@@ -445,11 +454,13 @@ async function saveBook() {
     publisher: document.getElementById('f-publisher').value.trim(),
     isbn: (document.getElementById('f-isbn') || {value:''}).value.trim(),
     condition: S.condition,
-    market_price: parseFloat(price) || null,
+    market_price: _saveBookPrice,
+    price_currency: _saveBookPrice !== null ? ((S.settings && S.settings.currency) || 'AUD') : null,
+    price_updated_at: _saveBookPrice !== null ? _saveBookNow : null,
     purchase_price: parseFloat(document.getElementById('f-cost').value) || null,
     notes: document.getElementById('f-notes').value.trim(),
     cover_url: S.coverUrl || null,
-    date_added: new Date().toISOString().slice(0,10),
+    date_added: _saveBookNow.slice(0,10),
     condition_flags: flags,
     sold_status: '',
     star_rating: null,
@@ -492,6 +503,8 @@ async function saveDraft() {
   const btn = document.getElementById('saveDraftBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
   const price = document.getElementById('f-price').value;
+  const _draftPrice = parseFloat(price) || null;
+  const _draftNow = new Date().toISOString();
   const draftRow = {
     user_id: _supaUser.id,
     title,
@@ -502,11 +515,13 @@ async function saveDraft() {
     publisher: document.getElementById('f-publisher').value.trim(),
     isbn: (document.getElementById('f-isbn')||{value:''}).value.trim(),
     condition: S.condition || '',
-    market_price: parseFloat(price) || null,
+    market_price: _draftPrice,
+    price_currency: _draftPrice !== null ? ((S.settings && S.settings.currency) || 'AUD') : null,
+    price_updated_at: _draftPrice !== null ? _draftNow : null,
     purchase_price: parseFloat(document.getElementById('f-cost').value) || null,
     notes: document.getElementById('f-notes').value.trim(),
     cover_url: S.coverUrl || null,
-    date_added: new Date().toISOString().slice(0,10),
+    date_added: _draftNow.slice(0,10),
     condition_flags: S.conditionFlags.join(', '),
     sold_status: '', star_rating: null,
     collectors_note: (document.getElementById('f-collector-note')||{value:''}).value.trim(),

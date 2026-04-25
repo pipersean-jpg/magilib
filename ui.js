@@ -440,9 +440,11 @@ function priceReviewApprove() {
     : newPrice;
   const oldPrice = b.price;
   b.price = finalPrice.toFixed(2);
+  b.priceCurrency = (S.settings && S.settings.currency) || 'AUD';
+  b.priceUpdatedAt = new Date().toISOString();
   // Write to Supabase
   if (b._id) {
-    _supa.from('books').update({ market_price: parseFloat(b.price) }).eq('id', b._id).then(()=>{});
+    _supa.from('books').update({ market_price: parseFloat(b.price), price_currency: b.priceCurrency, price_updated_at: b.priceUpdatedAt }).eq('id', b._id).then(()=>{});
   }
   _bulkUpdated++;
   _bulkPending = null;
@@ -601,8 +603,12 @@ function setSortFromSelect(val) {
 
 // ── VIEW MODE ──
 S.viewMode = 'grid';
+S.catalogViewMode = 'grid';
+S.wishlistViewMode = 'list';
 function toggleView() {
   S.viewMode = S.viewMode === 'grid' ? 'list' : 'grid';
+  if (S.showWishlist) S.wishlistViewMode = S.viewMode;
+  else S.catalogViewMode = S.viewMode;
   const btn = document.getElementById('viewToggleBtn');
   if (btn) btn.textContent = S.viewMode === 'grid' ? '⊞' : '☰';
   renderCatalog();

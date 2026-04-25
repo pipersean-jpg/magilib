@@ -320,6 +320,9 @@ function _doShowView(v){
     if(dc){dc.style.display='none';}
     if(qa){qa.style.display='block';}
     if(catH2){catH2.textContent='Wishlist';}
+    S.viewMode=S.wishlistViewMode||'list';
+    const _vbW=document.getElementById('viewToggleBtn');
+    if(_vbW)_vbW.textContent=S.viewMode==='grid'?'⊞':'☰';
     loadCatalog();
   } else {
     document.getElementById('view-'+v).classList.add('active');
@@ -334,7 +337,12 @@ function _doShowView(v){
       if(qa){qa.style.display='none';}
     }
     if(catH2&&v==='catalog'){catH2.textContent='Library';}
-    if(v==='catalog')loadCatalog();
+    if(v==='catalog'){
+      S.viewMode=S.catalogViewMode||'grid';
+      const _vbC=document.getElementById('viewToggleBtn');
+      if(_vbC)_vbC.textContent=S.viewMode==='grid'?'⊞':'☰';
+      loadCatalog();
+    }
     if(v==='home')renderHomeView();
     if(v==='entry'){
       window.scrollTo(0,0);
@@ -617,7 +625,7 @@ async function loadCatalog(){
     const { data, error } = await _supa.from('books').select('*').eq('user_id', _supaUser.id).order('created_at', { ascending: false });
     if (error) throw error;
     S.books = (data || []).map(row => {
-      const { notes, inPrint } = parseInPrintFromNotes(row.notes || '');
+      const { notes, inPrint: notesInPrint } = parseInPrintFromNotes(row.notes || '');
       return {
         _id: row.id,
         title: row.title || '',
@@ -629,6 +637,8 @@ async function loadCatalog(){
         isbn: row.isbn || '',
         condition: row.condition || '',
         price: row.market_price != null ? String(row.market_price) : '',
+        priceCurrency: row.price_currency || '',
+        priceUpdatedAt: row.price_updated_at || '',
         cost: row.purchase_price != null ? String(row.purchase_price) : '',
         notes,
         coverUrl: row.cover_url || '',
@@ -641,7 +651,7 @@ async function loadCatalog(){
         collectorNote: row.collectors_note || '',
         location: row.where_acquired || '',
         draft: row.draft_status || '',
-        inPrint,
+        inPrint: row.in_print !== null && row.in_print !== undefined ? row.in_print : notesInPrint,
       };
     });
     // Cache rows in IndexedDB for offline access (fire-and-forget).
@@ -658,7 +668,7 @@ async function loadCatalog(){
         const cached = await _idbLoadBooks(_supaUser.id);
         if (cached && cached.length > 0) {
           S.books = cached.map(row => {
-            const { notes, inPrint } = parseInPrintFromNotes(row.notes || '');
+            const { notes, inPrint: notesInPrint } = parseInPrintFromNotes(row.notes || '');
             return {
               _id: row.id,
               title: row.title || '',
@@ -670,6 +680,8 @@ async function loadCatalog(){
               isbn: row.isbn || '',
               condition: row.condition || '',
               price: row.market_price != null ? String(row.market_price) : '',
+              priceCurrency: row.price_currency || '',
+              priceUpdatedAt: row.price_updated_at || '',
               cost: row.purchase_price != null ? String(row.purchase_price) : '',
               notes,
               coverUrl: row.cover_url || '',
@@ -682,7 +694,7 @@ async function loadCatalog(){
               collectorNote: row.collectors_note || '',
               location: row.where_acquired || '',
               draft: row.draft_status || '',
-              inPrint,
+              inPrint: row.in_print !== null && row.in_print !== undefined ? row.in_print : notesInPrint,
             };
           });
           renderCatalog();
@@ -1335,10 +1347,12 @@ async function toggleMarketSync(bookId) {
 }
 
 async function acceptMarketPrice(id, price) {
-  const { error } = await _supa.from('books').update({ market_price: price, updated_at: new Date().toISOString() }).eq('id', id);
+  const _now = new Date().toISOString();
+  const _cur = (S.settings && S.settings.currency) || 'AUD';
+  const { error } = await _supa.from('books').update({ market_price: price, price_currency: _cur, price_updated_at: _now, updated_at: _now }).eq('id', id);
   if (error) { showToast('Price update failed', 'error', 2000); return; }
   const b = S.books.find(x => x._id === id);
-  if (b) { b.price = String(price); }
+  if (b) { b.price = String(price); b.priceCurrency = _cur; b.priceUpdatedAt = _now; }
   showToast('Market price updated ✓', 'success', 2000);
   // Refresh the price badge in the open modal
   openModal(S.currentModalIdx);
@@ -1691,14 +1705,14 @@ async function applyManualPrices() {
 
   const results = await Promise.all(
     updates.map(({ id, price }) =>
-      _supa.from('books').update({ market_price: price, updated_at: new Date().toISOString() }).eq('id', id)
+      _supa.from('books').update({ market_price: price, price_currency: (S.settings && S.settings.currency) || 'AUD', price_updated_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', id)
     )
   );
   const failed = results.filter(r => r.error).length;
   const succeeded = updates.length - failed;
 
   if (succeeded > 0) {
-    updates.forEach(({ id, price }) => { const b = S.books.find(x => x._id === id); if (b) b.price = String(price); });
+    updates.forEach(({ id, price }) => { const b = S.books.find(x => x._id === id); if (b) { b.price = String(price); b.priceCurrency = (S.settings && S.settings.currency) || 'AUD'; b.priceUpdatedAt = new Date().toISOString(); } });
     showToast(`Updated prices for ${succeeded} book${succeeded > 1 ? 's' : ''}.`, 'success', 2500);
     closePriceReviewSheet();
     triggerPoof(updates.map(u => u.id), () => { exitSelectMode(); });
@@ -2677,8 +2691,8 @@ async function _bkPrice(){
     if(!b.title||!b._id||String(b._id).startsWith('i')){skip++;continue;}
     var result=typeof localPriceLookup==='function'?localPriceLookup(b.title):null;
     if(!result){skip++;continue;}
-    var r=await _supa.from('books').update({market_price:result.recommended,updated_at:new Date().toISOString()}).eq('id',b._id);
-    if(!r.error){b.price=String(result.recommended);done++;}else skip++;
+    var r=await _supa.from('books').update({market_price:result.recommended,price_currency:(S.settings&&S.settings.currency)||'AUD',price_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',b._id);
+    if(!r.error){b.price=String(result.recommended);b.priceCurrency=(S.settings&&S.settings.currency)||'AUD';b.priceUpdatedAt=new Date().toISOString();done++;}else skip++;
   }
   _bkExit();renderCatalog();
   showToast('Prices: '+done+' updated, '+skip+' skipped \u2713','success',3500);

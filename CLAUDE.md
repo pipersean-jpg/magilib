@@ -1,8 +1,8 @@
-# MagiLib — Session 58
+# MagiLib — Session 59
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Home "Recently Added" thumbnails now navigate to Library and open the book detail card. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
+- **Focus:** Three new `books` table columns added (`in_print`, `price_currency`, `price_updated_at`) — SQL migration must be run in Supabase. Next: run migration, fix publisher fill in scan path, unify normKey, then beta walkthroughs.
 
 ---
 
@@ -47,15 +47,18 @@
 
 ---
 
-## Last Session (Session 58)
-- ### catalog.js
-- **`openBookFromHome(bookId)` added:** New global helper (inserted just before `openModal`). Finds the book's numeric index in `S.books` by `_id`, calls `showView('catalog')` to switch to Library, then calls `openModal(idx)` to open the detail card.
-- **Home recent row onclick fixed:** Changed from `openModal('${b._id}')` to `openBookFromHome('${b._id}')`. Previously passed a UUID string to `openModal` which does `S.books[idx]` (array lookup by numeric index) — always `undefined`, silently bailed on `if(!b)return`.
+## Last Session (Session 59)
+- ### Analysis (no code — diagnostic only)
+- Full audit of book data flow, population, and pricing architecture. Identified 10 specific issues:
+- Three different `normKey` implementations producing inconsistent lookups
+- Two incompatible pricing systems (Supabase `price_db` vs static `MARKET_DB`) used in different views
+- Publisher not filled from CONJURING_DB in scan/`applyConjuringMatch` path (entry.p available but unused)
+- `fetchPriceForEdit` only uses static local DB, never Supabase `price_db`
 
 **Known issues carried forward:**
-- **Copies badge CSS**: `.copies-badge` uses `position:absolute; top:7px; right:7px`. Verify in grid and list view.
-- **Catalog toolbar sticky top**: Verify no overlap with nav on device.
-- **Beta launch checklist**: Auth, Add, Library, Edit device walkthroughs still to complete.
+- **SQL migration not run yet** — must be done before the new columns can be written to.
+- **Publisher not filled in scan path** — `applyConjuringMatch` in conjuring.js fills author + year from entry but skips `entry.p` (publisher). One-line fix, high impact.
+- **normKey unification** — three different implementations in catalog.js, pricing.js, ui.js. Needs a single canonical function.
 
 ---
 
