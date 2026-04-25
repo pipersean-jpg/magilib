@@ -159,7 +159,11 @@ function conjuringFuzzyScore(query, candidate) {
   if (qTokens.size === 0) return 0;
   let overlap = 0;
   qTokens.forEach(t => { if (cTokens.has(t)) overlap++; });
-  const score = overlap / Math.max(qTokens.size, cTokens.size);
+  // Recall-biased blend: weight query coverage heavily so short prefix queries
+  // (e.g. "Conover" vs "Conover Volume 1 The Magic Of Tim Conover") score well.
+  const recall = overlap / qTokens.size;
+  const specificity = overlap / cTokens.size;
+  const score = recall * 0.65 + specificity * 0.35;
   const bonus = c.startsWith(q) || q.startsWith(c) ? 0.15 : 0;
   return Math.min(1, score + bonus);
 }
