@@ -1,8 +1,8 @@
-# MagiLib — Session 57
+# MagiLib — Session 58
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Double-splash on refresh fixed. Wishlist Quick Add simplified (Title + Author + 3 action buttons). SW bumped to s57. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
+- **Focus:** Home "Recently Added" thumbnails now navigate to Library and open the book detail card. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
 
 ---
 
@@ -47,13 +47,10 @@
 
 ---
 
-## Last Session (Session 57)
-- ### sw.js
-- **Cache version bumped:** `magilib-sw-s53` → `magilib-sw-s57`. Forces cache invalidation on next load.
-- ### index.html
-- **Script tags bumped:** all `?v=s53` → `?v=s57` (10 script tags).
-- **Wishlist Quick Add redesigned:** Removed Price and Notes fields. Now: Title input (full-width) → Author input (full-width) → 3 stacked buttons (Take Photo, Upload Photo, Find on Google) → photo preview + + Add button row.
-- ### ui.js
+## Last Session (Session 58)
+- ### catalog.js
+- **`openBookFromHome(bookId)` added:** New global helper (inserted just before `openModal`). Finds the book's numeric index in `S.books` by `_id`, calls `showView('catalog')` to switch to Library, then calls `openModal(idx)` to open the detail card.
+- **Home recent row onclick fixed:** Changed from `openModal('${b._id}')` to `openBookFromHome('${b._id}')`. Previously passed a UUID string to `openModal` which does `S.books[idx]` (array lookup by numeric index) — always `undefined`, silently bailed on `if(!b)return`.
 
 **Known issues carried forward:**
 - **Copies badge CSS**: `.copies-badge` uses `position:absolute; top:7px; right:7px`. Verify in grid and list view.

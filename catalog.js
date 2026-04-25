@@ -402,7 +402,7 @@ function renderHomeView(){
       row.innerHTML=recent.map(b=>{
         const cover=b.coverUrl?`<img class="home-recent-cover" src="${sanitize(b.coverUrl)}" loading="lazy" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="home-recent-cover" style="display:none;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;">📖</div>`
           :`<div class="home-recent-cover" style="display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;">📖</div>`;
-        return `<div class="home-recent-book" onclick="openModal('${sanitize(b._id)}')">${cover}<div class="home-recent-title">${sanitize(b.title)}</div></div>`;
+        return `<div class="home-recent-book" onclick="openBookFromHome('${sanitize(b._id)}')">${cover}<div class="home-recent-title">${sanitize(b.title)}</div></div>`;
       }).join('');
     }
   }
@@ -1344,6 +1344,12 @@ async function acceptMarketPrice(id, price) {
   openModal(S.currentModalIdx);
 }
 // ─────────────────────────────────────────────────────────────────────
+function openBookFromHome(bookId){
+  const idx=S.books.findIndex(b=>b._id===bookId);
+  if(idx===-1)return;
+  showView('catalog');
+  openModal(idx);
+}
 
 function openModal(idx){
   S.currentModalIdx=idx;
