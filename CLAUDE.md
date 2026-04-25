@@ -1,8 +1,8 @@
-# MagiLib — Session 56
+# MagiLib — Session 57
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Feature 7 (Settings) + Feature 8 (Onboarding) walkthroughs passed. Three bug fixes this session: library loading/empty state centering, auth screen flash on refresh. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
+- **Focus:** Double-splash on refresh fixed. Wishlist Quick Add simplified (Title + Author + 3 action buttons). SW bumped to s57. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
 
 ---
 
@@ -47,13 +47,13 @@
 
 ---
 
-## Last Session (Session 56)
-- ### assets/css/magilib.css
-- **Library loading/empty state centering:** Added `grid-column:1/-1` to `.catalog-loading` and `.empty-search-container`. Both live inside `#booksGrid` (CSS grid), so without this they were confined to the first grid column (~150px) rather than spanning the full width. Now centered horizontally and vertically.
+## Last Session (Session 57)
+- ### sw.js
+- **Cache version bumped:** `magilib-sw-s53` → `magilib-sw-s57`. Forces cache invalidation on next load.
 - ### index.html
-- **Auth screen starts hidden:** Added `class="hidden"` to `#authScreen` initial HTML. Previously visible by default — leaked through the fading splash (0.5s opacity transition at z-index 4500). Now only shown explicitly when we know the user is unauthenticated.
+- **Script tags bumped:** all `?v=s53` → `?v=s57` (10 script tags).
+- **Wishlist Quick Add redesigned:** Removed Price and Notes fields. Now: Title input (full-width) → Author input (full-width) → 3 stacked buttons (Take Photo, Upload Photo, Find on Google) → photo preview + + Add button row.
 - ### ui.js
-- **`_sessionCheckDone` flag:** Added alongside `_splashRunning`. Prevents `afterSplash()` from making routing decisions before `getSession()` has resolved.
 
 **Known issues carried forward:**
 - **Copies badge CSS**: `.copies-badge` uses `position:absolute; top:7px; right:7px`. Verify in grid and list view.

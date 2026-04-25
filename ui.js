@@ -612,16 +612,12 @@ async function addWishlistItem() {
   const title = (document.getElementById('wl-title').value || '').trim();
   if (!title) { showToast('Enter a title first', 'error'); return; }
   const author = (document.getElementById('wl-author').value || '').trim();
-  const price = parseFloat(document.getElementById('wl-price').value) || null;
-  const notes = (document.getElementById('wl-notes').value || '').trim();
   if (!_supaUser) { showToast('Not signed in', 'error'); return; }
   if (!window._isOnline) { showToast('You\'re offline — connect to add to wishlist', 'error'); return; }
   const row = {
     user_id: _supaUser.id,
     title,
     author: author || null,
-    notes: notes || null,
-    market_price: price,
     date_added: new Date().toISOString().slice(0, 10),
     sold_status: 'Wishlist',
   };
@@ -632,7 +628,7 @@ async function addWishlistItem() {
   }
   const { error } = await _supa.from('books').insert(row);
   if (error) { showToast('Could not add: ' + error.message, 'error'); return; }
-  ['wl-title', 'wl-author', 'wl-price', 'wl-notes'].forEach(id => {
+  ['wl-title', 'wl-author'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   if (preview) { preview.src = ''; preview.style.display = 'none'; }
@@ -719,8 +715,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (event === 'PASSWORD_RECOVERY') {
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('reset-password-form').style.display = 'flex';
-      } else if (event === 'SIGNED_IN' && session && !_supaUser) {
-        // OAuth redirect callback (Google etc) — _supaUser not yet set by getSession path
+      } else if (event === 'SIGNED_IN' && session && !_supaUser && _sessionCheckDone) {
+        // Runtime sign-in only (OAuth popup, etc.) — during startup getSession() handles auth
         _supaUser = session.user;
         await onAuthSuccess();
       }
