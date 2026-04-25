@@ -1,8 +1,8 @@
-# MagiLib — Session 53
+# MagiLib — Session 54
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Stabilisation pass complete (17 fixes — onboarding unification, splash, z-index scale, Library bugs, cache). Needs device walkthrough. Next: Onboarding walkthrough (Feature 8) + Settings re-test (Feature 7).
+- **Focus:** Two z-index bugs fixed (user dropdown behind toolbar, cover picker behind edit card). Next: Onboarding walkthrough (Feature 8) device test + Settings re-test (Feature 7).
 
 ---
 
@@ -47,16 +47,16 @@
 
 ---
 
-## Last Session (Session 53)
+## Last Session (Session 54)
 - ### assets/css/magilib.css
-- Expanded `:root` z-index scale from 3 vars to 12-level hierarchy:
--   `--z-nav:100` · `--z-dropdown:200` · `--z-toolbar:300` · `--z-banner:500` · `--z-batch:900`
--   `--z-sheet:1000` · `--z-modal:2000` · `--z-cover-picker:2500` · `--z-price-review:3000`
--   `--z-onboarding:4000` · `--z-auth:4500` · `--z-splash:5000`
--   (Legacy `--z-dialog` and `--z-fullscreen` kept as aliases)
+- `--z-nav:100` → `--z-nav:400` in `:root`
+- `.nav` rule: `z-index:100` → `z-index:var(--z-nav)` (400)
+- **Root cause fixed:** `.nav` (`position:sticky; z-index:100`) created a stacking context at z:100 in root. The `.user-dropdown` (z:200) is inside `.nav`'s stacking context, so from root it was effectively z:100 — below the `.catalog-toolbar` (z:300) added in Session 53. Raising nav to z:400 puts the entire nav stacking context above the toolbar.
+- ### index.html
+- Moved `#coverPickerOverlay` block from before `#editModalOverlay` (old line 823) to after it (now line 896)
 
 **Known issues carried forward:**
-- **Feature 8 — Onboarding device walkthrough**: still needs first test on device (same as Session 52). Bugs are now fixed + flow is unified. Key flows to verify:
+- **Feature 8 — Onboarding device walkthrough**: still needs first test on device. Key flows:
 -   - New user → wizard fires with dark step 0 hero (not blank white)
 -   - Skip visible on steps 0–3, hidden on step 4
 
