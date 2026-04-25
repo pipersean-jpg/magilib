@@ -1390,35 +1390,9 @@ function openModal(idx){
   const _gq = encodeURIComponent(b.title + (b.author ? ' ' + b.author : '') + ' book');
   const googleUrl = 'https://www.google.com/search?q=' + _gq;
 
-  document.getElementById('modalBody').innerHTML=`
-    <div style="display:flex;flex-direction:column;align-items:stretch;padding:20px 20px 0;">
-      ${libraryMatch ? `<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding:7px 12px 7px 10px;border-left:3px solid var(--tier3);background:var(--tier3-bg);border-radius:0 6px 6px 0;opacity:0.9;"><span style="flex-shrink:0;color:var(--tier3);"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg></span><span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--tier3);letter-spacing:0.02em;">Already in your library</span></div>` : ''}
-      <div style="align-self:center;margin-bottom:14px;cursor:${modalCoverSrc?'zoom-in':'default'};"${modalCoverSrc?` data-action="zoom-cover" data-zoom-src="${modalCoverSrc.replace(/"/g,'&quot;')}"`:''} >
-        ${modalCoverSrc
-          ? `<img class="ms-image" src="${modalCoverSrc}" alt="${sanitize(b.title)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-          : `<div style="width:100px;height:140px;display:flex;align-items:center;justify-content:center;opacity:0.15;background:var(--paper-warm);border-radius:6px;color:var(--ink-faint);"><svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg></div>`}
-      </div>
-      <div class="ms-title">${sanitize(b.title)}</div>
-      <div class="ms-subtitle" style="margin-bottom:${isWishlist?'6px':'10px'};">${[b.author, (b.artist && b.artist !== b.author) ? b.artist : null].filter(Boolean).map(sanitize).join(' · ')}</div>
-      ${isWishlist?`<div class="ms-subtitle" style="margin-bottom:10px;">In Print: <strong style="color:var(--ink);">${inPrintLabel}</strong></div>`:''}
-      <div style="display:flex;align-items:center;gap:8px;align-self:center;margin-bottom:${b.flags?'6px':'14px'};flex-wrap:wrap;justify-content:center;">
-        ${b.condition?`<span style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;letter-spacing:0.02em;">${b.condition}</span>`:''}
-        ${(b.price&&!isNaN(parseFloat(b.price)))?`<span style="background:var(--paper-warm);color:var(--ink);font-size:11px;font-weight:600;padding:5px 14px;border-radius:20px;border:0.5px solid var(--border-med);">${sym}${parseFloat(b.price).toFixed(0)}</span>`:''}
-      </div>
-      ${b.flags?`<div style="font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.5;">${sanitize(b.flags)}</div>`:''}
-      ${!isWishlist?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;align-self:center;"><span style="font-size:11px;color:var(--ink-faint);margin-right:2px;">Rating</span><div id="modalStarRow" class="star-row" style="margin-top:0;"></div></div>`:''}
-    </div>
-    <div class="ms-metadata-row">
-      ${b.publisher && b.publisher !== b.author?`<div class="ms-metadata-item"><span class="ms-label">Publisher</span><span class="ms-value">${sanitize(b.publisher)}</span></div>`:''}
-      ${b.year?`<div class="ms-metadata-item"><span class="ms-label">Year</span><span class="ms-value">${b.year}</span></div>`:''}
-      ${b.dateAdded&&!isWishlist?`<div class="ms-metadata-item"><span class="ms-label">Added</span><span class="ms-value">${b.dateAdded}</span></div>`:''}
-      ${b.location?`<div class="ms-metadata-item"><span class="ms-label">Acquired</span><span class="ms-value">${sanitize(b.location)}</span></div>`:''}
-    </div>
-    ${b.collectorNote?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);background:var(--paper-warm);"><div style="font-size:9px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Collector\'s note</div><div style="font-size:13px;color:var(--ink-light);font-style:italic;line-height:1.6;">${sanitize(b.collectorNote)}</div></div>`:''}
-    ${isWishlist&&!modalCoverSrc&&!libraryMatch?`<div style="margin:0;padding:14px 20px;border-top:0.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:11px;color:var(--ink-faint);text-align:center;">No image found for this title</div><button data-action="google-search" data-url="${googleUrl}" style="padding:9px 20px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:7px;"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>Search Google for Details</button></div>`:''}
-    ${isWishlist?'<div class="wishlist-status">★ In Wishlist</div>':''}
-    <div id="marketSyncSection" style="display:none;"></div>
-`;
+  document.getElementById('modalBody').innerHTML = buildDetailBodyHTML(b, S.books, {
+    isWishlist, libraryMatch, modalCoverSrc, inPrintLabel, googleUrl, sym,
+  });
   // Rewrite action buttons based on wishlist vs library
   const actionsArea = document.getElementById('modalActionsArea');
   if (actionsArea) {
@@ -2922,6 +2896,28 @@ function zoomCover(imgSrc) {
         case 'market-value': if (id) toggleMarketSync(id); break;
         case 'mark-sold': toggleSold(); break;
         case 'delete-book': if (id) deleteBook(id); break;
+        case 'filter-topic': {
+          const topic = el.dataset.topic;
+          if (topic) {
+            closeModal();
+            showView('catalog');
+            const si = document.getElementById('catalogSearch');
+            if (si) {
+              si.value = topic;
+              catalogSearchInput(si);
+              renderCatalog();
+            }
+          }
+          break;
+        }
+        case 'open-book': {
+          const targetIdx = parseInt(el.dataset.idx, 10);
+          if (!isNaN(targetIdx) && S.books[targetIdx]) {
+            closeModal();
+            requestAnimationFrame(() => { requestAnimationFrame(() => { openModal(targetIdx); }); });
+          }
+          break;
+        }
       }
     });
   }

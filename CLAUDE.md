@@ -1,8 +1,8 @@
-# MagiLib — Session 59
+# MagiLib — Session 60
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Three new `books` table columns added (`in_print`, `price_currency`, `price_updated_at`) — SQL migration must be run in Supabase. Next: run migration, fix publisher fill in scan path, unify normKey, then beta walkthroughs.
+- **Focus:** Book detail modal redesigned — new `detail.js` module with magic taxonomy, topic chips, recommendation carousels, and enrichment scaffold. SQL migration from Session 59 still needs to run in Supabase. Next: run migration, publisher fix in scan path, normKey unification, beta walkthroughs.
 
 ---
 
@@ -47,18 +47,13 @@
 
 ---
 
-## Last Session (Session 59)
-- ### Analysis (no code — diagnostic only)
-- Full audit of book data flow, population, and pricing architecture. Identified 10 specific issues:
-- Three different `normKey` implementations producing inconsistent lookups
-- Two incompatible pricing systems (Supabase `price_db` vs static `MARKET_DB`) used in different views
-- Publisher not filled from CONJURING_DB in scan/`applyConjuringMatch` path (entry.p available but unused)
-- `fetchPriceForEdit` only uses static local DB, never Supabase `price_db`
-
-**Known issues carried forward:**
-- **SQL migration not run yet** — must be done before the new columns can be written to.
-- **Publisher not filled in scan path** — `applyConjuringMatch` in conjuring.js fills author + year from entry but skips `entry.p` (publisher). One-line fix, high impact.
-- **normKey unification** — three different implementations in catalog.js, pricing.js, ui.js. Needs a single canonical function.
+## Last Session (Session 60)
+- ### detail.js (NEW — 260 lines)
+- `MAGIC_TAXONOMY` — 28-entry controlled tag list for magic categories.
+- `_TOPIC_KW` — Keyword→topic mapping for local detection across title/author/publisher/notes.
+- `MetadataCache` — localStorage-backed cache for web-enriched metadata (key: `magilib_enrich_<id>`).
+- `MetadataEnrichmentAdapters` — Adapter pattern with one OpenGraph/JSON-LD adapter. User-initiated, caches results, calls `/fetch-proxy`. Ready for future sources.
+- `enrichBookFromUrl(book, url)` — Calls matching adapter, stores result in cache.
 
 ---
 
