@@ -1,8 +1,8 @@
-# MagiLib — Session 55
+# MagiLib — Session 56
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Feature 8 onboarding bugs fixed (double-splash, wizard destination, text, magic fact rotation, Chrome password prompt on edit modal). Next: device walkthrough of Onboarding (Feature 8) + Settings re-test (Feature 7).
+- **Focus:** Feature 7 (Settings) + Feature 8 (Onboarding) walkthroughs passed. Three bug fixes this session: library loading/empty state centering, auth screen flash on refresh. Next: Auth, Add, Library, Edit device walkthroughs → beta launch.
 
 ---
 
@@ -47,18 +47,18 @@
 
 ---
 
-## Last Session (Session 55)
+## Last Session (Session 56)
+- ### assets/css/magilib.css
+- **Library loading/empty state centering:** Added `grid-column:1/-1` to `.catalog-loading` and `.empty-search-container`. Both live inside `#booksGrid` (CSS grid), so without this they were confined to the first grid column (~150px) rather than spanning the full width. Now centered horizontally and vertically.
+- ### index.html
+- **Auth screen starts hidden:** Added `class="hidden"` to `#authScreen` initial HTML. Previously visible by default — leaked through the fading splash (0.5s opacity transition at z-index 4500). Now only shown explicitly when we know the user is unauthenticated.
 - ### ui.js
-- **Double-splash fix:** Added `_splashRunning` flag — `showSplash()` is now idempotent. `onAuthStateChange` fires with `SIGNED_IN` before `getSession()` resolves on returning-user load, causing a second `showSplash()` → second `afterSplash()`. Guard prevents this.
-- **Wizard text updates:**
--   - Step 0: "beautifully organised" → "stacked & memorised"
--   - Step 1: "Over 1,000 magic titles" → "Over 10,000 magic titles"
--   - Step 1: "Conjuring publishers" → "Major magic publishers"
+- **`_sessionCheckDone` flag:** Added alongside `_splashRunning`. Prevents `afterSplash()` from making routing decisions before `getSession()` has resolved.
 
 **Known issues carried forward:**
-- **Feature 8 — Onboarding device walkthrough**: All known bugs fixed. Still needs first full device test:
--   - New user → wizard fires with dark step 0 hero (not blank white)
--   - Skip visible on steps 0–3, hidden on step 4
+- **Copies badge CSS**: `.copies-badge` uses `position:absolute; top:7px; right:7px`. Verify in grid and list view.
+- **Catalog toolbar sticky top**: Verify no overlap with nav on device.
+- **Beta launch checklist**: Auth, Add, Library, Edit device walkthroughs still to complete.
 
 ---
 

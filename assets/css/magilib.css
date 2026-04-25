@@ -395,12 +395,12 @@ input[type=file].file-input{display:none;}
 .book-price-text{font-size:var(--text-sm);font-weight:500;color:var(--accent);}
 
 /* ── Empty States ──────────────────────────────────────────────── */
-.catalog-loading{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ink-faint);gap:8px;}
+.catalog-loading{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ink-faint);gap:8px;grid-column:1/-1;}
 .empty-state{text-align:center;padding:50px 20px;color:var(--ink-faint);}
 .empty-state .empty-icon{margin-bottom:12px;opacity:0.35;display:flex;align-items:center;justify-content:center;}
 .empty-state p{font-size:var(--text-base);line-height:1.6;}
 .empty-state button{margin-top:14px;padding:11px 22px;background:var(--accent);color:white;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:var(--text-base);font-weight:500;cursor:pointer;}
-.empty-search-container{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:50vh;width:100%;gap:16px;color:var(--ink-faint);}
+.empty-search-container{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:50vh;width:100%;gap:16px;color:var(--ink-faint);grid-column:1/-1;}
 .empty-search-container .empty-icon{font-size:32px;}
 .empty-search-container p{font-size:14px;margin:0;}
 .empty-search-container .btn-ghost{color:var(--ink-light);}

@@ -739,10 +739,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         ]).catch(() => ({ data: null }));
         S.profile = profile || {};
         updateUserMenu();
-        document.getElementById('authScreen').classList.add('hidden');
       }
     } catch(e) {
       console.warn('Session check failed:', e.message);
+    } finally {
+      _sessionCheckDone = true;
+      if (!_splashRunning) afterSplash();
     }
   } catch(e) {
     console.warn('Startup error:', e.message);
@@ -750,6 +752,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 let _splashRunning = false;
+let _sessionCheckDone = false;
 function showSplash() {
   if (_splashRunning) return; // prevent double-splash from onAuthStateChange race
   _splashRunning = true;
@@ -776,8 +779,12 @@ function showSplash() {
 }
 
 function afterSplash() {
+  if (!_sessionCheckDone) return; // session check still in flight — will retry when done
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
-  if (!_supaUser) return; // not authenticated — auth screen is showing
+  if (!_supaUser) {
+    document.getElementById('authScreen').classList.remove('hidden');
+    return;
+  }
   if (!stored.wizardSeen) {
     updateUserMenu();
     openWizard(false);

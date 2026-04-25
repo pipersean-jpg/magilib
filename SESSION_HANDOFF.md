@@ -1,65 +1,43 @@
-# SESSION HANDOFF — 2026-04-25 (Session 55)
+# SESSION HANDOFF — 2026-04-25 (Session 56)
 
 ## Session Summary
-Feature 8 onboarding bugs fixed (6 issues across 3 files). No new features. Auth double-splash bug resolved.
+Feature 7 (Settings) and Feature 8 (Onboarding) device walkthroughs passed. Three bug fixes: library loading/empty state centering, and auth screen flash on page refresh.
 
 ---
 
 ## What Was Built/Changed This Session
 
-### ui.js
-- **Double-splash fix:** Added `_splashRunning` flag — `showSplash()` is now idempotent. `onAuthStateChange` fires with `SIGNED_IN` before `getSession()` resolves on returning-user load, causing a second `showSplash()` → second `afterSplash()`. Guard prevents this.
-- **Wizard text updates:**
-  - Step 0: "beautifully organised" → "stacked & memorised"
-  - Step 1: "Over 1,000 magic titles" → "Over 10,000 magic titles"
-  - Step 1: "Conjuring publishers" → "Major magic publishers"
-- **Wizard finish destination:** Both `wizardNext()` (step 4) and `wizardSkipUsername()` now call `showView('home')` instead of `showView('catalog')`. Skip button (steps 0–3) already called `showView('home')`.
-
-### catalog.js
-- **Magic fact rotation:** Changed from day-based rotation (`Math.floor(Date.now()/86400000)%facts.length`) to per-view random (`Math.floor(Math.random()*facts.length)`). New fact shown every time Home is viewed.
+### assets/css/magilib.css
+- **Library loading/empty state centering:** Added `grid-column:1/-1` to `.catalog-loading` and `.empty-search-container`. Both live inside `#booksGrid` (CSS grid), so without this they were confined to the first grid column (~150px) rather than spanning the full width. Now centered horizontally and vertically.
 
 ### index.html
-- **Edit modal autocomplete:** Added `autocomplete="off"` to all 8 text inputs in the edit modal (`edit-title`, `edit-author`, `edit-artist`, `edit-publisher`, `edit-year`, `edit-edition`, `edit-isbn`, `edit-location`) and `pickerUrlInput`. Prevents Chrome password manager from associating edit fields with stored credentials (was showing "Update password" prompt on every modal close).
+- **Auth screen starts hidden:** Added `class="hidden"` to `#authScreen` initial HTML. Previously visible by default — leaked through the fading splash (0.5s opacity transition at z-index 4500). Now only shown explicitly when we know the user is unauthenticated.
+
+### ui.js
+- **`_sessionCheckDone` flag:** Added alongside `_splashRunning`. Prevents `afterSplash()` from making routing decisions before `getSession()` has resolved.
+- **`afterSplash()` rewritten:** No longer silently returns when `!_supaUser`. Now waits for `_sessionCheckDone`; if unauthenticated, explicitly calls `authScreen.classList.remove('hidden')`.
+- **`DOMContentLoaded` `finally` block:** After `getSession()` resolves (or throws), sets `_sessionCheckDone = true` and calls `afterSplash()` if the splash has already finished. Handles slow-network case where `getSession()` takes longer than the 1.7s splash.
 
 ---
 
 ## Unresolved / Carried Forward
 
-- **Feature 8 — Onboarding device walkthrough**: All known bugs fixed. Still needs first full device test:
-  - New user → wizard fires with dark step 0 hero (not blank white)
-  - Skip visible on steps 0–3, hidden on step 4
-  - Swipe left/right navigates steps
-  - Finish with name → lands on **Home**, "All set!" toast
-  - Finish via skip-username link → lands on **Home**, "All set!" toast
-  - Skip button (top right, steps 0–3) → lands on Home
-  - Returning user (wizardSeen = true) → wizard does NOT fire
-  - Settings "Revisit tour" → wizard opens; close stays on Settings
-
-- **Feature 7 — Settings device walkthrough**: still needs re-test (carried from Sessions 50/51/52)
-  - Condition preset save → toast fires
-  - Display name → no Google Save Password prompt on desktop
-  - CSV template download → headers only, no example rows
-  - CSV import → result card shows, persists, dismissable with ×
-  - Edit title field → Conjuring DB dropdown appears while typing
-  - Delete from Edit modal → edit card closes after confirm
-
 - **Copies badge CSS**: `.copies-badge` uses `position:absolute; top:7px; right:7px`. Verify in grid and list view.
-
 - **Catalog toolbar sticky top**: Verify no overlap with nav on device.
-
-- **Beta launch checklist**: Settings and Onboarding device tests remaining.
+- **Beta launch checklist**: Auth, Add, Library, Edit device walkthroughs still to complete.
 
 ---
 
 ## Next Session Priorities
-1. **Device walkthrough — Onboarding** (all bugs fixed, re-test on device)
-2. **Device walkthrough — Settings** (re-test)
-3. **Beta launch prep** if both pass
+1. **Beta launch checklist** — Auth, Add, Library, Edit walkthroughs
+2. **Beta prep / launch**
 
 ---
 
 ## Model Learnings This Session
 
-- **`onAuthStateChange` races `getSession()` on Supabase JS v2**: For returning users, `onAuthStateChange` can fire `SIGNED_IN` synchronously (or nearly so) before `await _supa.auth.getSession()` assigns `_supaUser`. The `!_supaUser` guard in the listener fires, triggering `onAuthSuccess()` → second `showSplash()`. Fix: make `showSplash()` idempotent with a `_splashRunning` boolean — subsequent calls return immediately and the already-running splash handles navigation.
+- **CSS grid collapses single-child divs to one column:** When a loading or empty-state div is the only child of a `display:grid` container using `auto-fill` columns, it sits in the first column (~150px wide). Fix: `grid-column:1/-1` to span all columns. The flex centering inside the div then handles H/V alignment correctly.
 
-- **Chrome password manager fires on modal close, not just form submit**: Chrome scans all text inputs in the page DOM. If any un-annotated `type="text"` input is present alongside `type="password"` inputs (even in a different hidden view), Chrome may associate them as credentials and prompt to save/update when a "navigation" occurs (including closing a modal). Fix: `autocomplete="off"` on every text input in the modal.
+- **Auth screen should start hidden, not visible:** If the auth screen starts visible and the splash fades out over 0.5s (opacity transition), the auth screen bleeds through during the fade — even when the user is authenticated. Correct pattern: start hidden, use a session-check-done flag in `afterSplash()` to decide whether to show auth or home.
+
+- **`getSession()` can outlast the splash (slow network):** If `getSession()` takes >1.7s, `afterSplash()` fires with `_supaUser` null and silently returns — nobody ever navigates to home. Fix: `finally` block after `getSession()` sets a done-flag and calls `afterSplash()` directly if the splash has already ended.
