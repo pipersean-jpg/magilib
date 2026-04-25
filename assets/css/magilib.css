@@ -533,6 +533,7 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
 /* ── Onboarding Welcome ────────────────────────────────────────── */
 #welcomeScreen{position:fixed;inset:0;z-index:9997;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
 #welcomeScreen.hidden{display:none;}
+#wizardOverlay.hidden{display:none!important;}
 .welcome-card{background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius-lg);padding:36px 28px;width:100%;max-width:440px;text-align:center;box-shadow:var(--shadow-card);}
 .welcome-emoji{font-size:48px;margin-bottom:16px;}
 .welcome-title{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;}

@@ -1,8 +1,8 @@
-# MagiLib — Session 51
+# MagiLib — Session 52
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Settings (Feature 7) code review ✅ + 9 bugs fixed, needs re-test. Onboarding (Feature 8) ✅ built. Next: Settings re-test + Onboarding first walkthrough.
+- **Focus:** Device walkthrough. Auth ✅ Add ✅ Library ✅ Edit ✅ Status ✅ Pricing ✅ — Onboarding (Feature 8) redesigned + 3 bugs fixed, needs first walkthrough. Settings (Feature 7) needs re-test. Next: Onboarding walkthrough + Settings re-test.
 
 ---
 
@@ -47,18 +47,18 @@
 
 ---
 
-## Last Session (Session 51)
-- ### Bug Fix 1 — Stats bar showed global total, not section total
-- **catalog.js**
-- `sectionTotal` computed per-section: library books only when in library view, sold-only in sold view, drafts-only in drafts view, wishlist-only in wishlist view
-- Both the loading placeholder (`— / N`) and the final count use `sectionTotal` instead of `S.books.length`
-- Removed `wishlistTotal` local variable (folded into `sectionTotal`)
-- Root cause: `S.books.length` includes all books regardless of section — wishlist items were inflating the denominator in library view
+## Last Session (Session 52)
+- ### Bug Fix 1 — Wizard blank white page (root cause)
+- **assets/css/magilib.css**
+- Added `#wizardOverlay.hidden{display:none!important;}`
+- Root cause: no CSS rule existed for `.hidden` on `#wizardOverlay`. The overlay had `display:flex` as an inline style that was never overridden, so it was always visible from page load — covering the entire app. The splash screen (z-index:99999) hid it during loading, but `classList.add/remove('hidden')` had zero visual effect.
+- ### Bug Fix 2 — Returning users saw wizard every time
+- **ui.js** (`afterSplash`)
 
 **Known issues carried forward:**
-- **Feature 7 — Settings device walkthrough**: still needs re-test. Skipped again this session to build Feature 8. Key flows:
--   - Condition preset save → toast fires
--   - Display name → no Google Save Password prompt on desktop
+- **Feature 8 — Onboarding device walkthrough**: needs first test on device now that bugs are fixed. Key flows:
+-   - New user → wizard fires with dark step 0 hero (not blank white)
+-   - Skip visible on steps 0–3, hidden on step 4
 
 ---
 

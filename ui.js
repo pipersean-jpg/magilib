@@ -776,7 +776,7 @@ if (htmlSplash) htmlSplash.style.display = 'none';
 function afterSplash() {
   const stored = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
   if (!_supaUser) return; // not authenticated — auth screen is showing
-  if (!stored.welcomeSeen) {
+  if (!stored.wizardSeen) {
     updateUserMenu();
     openWizard(false);
   } else {
@@ -1059,16 +1059,20 @@ async function wizardNext() {
       if (errEl) errEl.style.display = 'none';
       const btn = document.getElementById('wizardNextBtn');
       btn.disabled = true; btn.textContent = 'Saving…';
-      const { data: existing } = await _supa.from('profiles').select('id').eq('username', val).neq('id', _supaUser.id).maybeSingle();
-      if (existing) {
-        btn.disabled = false; btn.textContent = 'Finish →';
-        if (errEl) { errEl.textContent = 'That name is already taken — try another.'; errEl.style.display = 'block'; }
-        return;
+      try {
+        const { data: existing } = await _supa.from('profiles').select('id').eq('username', val).neq('id', _supaUser.id).maybeSingle();
+        if (existing) {
+          btn.disabled = false; btn.textContent = 'Finish →';
+          if (errEl) { errEl.textContent = 'That name is taken — try another.'; errEl.style.display = 'block'; }
+          return;
+        }
+        await _supa.from('profiles').update({ username: val }).eq('id', _supaUser.id);
+        if (!S.profile) S.profile = {};
+        S.profile.username = val;
+        updateUserMenu();
+      } catch (_e) {
+        // Save failed — user can update in Settings
       }
-      await _supa.from('profiles').update({ username: val }).eq('id', _supaUser.id);
-      if (!S.profile) S.profile = {};
-      S.profile.username = val;
-      updateUserMenu();
       btn.disabled = false;
     }
     closeWizard(true);
@@ -1102,11 +1106,6 @@ function wizardSkipUsername() {
   }
 }
 
-function showWizardError(msg) {
-  const el = document.getElementById('wizardError');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-
 function renderWizardStep() {
   const content = document.getElementById('wizardStepContent');
   const backBtn = document.getElementById('wizardBackBtn');
@@ -1114,152 +1113,126 @@ function renderWizardStep() {
   const dots = document.getElementById('wizardDots');
   const skipBtn = document.getElementById('wizardSkipBtn');
 
-  // Dots — exclude step 0 (intro) from count, show progress through steps 1–4
-  const tourStep = Math.max(0, wizardStep);
   dots.innerHTML = Array.from({length: WIZARD_STEPS}, (_, i) =>
-    `<div style="width:${i===tourStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===tourStep?'var(--accent)':i<tourStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
+    `<div style="width:${i===wizardStep?'20px':'8px'};height:8px;border-radius:4px;background:${i===wizardStep?'var(--accent)':i<wizardStep?'var(--accent)':'var(--border-med)'};transition:all 0.3s;"></div>`
   ).join('');
 
   backBtn.style.visibility = wizardStep > 0 ? 'visible' : 'hidden';
   skipBtn.style.display = wizardStep < WIZARD_STEPS - 1 ? 'block' : 'none';
 
-  if (wizardStep === 0) {
-    // Welcome / intro
-    nextBtn.textContent = 'Start tour →';
-    content.innerHTML = `
-      <div style="background:#1a1625;padding:52px 24px 44px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;">
-        <img src="/logo@3x.png" style="height:72px;width:auto;filter:brightness(0) invert(1);display:block;margin:0 auto 14px;" onerror="this.src='/logo.png'">
-        <div style="font-size:11px;color:rgba(250,249,246,0.4);letter-spacing:0.12em;text-transform:uppercase;">v1.0 beta</div>
-      </div>
-      <div style="padding:28px 24px 20px;">
-        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink);margin-bottom:10px;line-height:1.3;">Your magic library,<br>beautifully organised.</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:24px;">The collector's catalogue for conjuring books — add, value and search your whole collection in minutes.</div>
-        <div style="display:flex;gap:8px;">
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">📚</div>
-            <div style="font-size:11px;font-weight:600;color:var(--ink);">Catalogue</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">💰</div>
-            <div style="font-size:11px;font-weight:600;color:var(--ink);">Value</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">🔍</div>
-            <div style="font-size:11px;font-weight:600;color:var(--ink);">Search</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  const _ck = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-  else if (wizardStep === 1) {
-    // Add a book
-    nextBtn.textContent = 'Next →';
-    content.innerHTML = `
-      <div style="background:var(--accent);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;">Add in seconds</div>
-      </div>
-      <div style="padding:24px 24px 20px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">1 of 3</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Adding a book</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">Tap <strong>Add</strong> in the nav bar. Search by title — MagiLib looks up the details automatically. Three ways to add:</div>
-        <div style="display:flex;gap:10px;">
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Scan cover</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Take a photo</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">✍️</div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Type title</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Manual entry</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="height:28px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;font-size:20px;">📋</div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Batch add</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Queue multiple</div>
-          </div>
+  const stepFns = [
+    // 0 — Welcome
+    () => ({
+      nextLabel: "Let's go →",
+      html: `
+        <div style="width:100%;background:#1a1625;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 48px;">
+          <!-- 📸 IMAGE SLOT 0: swap this div for <img src="assets/img/onb-welcome.jpg" style="width:100%;height:300px;object-fit:cover;display:block;"> -->
+          <img src="/logo@3x.png" alt="MagiLib" style="height:72px;width:auto;filter:brightness(0) invert(1);display:block;" onerror="this.style.display='none'">
+          <div style="margin-top:14px;font-size:10px;color:rgba(250,249,246,0.35);letter-spacing:0.16em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">v1.0 beta</div>
         </div>
-      </div>
-    `;
-  }
+        <div style="padding:32px 24px 32px;">
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:14px;">Your magic library,<br>beautifully organised.</div>
+          <div style="font-size:15px;color:var(--ink-light);line-height:1.75;">The only catalogue built for serious conjuring collectors — add, value and find any book in seconds.</div>
+        </div>
+      `
+    }),
 
-  else if (wizardStep === 2) {
-    // Library
-    nextBtn.textContent = 'Next →';
-    content.innerHTML = `
-      <div style="background:var(--paper-warm);border-bottom:0.5px solid var(--border);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);">Find anything instantly</div>
-      </div>
-      <div style="padding:24px 24px 20px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">2 of 3</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Your library</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">Search by title, author, or publisher. Fuzzy matching means typos are fine. Filter and sort any way you like.</div>
-        <div style="display:flex;gap:10px;">
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">🔍</div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Fuzzy search</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Typos welcome</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">🏷️</div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Filter</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Condition, status</div>
-          </div>
-          <div style="flex:1;background:var(--paper-warm);border:0.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">↕️</div>
-            <div style="font-size:12px;font-weight:600;color:var(--ink);">Sort</div>
-            <div style="font-size:11px;color:var(--ink-light);margin-top:2px;">Price, date, A–Z</div>
-          </div>
+    // 1 — Built for magic
+    () => ({
+      nextLabel: 'Next →',
+      html: `
+        <div style="width:100%;height:240px;background:linear-gradient(150deg,#2e1a4a 0%,#1a1625 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <!-- 📸 IMAGE SLOT 1: swap this div for <img src="assets/img/onb-catalog.jpg" style="width:100%;height:240px;object-fit:cover;display:block;"> -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         </div>
-      </div>
-    `;
-  }
+        <div style="padding:28px 24px 32px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;font-family:'DM Sans',sans-serif;">Purpose-built</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.3;">Every detail<br>that matters.</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px;">
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Over <strong style="color:var(--ink);">1,000 magic titles</strong> pre-loaded — authors, publishers and covers auto-filled</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Fields built for conjuring: <strong style="color:var(--ink);">edition, signed copies, condition grade</strong></span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Conjuring publishers, cover images and release details all built in</span></li>
+          </ul>
+        </div>
+      `
+    }),
 
-  else if (wizardStep === 3) {
-    // Pricing
-    nextBtn.textContent = 'Next →';
-    content.innerHTML = `
-      <div style="background:var(--paper-warm);border-bottom:0.5px solid var(--border);padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);">Know what it's worth</div>
-      </div>
-      <div style="padding:24px 24px 20px;">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:8px;">3 of 3</div>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">Pricing</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:20px;">When adding a book tap <strong>Fetch Price Estimate</strong> — values from eBay sales and dealer listings. In the library, tap any book then <strong>eBay</strong> for live results.</div>
-        <div style="background:var(--accent-light);border:0.5px solid var(--accent);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:13px;color:var(--ink);line-height:1.6;"><strong>Tip:</strong> Set condition presets in Settings — Fine / Very Good / Good / Fair — so every estimate adjusts to the condition of your copy.</div>
+    // 2 — Add your collection
+    () => ({
+      nextLabel: 'Next →',
+      html: `
+        <div style="width:100%;height:240px;background:linear-gradient(150deg,#162d3f 0%,#0f1f2c 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <!-- 📸 IMAGE SLOT 2: swap this div for <img src="assets/img/onb-add.jpg" style="width:100%;height:240px;object-fit:cover;display:block;"> -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
-      </div>
-    `;
-  }
+        <div style="padding:28px 24px 32px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;font-family:'DM Sans',sans-serif;">Three ways to add</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.3;">Build your library<br>fast.</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px;">
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;"><strong style="color:var(--ink);">Scan a cover</strong> — AI reads the title and fetches all details automatically</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;"><strong style="color:var(--ink);">Batch by photo</strong> — queue a whole stack and process them at once</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;"><strong style="color:var(--ink);">Import from CSV</strong> — bring in an existing spreadsheet in seconds</span></li>
+          </ul>
+        </div>
+      `
+    }),
 
-  else if (wizardStep === 4) {
-    // Choose name (last step — optional, can skip)
-    nextBtn.textContent = 'Finish →';
-    const suggested = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
-    content.innerHTML = `
-      <div style="background:#1a1625;padding:44px 24px 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;">One last thing</div>
-      </div>
-      <div style="padding:24px 24px 20px;">
-        <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px;">What should we call you?</div>
-        <div style="font-size:14px;color:var(--ink-light);line-height:1.6;margin-bottom:20px;">Your display name in MagiLib. Letters, numbers, _ and - only.</div>
-        <label style="font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px;">Display name</label>
-        <input type="text" id="wiz-username" value="${suggested}" placeholder="e.g. CardShark42" autocomplete="nickname"
-          style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
-          oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
-          maxlength="30"/>
-        <div id="wiz-username-error" style="display:none;font-size:12px;color:var(--status-sold);margin-top:6px;padding:6px 10px;background:var(--status-sold-bg);border-radius:6px;"></div>
-        <div style="font-size:11px;color:var(--ink-faint);margin-top:8px;">
-          <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:0;color:var(--ink-faint);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit;">Skip — I'll set this later in Settings</button>
+    // 3 — Pricing
+    () => ({
+      nextLabel: 'Next →',
+      html: `
+        <div style="width:100%;height:240px;background:linear-gradient(150deg,#0f2818 0%,#0a1c10 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <!-- 📸 IMAGE SLOT 3: swap this div for <img src="assets/img/onb-pricing.jpg" style="width:100%;height:240px;object-fit:cover;display:block;"> -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
-      </div>
-    `;
+        <div style="padding:28px 24px 32px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;font-family:'DM Sans',sans-serif;">Real market data</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.3;">Know what your<br>collection is worth.</div>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px;">
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Prices from <strong style="color:var(--ink);">eBay sales, dealer listings and auction results</strong></span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Condition presets — <strong style="color:var(--ink);">Fine · Very Good · Good · Fair</strong> — every estimate adjusts automatically</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Database evolves as the market moves — values stay current</span></li>
+          </ul>
+        </div>
+      `
+    }),
+
+    // 4 — Display name (optional)
+    () => {
+      const suggested = (S.profile && S.profile.username) || (_supaUser && _supaUser.email ? _supaUser.email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '') : '');
+      return {
+        nextLabel: 'Finish →',
+        html: `
+          <div style="width:100%;background:#1a1625;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 40px;flex-shrink:0;">
+            <!-- 📸 IMAGE SLOT 4: swap this div for <img src="assets/img/onb-profile.jpg" style="width:100%;height:220px;object-fit:cover;display:block;"> -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div style="padding:28px 24px 32px;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:10px;line-height:1.3;">One last thing.</div>
+            <div style="font-size:14px;color:var(--ink-light);line-height:1.6;margin-bottom:22px;">What should we call you in MagiLib? You can always change this in Settings.</div>
+            <label style="font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px;">Display name</label>
+            <input type="text" id="wiz-username" value="${suggested}" placeholder="e.g. CardShark42" autocomplete="nickname"
+              style="width:100%;padding:12px 14px;border:0.5px solid var(--border-med);border-radius:10px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--paper);outline:none;box-sizing:border-box;"
+              oninput="const e=document.getElementById('wiz-username-error');if(e)e.style.display='none';"
+              maxlength="30"/>
+            <div id="wiz-username-error" style="display:none;font-size:12px;color:var(--status-sold);margin-top:6px;padding:6px 10px;background:var(--status-sold-bg);border-radius:6px;"></div>
+            <div style="margin-top:18px;text-align:center;">
+              <button onclick="wizardSkipUsername()" style="background:none;border:none;padding:4px 0;color:var(--ink-faint);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Skip — I'll set this later in Settings</button>
+            </div>
+          </div>
+        `
+      };
+    }
+  ];
+
+  const { nextLabel, html } = stepFns[wizardStep]();
+  nextBtn.textContent = nextLabel;
+  content.innerHTML = html;
+  content.scrollTop = 0;
+
+  if (wizardStep === 4) {
     setTimeout(() => { const el = document.getElementById('wiz-username'); if (el) { el.focus(); el.select(); } }, 80);
   }
 }
