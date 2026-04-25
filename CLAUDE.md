@@ -1,8 +1,8 @@
-# MagiLib — Session 54
+# MagiLib — Session 55
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Two z-index bugs fixed (user dropdown behind toolbar, cover picker behind edit card). Next: Onboarding walkthrough (Feature 8) device test + Settings re-test (Feature 7).
+- **Focus:** Feature 8 onboarding bugs fixed (double-splash, wizard destination, text, magic fact rotation, Chrome password prompt on edit modal). Next: device walkthrough of Onboarding (Feature 8) + Settings re-test (Feature 7).
 
 ---
 
@@ -47,16 +47,16 @@
 
 ---
 
-## Last Session (Session 54)
-- ### assets/css/magilib.css
-- `--z-nav:100` → `--z-nav:400` in `:root`
-- `.nav` rule: `z-index:100` → `z-index:var(--z-nav)` (400)
-- **Root cause fixed:** `.nav` (`position:sticky; z-index:100`) created a stacking context at z:100 in root. The `.user-dropdown` (z:200) is inside `.nav`'s stacking context, so from root it was effectively z:100 — below the `.catalog-toolbar` (z:300) added in Session 53. Raising nav to z:400 puts the entire nav stacking context above the toolbar.
-- ### index.html
-- Moved `#coverPickerOverlay` block from before `#editModalOverlay` (old line 823) to after it (now line 896)
+## Last Session (Session 55)
+- ### ui.js
+- **Double-splash fix:** Added `_splashRunning` flag — `showSplash()` is now idempotent. `onAuthStateChange` fires with `SIGNED_IN` before `getSession()` resolves on returning-user load, causing a second `showSplash()` → second `afterSplash()`. Guard prevents this.
+- **Wizard text updates:**
+-   - Step 0: "beautifully organised" → "stacked & memorised"
+-   - Step 1: "Over 1,000 magic titles" → "Over 10,000 magic titles"
+-   - Step 1: "Conjuring publishers" → "Major magic publishers"
 
 **Known issues carried forward:**
-- **Feature 8 — Onboarding device walkthrough**: still needs first test on device. Key flows:
+- **Feature 8 — Onboarding device walkthrough**: All known bugs fixed. Still needs first full device test:
 -   - New user → wizard fires with dark step 0 hero (not blank white)
 -   - Skip visible on steps 0–3, hidden on step 4
 

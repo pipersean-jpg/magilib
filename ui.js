@@ -749,9 +749,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 });
 
+let _splashRunning = false;
 function showSplash() {
+  if (_splashRunning) return; // prevent double-splash from onAuthStateChange race
+  _splashRunning = true;
   var splash = document.getElementById('splashScreen');
-  if (!splash) { afterSplash(); return; }
+  if (!splash) { _splashRunning = false; afterSplash(); return; }
   splash.style.opacity = '1';
   splash.style.visibility = 'visible';
   splash.style.display = 'flex';
@@ -764,6 +767,7 @@ function showSplash() {
     splash.style.opacity = '0';
     splash.style.pointerEvents = 'none';
     setTimeout(function() {
+      _splashRunning = false;
       splash.style.visibility = 'hidden';
       splash.style.display = 'none';
       afterSplash();
@@ -1076,7 +1080,7 @@ async function wizardNext() {
     closeWizard(true);
     showToast('All set! Welcome to MagiLib ✓', 'success');
     if (!_wizardFromSettings) {
-      showView('catalog');
+      showView('home');
       if (typeof loadCatalog === 'function') loadCatalog();
       if (typeof checkChangelog === 'function') checkChangelog();
     }
@@ -1098,7 +1102,7 @@ function wizardSkipUsername() {
   closeWizard(true);
   showToast('All set! Welcome to MagiLib ✓', 'success');
   if (!_wizardFromSettings) {
-    showView('catalog');
+    showView('home');
     if (typeof loadCatalog === 'function') loadCatalog();
     if (typeof checkChangelog === 'function') checkChangelog();
   }
@@ -1131,7 +1135,7 @@ function renderWizardStep() {
           <div style="margin-top:14px;font-size:10px;color:rgba(250,249,246,0.35);letter-spacing:0.16em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">v1.0 beta</div>
         </div>
         <div style="padding:32px 24px 32px;">
-          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:14px;">Your magic library,<br>beautifully organised.</div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:14px;">Your magic library,<br>stacked &amp; memorised.</div>
           <div style="font-size:15px;color:var(--ink-light);line-height:1.75;">The only catalogue built for serious conjuring collectors — add, value and find any book in seconds.</div>
         </div>
       `
@@ -1149,9 +1153,9 @@ function renderWizardStep() {
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;font-family:'DM Sans',sans-serif;">Purpose-built</div>
           <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:20px;line-height:1.3;">Every detail<br>that matters.</div>
           <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px;">
-            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Over <strong style="color:var(--ink);">1,000 magic titles</strong> pre-loaded — authors, publishers and covers auto-filled</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Over <strong style="color:var(--ink);">10,000 magic titles</strong> pre-loaded — authors, publishers and covers auto-filled</span></li>
             <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Fields built for conjuring: <strong style="color:var(--ink);">edition, signed copies, condition grade</strong></span></li>
-            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Conjuring publishers, cover images and release details all built in</span></li>
+            <li style="display:flex;gap:12px;align-items:flex-start;">${_ck}<span style="font-size:14px;color:var(--ink-light);line-height:1.6;">Major magic publishers, cover images and release details all built in</span></li>
           </ul>
         </div>
       `

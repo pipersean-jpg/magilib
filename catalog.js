@@ -381,7 +381,7 @@ function renderHomeView(){
       el('homeGreetingSub').textContent='You have '+lib.length+' book'+(lib.length===1?'':'s')+' in your collection.';
     }
   }
-  // Magic fact (rotate by day) — merge static array with any custom facts from Supabase
+  // Magic fact — rotate each time Home is viewed
   if(el('homeMagicFact')){
     (async()=>{
       let facts=MAGIC_FACTS;
@@ -389,7 +389,7 @@ function renderHomeView(){
         const{data}=await _supa.from('magic_facts').select('fact');
         if(data&&data.length)facts=[...MAGIC_FACTS,...data.map(r=>r.fact)];
       }catch(e){}
-      el('homeMagicFact').textContent=facts[Math.floor(Date.now()/86400000)%facts.length];
+      el('homeMagicFact').textContent=facts[Math.floor(Math.random()*facts.length)];
     })();
   }
   // Recent books (last 5)
