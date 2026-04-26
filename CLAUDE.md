@@ -1,8 +1,8 @@
-# MagiLib — Session 60
+# MagiLib — Session 61
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** Book detail modal redesigned — new `detail.js` module with magic taxonomy, topic chips, recommendation carousels, and enrichment scaffold. SQL migration from Session 59 still needs to run in Supabase. Next: run migration, publisher fix in scan path, normKey unification, beta walkthroughs.
+- **Focus:** S61 closed three carried items: SQL migration run, publisher wired in scan path, normKey unified into `normCatalogKey`/`normPriceKey` in globals.js. Next: beta device walkthroughs (Auth, Add, Library, Edit).
 
 ---
 
@@ -48,13 +48,13 @@
 
 ---
 
-## Last Session (Session 60)
-- ### detail.js (NEW — 260 lines)
-- `MAGIC_TAXONOMY` — 28-entry controlled tag list for magic categories.
-- `_TOPIC_KW` — Keyword→topic mapping for local detection across title/author/publisher/notes.
-- `MetadataCache` — localStorage-backed cache for web-enriched metadata (key: `magilib_enrich_<id>`).
-- `MetadataEnrichmentAdapters` — Adapter pattern with one OpenGraph/JSON-LD adapter. User-initiated, caches results, calls `/fetch-proxy`. Ready for future sources.
-- `enrichBookFromUrl(book, url)` — Calls matching adapter, stores result in cache.
+## Last Session (Session 61)
+- ### Supabase (server-side — no file change)
+- Ran SQL migration: `in_print` (boolean), `price_currency` (varchar 3), `price_updated_at` (timestamptz) columns added to `books` table.
+- Migrated existing `notes`-encoded `In Print: Yes/No` rows to `in_print` column; stripped encoding from `notes`.
+- ### conjuring.js (MODIFIED)
+- Added `dbPublisher(e)` helper (line 36) — returns `e.p || ''`.
+- `applyConjuringMatch`: added `publisher = dbPublisher(entry)`; calls `fill('f-publisher', toTitleCasePublisher(publisher))`. `filledFromDB` count now includes publisher. Fixes blank publisher on every scan match.
 
 ---
 

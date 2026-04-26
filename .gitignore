@@ -5,3 +5,5 @@ node_modules/
 .vercel
 GEMINI_START.txt
 .mcp.json
+# Added by code-review-graph
+.code-review-graph/
