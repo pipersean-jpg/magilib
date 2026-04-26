@@ -55,6 +55,16 @@
 - **`closeModal`:** Restores `S._savedScrollY` after overlay hides; clears it.
 - **`openEditFromModal`:** Saves current scroll to `S._editSavedScrollY` (from `S._savedScrollY` or live `window.scrollY`) before calling `closeModal`, so edit-close path can restore independently.
 - **Wishlist toast:** `showToast` on `loadCatalog` now checks `S.showWishlist` — shows "X wishlist items" not total library count.
+- **`open-book` (reco):** `setTimeout(420)` replaces double-rAF — waits for 0.4s close animation.
+- ### detail.js (MODIFIED)
+- **Enrich fetch root cause:** Adapter was calling `res.text()` on JSON proxy response — now `res.json()` + `.html`. Was why Murphy's always returned "No description found."
+- **Vanishing URL:** `?search=` query param.
+- **HTML fallback + text sanitizer:** `_htmlDesc()` tries common selectors; `_clean()` strips mojibake.
+- **Wishlist card:** `coreSection`, `topicSection`, `authorSection`, `recoSection`, `enrichSection` all hidden when `isWishlist`.
+- ### conjuring.js (MODIFIED)
+- **`applyConjuringToEdit`:** Author always overrides on dropdown selection. `_applyEditCover()` extracted. `_scrapeEditCoverFromMagicRef()` — async MagicRef cover fallback when no `c` DB field.
+- ### books.js (MODIFIED)
+- **`closeEditModal`:** Restores `S._editSavedScrollY` (both close paths).
 
 ---
 
