@@ -66,8 +66,9 @@ const MetadataEnrichmentAdapters = [
       try {
         const res = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const html = await res.text();
-        return this.parseMetadata(html, url);
+        const json = await res.json();
+        if (!json.success || !json.html) return null;
+        return this.parseMetadata(json.html, url);
       } catch { return null; }
     },
     parseMetadata(html, sourceUrl) {
@@ -211,7 +212,7 @@ function _statusBadgeHTML(b) {
 function buildEnrichSectionHTML(b) {
   const q = encodeURIComponent((b.title || '') + (b.author ? ' ' + b.author : ''));
   const mAttr = ('https://www.murphysmagic.com/Search.aspx?q=' + q).replace(/"/g, '&quot;');
-  const vAttr = ('https://www.vanishingincmagic.com/search/' + q + '/').replace(/"/g, '&quot;');
+  const vAttr = ('https://www.vanishingincmagic.com/search/?q=' + q).replace(/"/g, '&quot;');
   return `<div class="ms-section ms-enrich-section" id="ms-enrich-section">
     <div class="ms-section-title">Enrich from Web</div>
     <div class="ms-enrich-body">
@@ -386,13 +387,13 @@ function buildDetailBodyHTML(book, allBooks, opts) {
     </div>
     ${metaRow}
     ${coreSection}
-    ${enrichSection}
     ${topicSection}
     ${collectorSection}
     ${authorSection}
     ${recoSection}
     ${wishSuggestSection}
     ${googleFallback}
+    ${enrichSection}
     ${marketSlot}
   `;
 }

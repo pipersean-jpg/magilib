@@ -389,15 +389,17 @@ function renderHomeView(){
       el('homeGreetingSub').textContent='You have '+lib.length+' book'+(lib.length===1?'':'s')+' in your collection.';
     }
   }
-  // Magic fact — rotate each time Home is viewed
+  // Magic fact — set from local array immediately (no lag), then update with Supabase facts
   if(el('homeMagicFact')){
+    el('homeMagicFact').textContent=MAGIC_FACTS[Math.floor(Math.random()*MAGIC_FACTS.length)];
     (async()=>{
-      let facts=MAGIC_FACTS;
       try{
         const{data}=await _supa.from('magic_facts').select('fact');
-        if(data&&data.length)facts=[...MAGIC_FACTS,...data.map(r=>r.fact)];
+        if(data&&data.length){
+          const all=[...MAGIC_FACTS,...data.map(r=>r.fact)];
+          el('homeMagicFact').textContent=all[Math.floor(Math.random()*all.length)];
+        }
       }catch(e){}
-      el('homeMagicFact').textContent=facts[Math.floor(Math.random()*facts.length)];
     })();
   }
   // Recent books (last 5)
@@ -658,7 +660,12 @@ async function loadCatalog(){
     _idbSaveBooks(_supaUser.id, data || []);
     renderCatalog();
     if(document.getElementById('view-home')&&document.getElementById('view-home').classList.contains('active'))renderHomeView();
-    showToast('Loaded '+S.books.length+' books','success',2000);
+    if(S.showWishlist){
+      const wCount=S.books.filter(b=>b.sold==='Wishlist').length;
+      showToast('Loaded '+wCount+' wishlist item'+(wCount===1?'':'s'),'success',2000);
+    }else{
+      showToast('Loaded '+S.books.length+' book'+(S.books.length===1?'':'s'),'success',2000);
+    }
     enrichCoversFromCatalog();
   }catch(e){
     console.error('Catalog load error:',e);
@@ -1396,9 +1403,7 @@ function openModal(idx){
       actionsArea.innerHTML =
         `<div class="ms-actions-primary">
           <button class="btn-action" data-action="edit-book">Edit Details</button>
-        </div>
-        <div class="ms-actions-secondary">
-          <button class="btn-ghost" style="width:100%" data-action="toggle-wishlist">Move to Library</button>
+          <button class="btn-action" data-action="toggle-wishlist">Move to Library</button>
         </div>
         <hr class="ms-separator">
         <div class="ms-actions-danger">
@@ -2942,7 +2947,13 @@ async function _doEnrichAndSave(b, url) {
           const targetIdx = parseInt(el.dataset.idx, 10);
           if (!isNaN(targetIdx) && S.books[targetIdx]) {
             closeModal();
-            requestAnimationFrame(() => { requestAnimationFrame(() => { openModal(targetIdx); }); });
+            requestAnimationFrame(() => { requestAnimationFrame(() => {
+              openModal(targetIdx);
+              requestAnimationFrame(() => {
+                const sheet = document.querySelector('#modalOverlay .magi-sheet');
+                if (sheet) sheet.scrollTop = 0;
+              });
+            }); });
           }
           break;
         }

@@ -638,10 +638,12 @@ function applyConjuringToEdit(match) {
     titleEl.classList.add('field-populated');
     setTimeout(() => titleEl.classList.remove('field-populated'), 3000);
   }
-  const author = dbAuthor(entry);
-  const year   = dbYear(entry);
-  if (author) fill('edit-author', toTitleCase(normalizeConjuringAuthor(author)));
-  if (year)   fill('edit-year', year);
+  const author    = dbAuthor(entry);
+  const year      = dbYear(entry);
+  const publisher = dbPublisher(entry);
+  if (author)    fill('edit-author',    toTitleCase(normalizeConjuringAuthor(author)));
+  if (year)      fill('edit-year',      year);
+  if (publisher) fill('edit-publisher', toTitleCasePublisher(publisher));
   // Update cover only if none currently set
   const coverUrl = dbCoverUrl(entry);
   if (coverUrl && !S.editCoverUrl) {
