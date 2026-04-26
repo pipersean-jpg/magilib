@@ -113,13 +113,31 @@ function closeEditModal(e) {
       title: 'Leave without saving?',
       message: 'Your changes will be lost.',
       confirmText: 'Leave',
-      onConfirm: () => { _editDirty = false; overlay.classList.add('hidden'); document.body.classList.remove('sheet-open'); }
+      onConfirm: () => {
+        _editDirty = false;
+        overlay.classList.add('hidden');
+        document.body.classList.remove('sheet-open');
+        if (S._editSavedScrollY != null) {
+          const y = S._editSavedScrollY; S._editSavedScrollY = null;
+          requestAnimationFrame(() => { window.scrollTo(0,y); document.body.scrollTop=y; document.documentElement.scrollTop=y; });
+        }
+      }
     });
     return;
   }
   _editDirty = false;
   overlay.classList.add('hidden');
   document.body.classList.remove('sheet-open');
+  // Restore library scroll position after edit overlay closes
+  if (S._editSavedScrollY != null) {
+    const y = S._editSavedScrollY;
+    S._editSavedScrollY = null;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, y);
+      document.body.scrollTop = y;
+      document.documentElement.scrollTop = y;
+    });
+  }
 }
 
 function _markEditDirty() { _editDirty = true; }

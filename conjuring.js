@@ -623,6 +623,7 @@ function hideEditTitleDropdown() {
 
 function applyConjuringToEdit(match) {
   const entry = match.entry;
+  // fill: only set if field is empty (non-destructive for year/publisher)
   const fill = (id, val) => {
     if (!val) return;
     const el = document.getElementById(id);
@@ -632,28 +633,62 @@ function applyConjuringToEdit(match) {
       setTimeout(() => el.classList.remove('field-populated'), 3000);
     }
   };
-  const titleEl = document.getElementById('edit-title');
-  if (titleEl) {
-    titleEl.value = entry.t || toTitleCase(match.key);
-    titleEl.classList.add('field-populated');
-    setTimeout(() => titleEl.classList.remove('field-populated'), 3000);
-  }
+  // set: always override (used for title and author — explicit DB selection)
+  const set = (id, val) => {
+    if (!val) return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = val;
+      el.classList.add('field-populated');
+      setTimeout(() => el.classList.remove('field-populated'), 3000);
+    }
+  };
+  set('edit-title',  entry.t || toTitleCase(match.key));
   const author    = dbAuthor(entry);
   const year      = dbYear(entry);
   const publisher = dbPublisher(entry);
-  if (author)    fill('edit-author',    toTitleCase(normalizeConjuringAuthor(author)));
-  if (year)      fill('edit-year',      year);
+  if (author)    set('edit-author',    toTitleCase(normalizeConjuringAuthor(author)));
+  if (year)      fill('edit-year',     year);
   if (publisher) fill('edit-publisher', toTitleCasePublisher(publisher));
-  // Update cover only if none currently set
+  // Set cover from DB if available
   const coverUrl = dbCoverUrl(entry);
-  if (coverUrl && !S.editCoverUrl) {
-    S.editCoverUrl = coverUrl;
-    const img = document.getElementById('editCoverImg');
-    const ph  = document.getElementById('editCoverPh');
-    if (img) { img.src = coverUrl; img.style.display = 'block'; }
-    if (ph)  ph.style.display = 'none';
+  if (coverUrl) {
+    _applyEditCover(coverUrl);
+  } else {
+    // Fallback: async scrape MagicRef page for cover image
+    const mrUrl = dbMagicrefUrl(entry);
+    if (mrUrl) _scrapeEditCoverFromMagicRef(mrUrl);
   }
   if (typeof _markEditDirty === 'function') _markEditDirty();
+}
+
+function _applyEditCover(url) {
+  if (!url) return;
+  S.editCoverUrl = url;
+  const img = document.getElementById('editCoverImg');
+  const ph  = document.getElementById('editCoverPh');
+  if (img) { img.src = url; img.style.display = 'block'; }
+  if (ph)  ph.style.display = 'none';
+}
+
+async function _scrapeEditCoverFromMagicRef(pageUrl) {
+  try {
+    const resp = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(pageUrl));
+    const data = await resp.json();
+    if (!data.success || !data.html) return;
+    // MagicRef pages embed cover image in an <img> with src containing /covers/ or /images/
+    const doc = new DOMParser().parseFromString(data.html, 'text/html');
+    const imgs = doc.querySelectorAll('img[src]');
+    for (const img of imgs) {
+      const src = img.getAttribute('src') || '';
+      if (src.includes('cover') || src.includes('/images/b')) {
+        const fullUrl = src.startsWith('http') ? src : 'https://www.magicref.co.uk' + src;
+        _applyEditCover(fullUrl);
+        if (typeof _markEditDirty === 'function') _markEditDirty();
+        return;
+      }
+    }
+  } catch { /* cover scrape is non-critical */ }
 }
 
 // ── TITLE FIELD BLUR ──

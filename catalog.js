@@ -389,18 +389,9 @@ function renderHomeView(){
       el('homeGreetingSub').textContent='You have '+lib.length+' book'+(lib.length===1?'':'s')+' in your collection.';
     }
   }
-  // Magic fact — set from local array immediately (no lag), then update with Supabase facts
+  // Magic fact — synchronous pick from local array; no async update that causes visible flash
   if(el('homeMagicFact')){
     el('homeMagicFact').textContent=MAGIC_FACTS[Math.floor(Math.random()*MAGIC_FACTS.length)];
-    (async()=>{
-      try{
-        const{data}=await _supa.from('magic_facts').select('fact');
-        if(data&&data.length){
-          const all=[...MAGIC_FACTS,...data.map(r=>r.fact)];
-          el('homeMagicFact').textContent=all[Math.floor(Math.random()*all.length)];
-        }
-      }catch(e){}
-    })();
   }
   // Recent books (last 5)
   const row=el('homeRecentRow');
@@ -1432,9 +1423,18 @@ function openModal(idx){
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
   const _mo = document.getElementById('modalOverlay');
+  // Save library scroll position so closeModal can restore it
+  if (!_mo.classList.contains('is-active')) {
+    S._savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  }
   _mo.classList.add('is-active');
   _mo.style.pointerEvents = 'none';
-  requestAnimationFrame(() => { requestAnimationFrame(() => { _mo.style.pointerEvents = ''; }); });
+  requestAnimationFrame(() => { requestAnimationFrame(() => {
+    _mo.style.pointerEvents = '';
+    // Always start at top of detail sheet
+    const _sheet = _mo.querySelector('.magi-sheet');
+    if (_sheet) _sheet.scrollTop = 0;
+  }); });
 }
 function openEbayModal(){
   // Installed PWA on iOS loses state with window.open — use location.href only in that case
@@ -1447,12 +1447,26 @@ function openEditFromModal(id){
     const b = S.books[S.currentModalIdx];
     if (b) id = b._id;
   }
+  // Persist scroll so closeEditModal can restore it after edit overlay closes
+  S._editSavedScrollY = S._savedScrollY != null ? S._savedScrollY : (window.scrollY || document.documentElement.scrollTop || 0);
   const sheet = document.querySelector('#modalOverlay .magi-sheet');
   if (sheet) sheet.classList.add('is-fading');
   closeModal();
   setTimeout(() => { openEditForm(id); }, 350);
 }
-function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay')||!e.target){document.getElementById('modalOverlay').classList.remove('is-active');document.body.classList.remove('sheet-open');}}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modalOverlay')||!e.target){
+    document.getElementById('modalOverlay').classList.remove('is-active');
+    document.body.classList.remove('sheet-open');
+    // Restore library scroll position
+    if(S._savedScrollY!=null){
+      window.scrollTo(0,S._savedScrollY);
+      document.body.scrollTop=S._savedScrollY;
+      document.documentElement.scrollTop=S._savedScrollY;
+      S._savedScrollY=null;
+    }
+  }
+}
 
 // ── BATCH SELECT MODE ─────────────────────────────────────────────
 S.selectMode = null; // null | 'edit' | 'move'
@@ -2946,14 +2960,14 @@ async function _doEnrichAndSave(b, url) {
         case 'open-book': {
           const targetIdx = parseInt(el.dataset.idx, 10);
           if (!isNaN(targetIdx) && S.books[targetIdx]) {
+            // Preserve scroll position across the modal switch
+            const _scrollForSwitch = S._savedScrollY != null ? S._savedScrollY : (window.scrollY || document.documentElement.scrollTop || 0);
             closeModal();
-            requestAnimationFrame(() => { requestAnimationFrame(() => {
+            // Wait for 0.4s close animation before opening next modal
+            setTimeout(() => {
+              S._savedScrollY = _scrollForSwitch;
               openModal(targetIdx);
-              requestAnimationFrame(() => {
-                const sheet = document.querySelector('#modalOverlay .magi-sheet');
-                if (sheet) sheet.scrollTop = 0;
-              });
-            }); });
+            }, 420);
           }
           break;
         }

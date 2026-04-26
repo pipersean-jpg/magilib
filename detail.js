@@ -87,9 +87,38 @@ const MetadataEnrichmentAdapters = [
           }
         } catch { /* invalid JSON-LD */ }
       });
+      // HTML fallback: look for description in common content selectors
+      const _htmlDesc = () => {
+        const selectors = [
+          '[itemprop="description"]',
+          '.product-description', '.description', '.prod-description',
+          '#product-description', '#description',
+          '.ProductDescription', '.ItemDescription',
+        ];
+        for (const sel of selectors) {
+          const el = doc.querySelector(sel);
+          if (el) {
+            const t = el.textContent.trim();
+            if (t.length > 60) return t;
+          }
+        }
+        // Last resort: first paragraph with enough content
+        for (const p of doc.querySelectorAll('p')) {
+          const t = p.textContent.trim();
+          if (t.length > 120) return t;
+        }
+        return '';
+      };
+      // Sanitize text: strip garbled encoding artefacts + collapse whitespace
+      const _clean = t => t
+        .replace(/[-]/g, '')   // C1 control chars (Windows-1252 mojibake)
+        .replace(/ /g, ' ')            // non-breaking space
+        .replace(/\s+/g, ' ')
+        .trim();
+      const rawDesc = (ld && ld.description) || og('og:description') || meta('description') || _htmlDesc();
       const data = {
         title:       (ld && ld.name)        || og('og:title')       || doc.title || '',
-        description: (ld && ld.description) || og('og:description') || meta('description') || '',
+        description: _clean(rawDesc),
         image:       (ld && ld.image)       || og('og:image')       || '',
         author:      (ld && ld.author && ld.author.name) || '',
         publisher:   (ld && ld.publisher && ld.publisher.name) || '',
@@ -212,7 +241,7 @@ function _statusBadgeHTML(b) {
 function buildEnrichSectionHTML(b) {
   const q = encodeURIComponent((b.title || '') + (b.author ? ' ' + b.author : ''));
   const mAttr = ('https://www.murphysmagic.com/Search.aspx?q=' + q).replace(/"/g, '&quot;');
-  const vAttr = ('https://www.vanishingincmagic.com/search/?q=' + q).replace(/"/g, '&quot;');
+  const vAttr = ('https://www.vanishingincmagic.com/search/?search=' + q).replace(/"/g, '&quot;');
   return `<div class="ms-section ms-enrich-section" id="ms-enrich-section">
     <div class="ms-section-title">Enrich from Web</div>
     <div class="ms-enrich-body">
@@ -386,14 +415,14 @@ function buildDetailBodyHTML(book, allBooks, opts) {
       ${starSlot}
     </div>
     ${metaRow}
-    ${coreSection}
-    ${topicSection}
+    ${!isWishlist ? coreSection : ''}
+    ${!isWishlist ? topicSection : ''}
     ${collectorSection}
-    ${authorSection}
-    ${recoSection}
+    ${!isWishlist ? authorSection : ''}
+    ${!isWishlist ? recoSection : ''}
     ${wishSuggestSection}
     ${googleFallback}
-    ${enrichSection}
+    ${!isWishlist ? enrichSection : ''}
     ${marketSlot}
   `;
 }
