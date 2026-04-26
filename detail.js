@@ -243,6 +243,7 @@ function buildDetailBodyHTML(book, allBooks, opts) {
   const authorItems  = _authorBooks(b, allBooks);
   const wishSuggs    = !isWishlist ? _wishlistSuggestions(b, allBooks) : [];
   const cached       = MetadataCache.get(b._id);
+  const topics       = detectMagicTopics(b);
   const _coreContent = (b.notes || '') || ((cached && cached.description) || '');
   const enrichSection = !_coreContent ? buildEnrichSectionHTML(b) : '';
 
