@@ -1,5 +1,26 @@
 const S={condition:'',coverUrl:'',books:[],filterCondition:'all',settings:{},currentModalUrl:''};
 
+// Canonical key for book_catalog.norm_key (Supabase): "title:author" minimal strip
+function normCatalogKey(title, author) {
+  const clean = s => (s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+  return clean(title) + ':' + clean(author);
+}
+
+// Canonical key for MARKET_DB lookups (title-only, aggressive strip)
+function normPriceKey(title) {
+  return (title||'')
+    .replace(/[^\x00-\x7F]/g,' ')
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/\[[^\]]*\]/g,' ')
+    .replace(/\s+-\s+.*$/,'')
+    .replace(/\s+by\s+.*$/i,'')
+    .replace(/\s*(hardcover|softcover|paperback|hc\b|pb\b|magic trick|magic book|signed\b|oop\b)\s*/gi,' ')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ').trim()
+    .replace(/^(the|a|an)\s+/,'');
+}
+
 function sanitize(str) {
   return (str == null ? '' : String(str))
     .replace(/&/g, '&amp;')

@@ -33,6 +33,7 @@ function dbYear(e)       { return (e && e.y) || ''; }
 function dbCoverUrl(e)   { return e ? expandCoverUrl(e.c || '') : ''; }
 function dbAltImages(e)  { return e && e.i ? e.i.map(expandCoverUrl).filter(Boolean) : []; }
 function dbMagicrefUrl(e){ return e ? expandPageUrl(e.m || '') : ''; }
+function dbPublisher(e)  { return (e && e.p) || ''; }
 
 // Get ALL cover images for an entry (primary + alts), deduplicated
 function dbAllCovers(e) {
@@ -304,12 +305,14 @@ async function applyConjuringMatch(match, scanSource) {
     }
   };
 
-  const author = dbAuthor(entry);
-  const year   = dbYear(entry);
-  if (author) fill('f-author', toTitleCase(normalizeConjuringAuthor(author)));
-  if (year)   fill('f-year', year);
+  const author    = dbAuthor(entry);
+  const year      = dbYear(entry);
+  const publisher = dbPublisher(entry);
+  if (author)    fill('f-author',    toTitleCase(normalizeConjuringAuthor(author)));
+  if (year)      fill('f-year',      year);
+  if (publisher) fill('f-publisher', toTitleCasePublisher(publisher));
 
-  const filledFromDB = [author, year].filter(Boolean).length;
+  const filledFromDB = [author, year, publisher].filter(Boolean).length;
 
   // 4. Status message
   const statusEl = document.getElementById('scanDetail');

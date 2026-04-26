@@ -295,19 +295,7 @@ function localPriceLookup(title) {
   const USD_AUD = 1.55, GBP_AUD = 2.02;
   const toAUD = (p, cur) => Math.round(p * (cur === 'GBP' ? GBP_AUD : USD_AUD));
 
-  const normKey = s => {
-    let k = s.replace(/[^\x00-\x7F]/g,' ')
-             .replace(/\([^)]*\)/g,' ')
-             .replace(/\s+-\s+.*$/,'')
-             .replace(/\s+by\s+.*$/i,'')
-             .toLowerCase()
-             .replace(/[^a-z0-9\s]/g,' ')
-             .replace(/\s+/g,' ').trim()
-             .replace(/^(the|a|an)\s+/,'');
-    return k;
-  };
-
-  const key = normKey(title);
+  const key = normPriceKey(title);
   const sources = [];
   const priceEntry = lookupPriceDB(title);
   if (priceEntry) {

@@ -1060,11 +1060,6 @@ function closeCopiesSheet(e) {
   }
 }
 // ── MARKET SYNC ──────────────────────────────────────────────────────
-function normKey(title, author) {
-  const clean = s => (s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
-  return clean(title) + ':' + clean(author);
-}
-
 // ── COVER ENRICHMENT FROM book_catalog ──
 // Pass 1: exact norm_key match (title+author). Pass 2: clean-title prefix match for
 // books with no author or unmatched by pass 1. Runs once per load.
@@ -1080,7 +1075,7 @@ async function enrichCoversFromCatalog() {
   // Pass 1 — exact norm_key lookup (handles special chars via .in())
   const keyToBooks = {};
   booksToFix.forEach(b => {
-    const k = normKey(b.title, b.author);
+    const k = normCatalogKey(b.title, b.author);
     if (!keyToBooks[k]) keyToBooks[k] = [];
     keyToBooks[k].push(b);
   });
@@ -1169,7 +1164,7 @@ function getConditionPct(condition) {
 
 // ── getEstimatedValue ─────────────────────────────────────────────────────
 async function getEstimatedValue(book) {
-  const key = normKey(book.title, book.author);
+  const key = normCatalogKey(book.title, book.author);
   const userCur = (S.settings && S.settings.currency) || 'AUD';
 
   const [{ data: rows }, fx] = await Promise.all([
@@ -1239,7 +1234,7 @@ async function loadMarketSync(b) {
   const el = document.getElementById('marketSyncSection');
   if (!el) return;
 
-  const key = normKey(b.title, b.author);
+  const key = normCatalogKey(b.title, b.author);
   const sym = currSym();
   const userCur = (S.settings && S.settings.currency) || 'AUD';
 

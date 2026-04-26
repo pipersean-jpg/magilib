@@ -255,22 +255,7 @@ async function fetchPrice(){
   const GBP_AUD = 2.02;
   const toAUD = (price, cur) => Math.round(price * (cur === 'GBP' ? GBP_AUD : USD_AUD));
 
-  // ── Normalise title for DB lookup ──
-  const normKey = s => {
-    let k = s.replace(/[^\x00-\x7F]/g, ' ')
-             .replace(/\([^)]*\)/g, ' ')
-             .replace(/\[[^\]]*\]/g, ' ')
-             .replace(/\s+-\s+.*$/, '')
-             .replace(/\s+by\s+.*$/i, '')
-             .replace(/\s*(hardcover|softcover|paperback|hc\b|pb\b|magic trick|magic book|signed\b|oop\b)\s*/gi, ' ')
-             .toLowerCase()
-             .replace(/[^a-z0-9\s]/g, ' ')
-             .replace(/\s+/g, ' ').trim()
-             .replace(/^(the|a|an)\s+/, '');
-    return k;
-  };
-
-  const key = normKey(title);
+  const key = normPriceKey(title);
   const allSources = [];
 
   // Helper: check if MARKET_DB is loaded
