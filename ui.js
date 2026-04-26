@@ -1036,7 +1036,6 @@ function skipWizard() {
   if (!_wizardFromSettings) {
     showView('home');
     if (typeof loadCatalog === 'function') loadCatalog();
-    if (typeof checkChangelog === 'function') checkChangelog();
   }
 }
 
@@ -1079,7 +1078,6 @@ async function wizardNext() {
     if (!_wizardFromSettings) {
       showView('home');
       if (typeof loadCatalog === 'function') loadCatalog();
-      if (typeof checkChangelog === 'function') checkChangelog();
     }
     return;
   }
@@ -1101,7 +1099,6 @@ function wizardSkipUsername() {
   if (!_wizardFromSettings) {
     showView('home');
     if (typeof loadCatalog === 'function') loadCatalog();
-    if (typeof checkChangelog === 'function') checkChangelog();
   }
 }
 

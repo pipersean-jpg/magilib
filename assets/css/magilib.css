@@ -540,7 +540,7 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
 .spinner.dark{border-color:rgba(26,24,20,0.15);border-top-color:var(--accent);}
 @keyframes spin{to{transform:rotate(360deg);}}
-.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(80px);padding:12px 20px;border-radius:9px;font-size:var(--text-base);font-weight:500;z-index:var(--z-dialog);opacity:0;transition:all 0.3s;max-width:90vw;text-align:center;box-shadow:var(--shadow-toast);}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(80px);padding:12px 20px;border-radius:9px;font-size:var(--text-base);font-weight:500;z-index:var(--z-dialog);opacity:0;transition:all 0.3s;max-width:90vw;text-align:center;box-shadow:var(--shadow-toast);pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.success{background:var(--success-bg);color:var(--success);border:0.5px solid var(--tier1-border);}
 .toast.error{background:var(--status-sold-bg);color:var(--status-sold);border:0.5px solid var(--status-sold-border);}
@@ -607,7 +607,7 @@ body.sheet-open{overflow:hidden;position:fixed;width:100%;}
 .welcome-btn-secondary:hover{background:var(--accent-light);}
 
 /* ── User Menu ─────────────────────────────────────────────────── */
-.user-menu-btn{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:var(--text-base);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.user-menu-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:var(--text-base);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .user-dropdown{position:absolute;top:58px;right:16px;background:var(--paper-card);border:0.5px solid var(--border-med);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:6px;min-width:160px;z-index:200;display:none;}
 .user-dropdown.open{display:block;}
 .user-dropdown-item{padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:var(--text-base);color:var(--ink);cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px;}
