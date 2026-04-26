@@ -2872,6 +2872,39 @@ function zoomCover(imgSrc) {
   document.body.appendChild(zoomEl);
 }
 
+// ── Book detail enrich ────────────────────────────────────────────
+let _enrichInFlight = false;
+async function _doEnrichAndSave(b, url) {
+  if (_enrichInFlight) return;
+  _enrichInFlight = true;
+  const statusEl = document.getElementById('enrichStatus');
+  const fetchBtn = document.getElementById('enrichFetchBtn');
+  if (statusEl) statusEl.textContent = 'Fetching…';
+  if (fetchBtn) fetchBtn.disabled = true;
+  try {
+    const data = await enrichBookFromUrl(b, url);
+    if (!data || !data.description) {
+      if (statusEl) statusEl.textContent = 'No description found on that page.';
+      if (fetchBtn) fetchBtn.disabled = false;
+      return;
+    }
+    if (!b.notes) {
+      b.notes = data.description;
+      const { error } = await _supa.from('books').update({
+        notes: data.description,
+        updated_at: new Date().toISOString(),
+      }).eq('id', b._id);
+      if (error) console.warn('Enrich save failed:', error.message);
+    }
+    openModal(S.currentModalIdx);
+  } catch {
+    if (statusEl) statusEl.textContent = "Couldn't load that page — try another URL.";
+    if (fetchBtn) fetchBtn.disabled = false;
+  } finally {
+    _enrichInFlight = false;
+  }
+}
+
 // Delegated click handlers — replaces inline onclick on modal and batch bar buttons
 (function() {
   const overlay = document.getElementById('modalOverlay');
@@ -2911,6 +2944,15 @@ function zoomCover(imgSrc) {
             closeModal();
             requestAnimationFrame(() => { requestAnimationFrame(() => { openModal(targetIdx); }); });
           }
+          break;
+        }
+        case 'enrich-open':
+          window.open(el.dataset.url, '_blank', 'noopener');
+          break;
+        case 'enrich-fetch': {
+          const urlInput = document.getElementById('enrichUrlInput');
+          const url = urlInput ? urlInput.value.trim() : '';
+          if (url.startsWith('http') && b) _doEnrichAndSave(b, url);
           break;
         }
       }

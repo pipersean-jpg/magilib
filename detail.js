@@ -64,7 +64,7 @@ const MetadataEnrichmentAdapters = [
     canHandle(url) { return !!url; },
     async fetchMetadata(url, bookId) {
       try {
-        const res = await fetch('/fetch-proxy?url=' + encodeURIComponent(url));
+        const res = await fetch('/api/fetch-proxy?action=fetch&url=' + encodeURIComponent(url));
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const html = await res.text();
         return this.parseMetadata(html, url);
@@ -207,6 +207,28 @@ function _statusBadgeHTML(b) {
   return `<span class="ms-status-badge ms-status-owned">✓ In Library</span>`;
 }
 
+// ── Enrich section builder ────────────────────────────────────────
+function buildEnrichSectionHTML(b) {
+  const q = encodeURIComponent((b.title || '') + (b.author ? ' ' + b.author : ''));
+  const mAttr = ('https://www.murphysmagic.com/Search.aspx?q=' + q).replace(/"/g, '&quot;');
+  const vAttr = ('https://www.vanishingincmagic.com/search/' + q + '/').replace(/"/g, '&quot;');
+  return `<div class="ms-section ms-enrich-section" id="ms-enrich-section">
+    <div class="ms-section-title">Enrich from Web</div>
+    <div class="ms-enrich-body">
+      <div class="ms-enrich-hint">Find the product page, copy its URL, paste below.</div>
+      <div class="ms-enrich-chips">
+        <button class="ms-enrich-chip" data-action="enrich-open" data-url="${mAttr}">Murphy's Magic ↗</button>
+        <button class="ms-enrich-chip" data-action="enrich-open" data-url="${vAttr}">Vanishing Inc ↗</button>
+      </div>
+      <div class="ms-enrich-paste-row">
+        <input type="url" id="enrichUrlInput" class="ms-enrich-input" placeholder="Paste product page URL…" autocomplete="off">
+        <button id="enrichFetchBtn" class="ms-enrich-btn" data-action="enrich-fetch">Fetch</button>
+      </div>
+      <div id="enrichStatus" class="ms-enrich-status"></div>
+    </div>
+  </div>`;
+}
+
 // ── Main HTML builder — called by openModal() in catalog.js ───────
 function buildDetailBodyHTML(book, allBooks, opts) {
   const b          = book;
@@ -217,11 +239,12 @@ function buildDetailBodyHTML(book, allBooks, opts) {
   const googleUrl      = opts.googleUrl      || '';
   const sym            = opts.sym            || '';
 
-  const topics       = detectMagicTopics(b);
   const recoItems    = _buildRecommendations(b, allBooks);
   const authorItems  = _authorBooks(b, allBooks);
   const wishSuggs    = !isWishlist ? _wishlistSuggestions(b, allBooks) : [];
   const cached       = MetadataCache.get(b._id);
+  const _coreContent = (b.notes || '') || ((cached && cached.description) || '');
+  const enrichSection = !_coreContent ? buildEnrichSectionHTML(b) : '';
 
   // ── Library match warning ───────────────────────────────────────
   const matchWarning = libraryMatch
@@ -362,6 +385,7 @@ function buildDetailBodyHTML(book, allBooks, opts) {
     </div>
     ${metaRow}
     ${coreSection}
+    ${enrichSection}
     ${topicSection}
     ${collectorSection}
     ${authorSection}

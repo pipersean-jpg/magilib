@@ -1,8 +1,8 @@
-# MagiLib — Session 61
+# MagiLib — Session 62
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** S61 closed three carried items: SQL migration run, publisher wired in scan path, normKey unified into `normCatalogKey`/`normPriceKey` in globals.js. Next: beta device walkthroughs (Auth, Add, Library, Edit).
+- **Focus:** S62 wired Enrich from Web feature in book detail modal — proxy URL fixed, Murphy's/Vanishing Inc search chips, paste+Fetch UI, enriched description saved to Supabase `books.notes`. Next: beta device walkthroughs (Auth, Add, Library, Edit) + test Enrich flow on device.
 
 ---
 
@@ -48,13 +48,13 @@
 
 ---
 
-## Last Session (Session 61)
-- ### Supabase (server-side — no file change)
-- Ran SQL migration: `in_print` (boolean), `price_currency` (varchar 3), `price_updated_at` (timestamptz) columns added to `books` table.
-- Migrated existing `notes`-encoded `In Print: Yes/No` rows to `in_print` column; stripped encoding from `notes`.
-- ### conjuring.js (MODIFIED)
-- Added `dbPublisher(e)` helper (line 36) — returns `e.p || ''`.
-- `applyConjuringMatch`: added `publisher = dbPublisher(entry)`; calls `fill('f-publisher', toTitleCasePublisher(publisher))`. `filledFromDB` count now includes publisher. Fixes blank publisher on every scan match.
+## Last Session (Session 62)
+- ### detail.js (MODIFIED)
+- **Proxy URL fixed (line 67):** `/fetch-proxy?url=` → `/api/fetch-proxy?action=fetch&url=` — `enrichBookFromUrl()` was always hitting a 404.
+- **`buildEnrichSectionHTML(b)` added (line 211):** Renders Murphy's Magic + Vanishing Inc search chips (open in new tab as search launchers, not scrapers) + paste input + Fetch button + status div.
+- **`buildDetailBodyHTML` updated:** Computes `_coreContent`; injects `enrichSection` between Core Ideas and Topics only when Core Ideas is empty (no notes, no cached description). Removed now-unused `topics` local variable (moved into `buildTopicSectionHTML` was considered but full rebuild chosen instead — see Model Learnings).
+- ### catalog.js (MODIFIED)
+- **`_doEnrichAndSave(b, url)` added (line 2877):** In-flight guard (`_enrichInFlight` flag), calls `enrichBookFromUrl`, on success writes `notes` to Supabase `books` row (skips write if `b.notes` already set), calls `openModal(S.currentModalIdx)` to rebuild modal. Error + no-description paths re-enable Fetch button with inline status text.
 
 ---
 
