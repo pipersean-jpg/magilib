@@ -43,7 +43,10 @@
       "Bash(python3 -m http.server 8000 --bind 0.0.0.0)",
       "Bash(node ~/magilib/scripts/handoff.js)",
       "mcp__claude_ai_Supabase__list_projects",
-      "Bash(node sync-claude-to-notion.js)"
+      "Bash(node sync-claude-to-notion.js)",
+      "mcp__code-review-graph__semantic_search_nodes_tool",
+      "Bash(node --check /Users/seanpiper/magilib/detail.js)",
+      "Bash(node --check /Users/seanpiper/magilib/conjuring.js)"
     ],
     "additionalDirectories": [
       "/Applications/ClaudeUsageBar.app",

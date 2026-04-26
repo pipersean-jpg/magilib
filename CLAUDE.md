@@ -1,8 +1,8 @@
-# MagiLib — Session 62
+# MagiLib — Session 63
 
 ## Current Status
 - **Phase:** Phase 1 → Beta Launch — IN PROGRESS
-- **Focus:** S62 wired Enrich from Web feature in book detail modal — proxy URL fixed, Murphy's/Vanishing Inc search chips, paste+Fetch UI, enriched description saved to Supabase `books.notes`. Next: beta device walkthroughs (Auth, Add, Library, Edit) + test Enrich flow on device.
+- **Focus:** S63 QA bug pass — 17 bugs fixed (fact flash, enrich fetch root cause, scroll save/restore, wishlist card sections, reco animation, Takagi author/cover, Vanishing URL, Murphy's HTML fallback). Next: device test all fixes, beta walkthroughs (Auth, Add, Library, Edit), Settings metadata refresh feature.
 
 ---
 
@@ -48,13 +48,13 @@
 
 ---
 
-## Last Session (Session 62)
-- ### detail.js (MODIFIED)
-- **Proxy URL fixed (line 67):** `/fetch-proxy?url=` → `/api/fetch-proxy?action=fetch&url=` — `enrichBookFromUrl()` was always hitting a 404.
-- **`buildEnrichSectionHTML(b)` added (line 211):** Renders Murphy's Magic + Vanishing Inc search chips (open in new tab as search launchers, not scrapers) + paste input + Fetch button + status div.
-- **`buildDetailBodyHTML` updated:** Computes `_coreContent`; injects `enrichSection` between Core Ideas and Topics only when Core Ideas is empty (no notes, no cached description). Removed now-unused `topics` local variable (moved into `buildTopicSectionHTML` was considered but full rebuild chosen instead — see Model Learnings).
+## Last Session (Session 63)
 - ### catalog.js (MODIFIED)
-- **`_doEnrichAndSave(b, url)` added (line 2877):** In-flight guard (`_enrichInFlight` flag), calls `enrichBookFromUrl`, on success writes `notes` to Supabase `books` row (skips write if `b.notes` already set), calls `openModal(S.currentModalIdx)` to rebuild modal. Error + no-description paths re-enable Fetch button with inline status text.
+- **Magic Fact:** Synchronous pick from `MAGIC_FACTS` local array only — removed Supabase async fetch that caused double-update flash each Home visit.
+- **`openModal`:** Saves `window.scrollY` to `S._savedScrollY` on first open. Resets `.magi-sheet scrollTop=0` on every open (via double-rAF after `is-active`).
+- **`closeModal`:** Restores `S._savedScrollY` after overlay hides; clears it.
+- **`openEditFromModal`:** Saves current scroll to `S._editSavedScrollY` (from `S._savedScrollY` or live `window.scrollY`) before calling `closeModal`, so edit-close path can restore independently.
+- **Wishlist toast:** `showToast` on `loadCatalog` now checks `S.showWishlist` — shows "X wishlist items" not total library count.
 
 ---
 
