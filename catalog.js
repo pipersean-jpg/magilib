@@ -368,6 +368,26 @@ const MAGIC_FACTS = [
   "Strong Magic by Darwin Ortiz (1994) shifted how magicians think about performance — arguing that technique is secondary to making the audience feel genuine wonder.",
 ];
 
+function getStableMagicFact(){
+  const now=new Date();
+  const today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  if(S._magicFact&&S._magicFactDate===today)return S._magicFact;
+  try{
+    const stored=JSON.parse(localStorage.getItem('magilib_magic_fact')||'{}');
+    if(stored.date===today&&stored.fact){
+      S._magicFact=stored.fact;
+      S._magicFactDate=today;
+      return stored.fact;
+    }
+  }catch(e){}
+  const seed=today.split('').reduce((sum,ch)=>sum+ch.charCodeAt(0),0);
+  const fact=MAGIC_FACTS[seed%MAGIC_FACTS.length];
+  S._magicFact=fact;
+  S._magicFactDate=today;
+  try{localStorage.setItem('magilib_magic_fact',JSON.stringify({date:today,fact}));}catch(e){}
+  return fact;
+}
+
 function renderHomeView(){
   const lib=S.books.filter(b=>b.sold!=='Sold'&&b.sold!=='Wishlist');
   const wishlist=S.books.filter(b=>b.sold==='Wishlist');
@@ -391,7 +411,7 @@ function renderHomeView(){
   }
   // Magic fact — synchronous pick from local array; no async update that causes visible flash
   if(el('homeMagicFact')){
-    el('homeMagicFact').textContent=MAGIC_FACTS[Math.floor(Math.random()*MAGIC_FACTS.length)];
+    el('homeMagicFact').textContent=getStableMagicFact();
   }
   // Recent books (last 5)
   const row=el('homeRecentRow');
@@ -410,8 +430,12 @@ function renderHomeView(){
 }
 function showToast(msg,type='info',dur=3500){
   const t=document.getElementById('toast');
+  if(!t)return;
+  if(t._hideTimer)clearTimeout(t._hideTimer);
+  t.style.pointerEvents='none';
+  t.setAttribute('aria-live', type==='error'?'assertive':'polite');
   t.textContent=msg;t.className='toast '+type+' show';
-  setTimeout(()=>t.classList.remove('show'),dur);
+  t._hideTimer=setTimeout(()=>t.classList.remove('show'),dur);
 }
 function setCondition(c){
   S.condition=c;
@@ -820,6 +844,23 @@ function renderCatalog(){
   document.getElementById('statValue') && (document.getElementById('statValue').textContent=totalVal?sym+totalVal.toFixed(0):'—');
   document.getElementById('statAvg') && (document.getElementById('statAvg').textContent=avg?sym+avg.toFixed(0):'—');
   document.getElementById('statTop') && (document.getElementById('statTop').textContent=top?sym+top.toFixed(0):'—');
+  // Rescan bar — shown in drafts view when rescannble covers exist
+  const rescanBar = document.getElementById('draftRescanBar');
+  if (rescanBar) {
+    if (S.showDrafts) {
+      const rescannableCount = S.books.filter(b => b.draft === 'Draft' && b.coverUrl && b.coverUrl !== '__local__').length;
+      if (rescannableCount > 0) {
+        rescanBar.style.display = 'block';
+        rescanBar.innerHTML = `<button id="rescanDraftsBtn" onclick="rescanDrafts()" class="btn-ghost" style="width:100%;font-size:12px;padding:8px;">Rescan ${rescannableCount} draft cover${rescannableCount!==1?'s':''} with AI</button>`;
+      } else {
+        rescanBar.style.display = 'none';
+        rescanBar.innerHTML = '';
+      }
+    } else {
+      rescanBar.style.display = 'none';
+      rescanBar.innerHTML = '';
+    }
+  }
   // Populate publisher filter dropdown
   const pubSelect=document.getElementById('filterPublisher');
   if(pubSelect&&pubSelect.options.length<=1){
@@ -850,7 +891,7 @@ function renderCatalog(){
   // ── GROUPING ──
   // Normalise: strip leading The/A/An, lowercase, trim
   const normTitle = t => (t||'').toLowerCase().trim().replace(/^(the|a|an)\s+/i,'').trim();
-  const groupKey = b => normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();
+  const groupKey = b => b.draft === 'Draft' ? '__draft_' + b._id : normTitle(b.title) + '||' + (b.author||'').toLowerCase().trim();
 
   // Build groups — each group keyed by normalised title+author
   // Representative card = first non-sold copy, or first copy if all sold
@@ -1423,6 +1464,8 @@ function openModal(idx){
   // If draft, open in Add form instead
   if (b.draft === 'Draft') { openDraftActions(idx); return; }
   const _mo = document.getElementById('modalOverlay');
+  const _sheet = _mo.querySelector('.magi-sheet');
+  if (_sheet) _sheet.classList.remove('is-fading');
   // Save library scroll position so closeModal can restore it
   if (!_mo.classList.contains('is-active')) {
     S._savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
@@ -1432,7 +1475,6 @@ function openModal(idx){
   requestAnimationFrame(() => { requestAnimationFrame(() => {
     _mo.style.pointerEvents = '';
     // Always start at top of detail sheet
-    const _sheet = _mo.querySelector('.magi-sheet');
     if (_sheet) _sheet.scrollTop = 0;
   }); });
 }
@@ -1456,7 +1498,10 @@ function openEditFromModal(id){
 }
 function closeModal(e){
   if(!e||e.target===document.getElementById('modalOverlay')||!e.target){
-    document.getElementById('modalOverlay').classList.remove('is-active');
+    const overlay = document.getElementById('modalOverlay');
+    const sheet = overlay.querySelector('.magi-sheet');
+    if (sheet) sheet.classList.remove('is-fading');
+    overlay.classList.remove('is-active');
     document.body.classList.remove('sheet-open');
     // Restore library scroll position
     if(S._savedScrollY!=null){
@@ -2893,31 +2938,43 @@ function zoomCover(imgSrc) {
 
 // ── Book detail enrich ────────────────────────────────────────────
 let _enrichInFlight = false;
-async function _doEnrichAndSave(b, url) {
+async function _doGenerateDetailsAndSave(b, url) {
   if (_enrichInFlight) return;
   _enrichInFlight = true;
   const statusEl = document.getElementById('enrichStatus');
   const fetchBtn = document.getElementById('enrichFetchBtn');
-  if (statusEl) statusEl.textContent = 'Fetching…';
+  if (statusEl) statusEl.textContent = 'Gathering sources and writing note...';
   if (fetchBtn) fetchBtn.disabled = true;
   try {
-    const data = await enrichBookFromUrl(b, url);
-    if (!data || !data.description) {
-      if (statusEl) statusEl.textContent = 'No description found on that page.';
+    const data = await generateBookDetails(b, url);
+    if (!data || !data.generatedSummary) {
+      if (statusEl) statusEl.textContent = 'No details could be generated.';
       if (fetchBtn) fetchBtn.disabled = false;
       return;
     }
     if (!b.notes) {
-      b.notes = data.description;
+      b.notes = data.generatedSummary;
       const { error } = await _supa.from('books').update({
-        notes: data.description,
+        notes: data.generatedSummary,
         updated_at: new Date().toISOString(),
       }).eq('id', b._id);
       if (error) console.warn('Enrich save failed:', error.message);
     }
     openModal(S.currentModalIdx);
-  } catch {
-    if (statusEl) statusEl.textContent = "Couldn't load that page — try another URL.";
+  } catch (err) {
+    console.warn('Generate details failed:', err);
+    const msg = (err && err.message) || '';
+    if (statusEl) {
+      if (/API error (404|405|501)/i.test(msg)) {
+        statusEl.textContent = 'AI generation needs the Vercel dev server or deployed app.';
+      } else if (/ANTHROPIC_API_KEY/i.test(msg)) {
+        statusEl.textContent = 'Claude API key is missing in the local environment.';
+      } else if (/invalid x-api-key|authentication/i.test(msg)) {
+        statusEl.textContent = 'Claude API key is invalid in the local environment.';
+      } else {
+        statusEl.textContent = "Couldn't generate details right now.";
+      }
+    }
     if (fetchBtn) fetchBtn.disabled = false;
   } finally {
     _enrichInFlight = false;
@@ -2977,7 +3034,13 @@ async function _doEnrichAndSave(b, url) {
         case 'enrich-fetch': {
           const urlInput = document.getElementById('enrichUrlInput');
           const url = urlInput ? urlInput.value.trim() : '';
-          if (url.startsWith('http') && b) _doEnrichAndSave(b, url);
+          if (b) _doGenerateDetailsAndSave(b, url.startsWith('http') ? url : '');
+          break;
+        }
+        case 'generate-details': {
+          const urlInput = document.getElementById('enrichUrlInput');
+          const url = urlInput ? urlInput.value.trim() : '';
+          if (b) _doGenerateDetailsAndSave(b, url.startsWith('http') ? url : '');
           break;
         }
       }

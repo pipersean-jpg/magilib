@@ -207,6 +207,47 @@ async function quickAddFromQueue() {
   }
 }
 
+// ── RESCAN DRAFT COVERS ──
+async function rescanDrafts() {
+  const drafts = S.books.filter(b => b.draft === 'Draft' && b.coverUrl && b.coverUrl !== '__local__');
+  if (!drafts.length) { showToast('No draft covers to rescan', 'info'); return; }
+  const btn = document.getElementById('rescanDraftsBtn');
+  if (btn) { btn.disabled = true; btn.textContent = `Rescanning 0 / ${drafts.length}…`; }
+  let updated = 0, failed = 0;
+  for (let i = 0; i < drafts.length; i++) {
+    const b = drafts[i];
+    if (btn) btn.textContent = `Rescanning ${i + 1} / ${drafts.length}…`;
+    try {
+      let imageSource;
+      if (b.coverUrl.startsWith('data:')) {
+        const b64  = b.coverUrl.split(',')[1];
+        const mime = (b.coverUrl.match(/data:([^;]+);/) || [,'image/jpeg'])[1];
+        imageSource = {type:'base64', media_type:mime, data:b64};
+      } else {
+        imageSource = {type:'url', url:b.coverUrl};
+      }
+      const data = await callClaude([{role:'user', content:[
+        {type:'image', source:imageSource},
+        {type:'text', text:'Extract the book title and author from this cover. Reply ONLY with valid JSON: {"title":"","author":""}'}
+      ]}], 150);
+      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      const title  = toTitleCase((parsed.title||'').trim())  || 'Unknown Title';
+      const author = toTitleCase((parsed.author||'').trim()) || '';
+      if (title !== 'Unknown Title' || author) {
+        await _supa.from('books').update({ title, author }).eq('id', b._id);
+        b.title  = title;
+        b.author = author;
+        updated++;
+      }
+    } catch(e) {
+      failed++;
+    }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = `Rescan ${drafts.length - updated} draft cover${(drafts.length-updated)!==1?'s':''} with AI`; }
+  renderCatalog();
+  showToast(`Rescan done — ${updated} identified${failed?', '+failed+' failed':''}`, updated ? 'success' : 'info', 4000);
+}
+
 // ── OPEN DRAFT IN ADD FORM ──
 
 // ── TUTORIAL ──
@@ -1027,6 +1068,7 @@ function closeWizard(markSeen) {
   if (markSeen) {
     const s = JSON.parse(localStorage.getItem('arcana_books_v2') || '{}');
     s.wizardSeen = true;
+    if (!_wizardFromSettings) s.changelogSeen = APP_VERSION;
     localStorage.setItem('arcana_books_v2', JSON.stringify(s));
   }
 }
