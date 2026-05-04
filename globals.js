@@ -35,11 +35,13 @@ async function callClaude(messages, maxTokens=800){
   const resp=await fetch('/api/claude-proxy',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages})
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens,messages})
   });
   if(!resp.ok){
     const err=await resp.json().catch(()=>({}));
-    throw new Error(err.error||'API error '+resp.status);
+    const raw = (err.error && err.error.message) || err.message || err.error;
+    const msg = typeof raw === 'string' ? raw : (raw ? JSON.stringify(raw) : 'API error '+resp.status);
+    throw new Error(msg);
   }
   return resp.json();
 }
